@@ -1,2 +1,2 @@
 # goutils
-Utilities that I use across various go projects
+This repo is comprised of utilities that I use across various go projects.
