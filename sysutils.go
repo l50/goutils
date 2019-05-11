@@ -1,19 +1,17 @@
 package utils
 
 import (
-	"log"
 	"os/exec"
 )
 
-// RunCommand runs a specified command
-func RunCommand(cmd string, args ...string) string {
+// RunCommand runs a specified system command
+func RunCommand(cmd string, args ...string) (output string, outputErr string) {
 
-	cmdOut, err := exec.Command(cmd, args...).Output()
-	if len(cmdOut) == 0 {
-		if err != nil {
-			log.Fatal(err)
-		}
+	out, err := exec.Command(cmd, args...).CombinedOutput()
+
+	if err != nil {
+		outputErr = err.Error()
 	}
 
-	return string(cmdOut)
+	return string(out), outputErr
 }
