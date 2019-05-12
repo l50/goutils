@@ -5,13 +5,13 @@ import (
 )
 
 // RunCommand runs a specified system command
-func RunCommand(cmd string, args ...string) (output string, outputErr string) {
+func RunCommand(cmd string, args ...string) (string, error) {
 
 	out, err := exec.Command(cmd, args...).CombinedOutput()
 
 	if err != nil {
-		outputErr = err.Error()
+		return "", err
 	}
 
-	return string(out), outputErr
+	return string(out), nil
 }
