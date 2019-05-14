@@ -1,10 +1,22 @@
 package utils
 
 import (
+	"os"
 	"path/filepath"
 	"runtime"
 	"testing"
 )
+
+func TestCreateEmptyFile(t *testing.T) {
+	file := "test.txt"
+	created := CreateEmptyFile(file)
+	exists := FileExists(file)
+	if created && exists {
+		os.Remove(file)
+	} else {
+		t.Fatal("Unable to create ", file)
+	}
+}
 
 func TestFileExists(t *testing.T) {
 	if runtime.GOOS == "linux" || runtime.GOOS == "darwin" {
