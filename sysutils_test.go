@@ -22,7 +22,13 @@ func TestCp(t *testing.T) {
 	} else {
 		t.Fatal("File creation failed, check CreateEmptyFile() in fileutils.go for issues")
 	}
+}
 
+func TestGwd(t *testing.T) {
+	out := Gwd()
+	if !strings.Contains(out, "goutils") {
+		t.Fatal("Unable to get the current working directory")
+	}
 }
 
 func TestRunCommand(t *testing.T) {
