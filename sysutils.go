@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -47,7 +48,7 @@ func RunCommand(cmd string, args ...string) (string, error) {
 	out, err := exec.Command(cmd, args...).CombinedOutput()
 
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("%s %s %s %s", cmd, args, out, err)
 	}
 	return string(out), nil
 }
