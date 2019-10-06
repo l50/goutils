@@ -1,0 +1,51 @@
+trigger:
+- master
+
+schedules:
+- cron: "0 0 * * 0"
+  displayName: Weekly midnight (UTC) build
+  branches:
+    include:
+    - master
+  always: true
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  GOPATH: '$(Agent.BuildDirectory)/gopath' # Go workspace path
+  GOROOT: '$(Agent.BuildDirectory)/go' # Go installation path
+  GOBIN:  '$(GOPATH)/bin' # Go binaries path
+  modulePath: '$(GOPATH)/src/github.com/$(build.repository.name)' # Path to the module's code
+
+steps:
+- script: |
+    wget "https://dl.google.com/go/go1.12.7.linux-amd64.tar.gz" --output-document "$(Agent.BuildDirectory)/go1.12.7.tar.gz"
+    tar -C '$(Agent.BuildDirectory)' -xzf "$(Agent.BuildDirectory)/go1.12.7.tar.gz"
+  displayName: 'Install Go 1.12.7'
+
+- script: |
+    mkdir -p '$(GOBIN)'
+    mkdir -p '$(GOPATH)/pkg'
+    mkdir -p '$(modulePath)'
+    shopt -s extglob
+    shopt -s dotglob
+    mv !(gopath) '$(modulePath)'
+    echo '##vso[task.prependpath]$(GOBIN)'
+    echo '##vso[task.prependpath]$(GOROOT)/bin'
+  displayName: 'Set up the Go workspace'
+
+- script: |
+    go version
+    go get -v -t -d ./...
+    if [ -f Gopkg.toml ]; then
+        curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+        dep ensure
+    fi
+    go build -v .
+  displayName: 'Get dependencies, then build'
+  workingDirectory: '$(modulePath)'
+
+- script: "go test -count=1 -v -race ./..."
+  displayName: 'Run unit tests'
+  workingDirectory: "$(modulePath)"
