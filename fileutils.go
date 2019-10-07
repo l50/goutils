@@ -20,9 +20,8 @@ func CreateEmptyFile(name string) bool {
 func FileExists(fileLoc string) bool {
 	if _, err := os.Stat(fileLoc); !os.IsNotExist(err) {
 		return true
-	} else {
-		return false
 	}
+	return false
 }
 
 // GetHomeDir returns the path to current user's home directory
