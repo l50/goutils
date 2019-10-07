@@ -6,6 +6,8 @@ import (
 	"os"
 )
 
+// CloneRepo clones the repo specified at src to the path
+// specified with dst
 func CloneRepo(src string, dst string) bool {
 	_, err := git.PlainClone((dst), false, &git.CloneOptions{
 		URL:      src,
