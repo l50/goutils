@@ -1,4 +1,4 @@
 test:
-		@go test -v -race ./... ; \
-				echo "Done."
+	@go test -v -race ./... ; \
+	echo "Done."
 

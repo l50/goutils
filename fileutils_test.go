@@ -40,3 +40,13 @@ func TestGetHomeDir(t *testing.T) {
 		t.Fatal("Unable to get the user's home directory due to: ", err.Error())
 	}
 }
+
+func TestIsDirEmpty(t *testing.T) {
+	dirEmpty, err := IsDirEmpty("/")
+	if err != nil {
+		t.Fatal("Unable to get the tmp directory due to: ", err.Error())
+	}
+	if dirEmpty != false {
+		t.Fatal("The / directory has reported back as being empty, which can not be true.")
+	}
+}

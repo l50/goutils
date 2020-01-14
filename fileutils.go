@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"io"
 	"os"
 )
 
@@ -32,4 +33,23 @@ func GetHomeDir() (string, error) {
 		return "", err
 	}
 	return out, nil
+}
+
+// IsDirEmpty checks if an input directory (name) is empty
+// Resource: https://socketloop.com/tutorials/golang-determine-if-directory-is-empty-with-os-file-readdir-function
+func IsDirEmpty(name string) (bool, error) {
+	f, err := os.Open(name)
+	if err != nil {
+		return false, err
+	}
+	defer f.Close()
+
+	// read in ONLY one file
+	_, err = f.Readdir(1)
+
+	// and if the file is EOF... well, the dir is empty.
+	if err == io.EOF {
+		return true, nil
+	}
+	return false, err
 }
