@@ -41,6 +41,6 @@ steps:
   displayName: 'Get dependencies, then build'
   workingDirectory: '$(modulePath)'
 
-- script: "go test -count=1 -v -race ./..."
-  displayName: 'Run unit tests'
+- script: "make"
+  displayName: 'Run unit tests and update pkg cache'
   workingDirectory: "$(modulePath)"
