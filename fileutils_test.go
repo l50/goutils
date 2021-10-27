@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -31,6 +32,28 @@ func TestFileExists(t *testing.T) {
 		}
 	} else {
 		t.Fatal("Unsupported OS detected")
+	}
+}
+
+func TestFileToSlice(t *testing.T) {
+	var testFile string
+	if runtime.GOOS == "linux" || runtime.GOOS == "darwin" {
+		testFile = filepath.FromSlash("/etc/passwd")
+	} else if runtime.GOOS == "windows" {
+		testFile = filepath.FromSlash("C:/WINDOWS/system32/win.ini")
+	} else {
+		t.Fatal("Unsupported OS detected")
+	}
+
+	exists := FileExists(testFile)
+	if !exists {
+		t.Fatalf("Unable to locate %s, FileExists() failed.\n", testFile)
+	}
+
+	fileSlice, err := FileToSlice(testFile)
+	fmt.Printf("%v\n", fileSlice)
+	if err != nil {
+		t.Fatalf("Unable to convert %s to a slice due to: %v; FileToSlice() failed.\n", testFile, err.Error())
 	}
 }
 

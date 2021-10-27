@@ -2,7 +2,9 @@ package utils
 
 import (
 	"io"
+	"io/ioutil"
 	"os"
+	"strings"
 )
 
 // CreateEmptyFile creates an file based on the name input.
@@ -23,6 +25,16 @@ func FileExists(fileLoc string) bool {
 		return true
 	}
 	return false
+}
+
+// FileToSlice reads an input file into a slice
+// and returns it.
+func FileToSlice(fileName string) ([]string, error) {
+	b, err := ioutil.ReadFile(fileName)
+	if err != nil {
+		return nil, err
+	}
+	return strings.Split(string(b), "\n"), nil
 }
 
 // GetHomeDir returns the path to current user's home directory
