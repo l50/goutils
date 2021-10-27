@@ -1,5 +1,6 @@
-USER := l50
+SHELL := bash
 PACKAGE := goutils
+USER := l50
 VERSION := v1.0.0
 
 .PHONY: all
