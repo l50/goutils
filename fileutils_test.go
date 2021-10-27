@@ -1,41 +1,15 @@
 package utils
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"runtime"
 	"testing"
 )
 
-func TestCreateEmptyFile(t *testing.T) {
-	file := "test.txt"
-	created := CreateEmptyFile(file)
-	exists := FileExists(file)
-	if created && exists {
-		os.Remove(file)
-	} else {
-		t.Fatal("Unable to create ", file)
-	}
-}
-
-func TestFileExists(t *testing.T) {
-	if runtime.GOOS == "linux" || runtime.GOOS == "darwin" {
-		exists := FileExists(filepath.FromSlash("/etc/passwd"))
-		if !exists {
-			t.Fatal("Unable to locate /etc/passwd, FileExists() failed.")
-		}
-	} else if runtime.GOOS == "windows" {
-		exists := FileExists(filepath.FromSlash("C:/WINDOWS/system32/win.ini"))
-		if !exists {
-			t.Fatal("Unable to locate C:/WINDOWS/system32/win.ini, FileExists() failed.")
-		}
-	} else {
-		t.Fatal("Unsupported OS detected")
-	}
-}
-
-func TestFileToSlice(t *testing.T) {
+// Helper function that returns a test file based on the OS of the system
+func getTestFile(t *testing.T) string {
+	t.Helper()
 	var testFile string
 	if runtime.GOOS == "linux" || runtime.GOOS == "darwin" {
 		testFile = filepath.FromSlash("/etc/passwd")
@@ -44,14 +18,43 @@ func TestFileToSlice(t *testing.T) {
 	} else {
 		t.Fatal("Unsupported OS detected")
 	}
+	return testFile
+}
 
+func TestCreateEmptyFile(t *testing.T) {
+	newFile := "test.txt"
+	created := CreateEmptyFile(newFile)
+	exists := FileExists(newFile)
+
+	if !exists {
+		t.Fatalf("Unable to locate %s, FileExists() failed.", newFile)
+	}
+
+	if created && exists {
+		os.Remove(newFile)
+	} else {
+		t.Fatalf("Unable to create %s, CreateEmptyFile() failed.", newFile)
+	}
+}
+
+func TestFileExists(t *testing.T) {
+	testFile := getTestFile(t)
 	exists := FileExists(testFile)
+
+	if !exists {
+		t.Fatalf("Unable to locate %s, FileExists() failed.", testFile)
+	}
+}
+
+func TestFileToSlice(t *testing.T) {
+	testFile := getTestFile(t)
+	exists := FileExists(testFile)
+
 	if !exists {
 		t.Fatalf("Unable to locate %s, FileExists() failed.\n", testFile)
 	}
 
-	fileSlice, err := FileToSlice(testFile)
-	fmt.Printf("%v\n", fileSlice)
+	_, err := FileToSlice(testFile)
 	if err != nil {
 		t.Fatalf("Unable to convert %s to a slice due to: %v; FileToSlice() failed.\n", testFile, err.Error())
 	}
