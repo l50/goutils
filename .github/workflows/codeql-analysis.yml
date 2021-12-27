@@ -1,0 +1,52 @@
+name: 🚨 CodeQL Analysis
+on:
+  push:
+  pull_request:
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+    inputs:
+      git_user:
+        description: Username to associate with running this action
+        required: true
+        default: Jayson Grace
+      git_email:
+        description: Email to associate with running this action
+        required: true
+        default: jayson.e.grace@gmail.com
+      debug_enabled:
+        description: 'Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)'
+        required: true
+        default: "true"
+
+jobs:
+  sast:
+    name: Evaluate code for vulnerabilities
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [ 'go' ]
+
+    steps:
+      - name: Set up git repository
+        uses: actions/checkout@v2
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v1
+        with:
+          languages: ${{ matrix.language }}
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v1
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v1
+      
+      - name: Setup tmate session if any part of the action fails
+        if: ${{ failure() }}
+        uses: mxschmitt/action-tmate@v3
