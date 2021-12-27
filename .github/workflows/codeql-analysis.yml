@@ -47,6 +47,6 @@ jobs:
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v1
 
-      - name: Setup tmate session if any part of the action fails
-        if: ${{ failure() }}
-        uses: mxschmitt/action-tmate@v3
+      # - name: Setup tmate session if any part of the action fails
+      #   if: ${{ failure() }}
+      #   uses: mxschmitt/action-tmate@v3

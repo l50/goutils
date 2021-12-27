@@ -32,6 +32,6 @@ jobs:
           version: latest
           args: --timeout 5m
 
-      - name: Setup tmate session if any part of the action fails
-        if: ${{ failure() }}
-        uses: mxschmitt/action-tmate@v3
+      # - name: Setup tmate session if any part of the action fails
+      #   if: ${{ failure() }}
+      #   uses: mxschmitt/action-tmate@v3

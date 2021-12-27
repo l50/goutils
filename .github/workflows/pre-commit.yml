@@ -35,6 +35,6 @@ jobs:
       - name: Run pre-commit
         uses: pre-commit/action@v2.0.3
 
-      - name: Setup tmate session if any part of the action fails
-        if: ${{ failure() }}
-        uses: mxschmitt/action-tmate@v3
+      # - name: Setup tmate session if any part of the action fails
+      #   if: ${{ failure() }}
+      #   uses: mxschmitt/action-tmate@v3

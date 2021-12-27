@@ -45,6 +45,6 @@ jobs:
       - name: "Update the package found at https://pkg.go.dev"
         run: curl https://proxy.golang.org/github.com/${{ github.repository_owner	}}/${{ github.event.repository.name }}/@v/${{ steps.branch_name.outputs.SOURCE_TAG }}.info
 
-      - name: Setup tmate session if any part of the action fails
-        if: ${{ failure() }}
-        uses: mxschmitt/action-tmate@v3
+      # - name: Setup tmate session if any part of the action fails
+      #   if: ${{ failure() }}
+      #   uses: mxschmitt/action-tmate@v3
