@@ -18,14 +18,14 @@ on:
         required: true
         default: "true"
 
-jobs:  
+jobs:
   build:
     name: Build and configure the basic salt test environment
     runs-on: ubuntu-latest
     steps:
       - name: Set up git repository
         uses: actions/checkout@v2
-    
+
       - name: Install golang
         uses: actions/setup-go@v2
         with:
@@ -33,7 +33,7 @@ jobs:
 
       - name: Run unit tests
         run: go test -v -race ./...
-      
+
       - name: Setup tmate session if any part of the action fails
         if: ${{ failure() }}
         uses: mxschmitt/action-tmate@v3
