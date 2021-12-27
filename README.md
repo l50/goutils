@@ -8,24 +8,24 @@
 
 This repo is comprised of utilities that I use across various go projects.
 
-## Development
+## Development Environment Setup
 The following steps can be followed to prepare your environment to hack on `goutils`:
 
-1. Install Mage:
-```
-go install github.com/magefile/mage@latest
-```
-
-2. Run the following command to set up `go.mod` for development with your fork:
+1. (Fork this project](https://docs.github.com/en/get-started/quickstart/fork-a-repo)
+2. Install Dependencies:
+   * [Golang](https://go.dev/doc/install)
+   * [Pre-Commit](https://pre-commit.com/#install)
+   * [Mage](https://magefile.org/):
+      ```
+      go install github.com/magefile/mage@latest
+      ```
+3. Run the following command to set up `go.mod` for development with your fork:
 ```
 REPO=github.com/l50/goutils
 FORK="${PWD}"
 
 echo -e "\nreplace ${REPO} => ${FORK}" >> go.mod
 ```
-
-3. Install Pre-Commit by following these instructions: https://pre-commit.com/#install
-
 4. Set up Pre-Commit hooks locally:
 ```
 mage precommit
