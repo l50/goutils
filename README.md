@@ -4,6 +4,7 @@
 [![Test goutils](https://github.com/l50/goutils/actions/workflows/test-build.yml/badge.svg)](https://github.com/l50/goutils/actions/workflows/test-build.yml)
 [![Lint test for code](https://github.com/l50/goutils/actions/workflows/lint.yml/badge.svg)](https://github.com/l50/goutils/actions/workflows/lint.yml)
 [![🚨 CodeQL Analysis](https://github.com/l50/goutils/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/l50/goutils/actions/workflows/codeql-analysis.yml)
+[![🚨 Semgrep Analysis](https://github.com/l50/goutils/actions/workflows/semgrep.yml/badge.svg)](https://github.com/l50/goutils/actions/workflows/semgrep.yml)
 [![Run Pre-Commit hooks](https://github.com/l50/goutils/actions/workflows/pre-commit.yml/badge.svg)](https://github.com/l50/goutils/actions/workflows/pre-commit.yml)
 
 This repo is comprised of utilities that I use across various go projects.
