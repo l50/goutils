@@ -75,3 +75,14 @@ func RunTests() error {
 
 	return nil
 }
+
+// UpdateMirror updates pkg.go.dev with the release associated with the input tag
+func UpdateMirror(tag string) error {
+	fmt.Println(color.YellowString("Updating pkg.go.dev with the new tag %s.", tag))
+	err := sh.RunV("curl", "--silent", fmt.Sprintf("https://proxy.golang.org/github.com/l50/goutils/@v/%s.info", tag))
+	if err != nil {
+		return fmt.Errorf(color.RedString("Failed to update pkg.go.dev: %v\n", err))
+	}
+
+	return nil
+}
