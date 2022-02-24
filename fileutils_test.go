@@ -11,11 +11,12 @@ import (
 func getTestFile(t *testing.T) string {
 	t.Helper()
 	var testFile string
-	if runtime.GOOS == "linux" || runtime.GOOS == "darwin" {
+	switch runtime.GOOS {
+	case "linux", "darwin":
 		testFile = filepath.FromSlash("/etc/passwd")
-	} else if runtime.GOOS == "windows" {
+	case "windows":
 		testFile = filepath.FromSlash("C:/WINDOWS/system32/win.ini")
-	} else {
+	default:
 		t.Fatal("Unsupported OS detected")
 	}
 	return testFile

@@ -1,11 +1,10 @@
+//go:build mage
 // +build mage
 
 package main
 
 import (
-	"errors"
 	"fmt"
-	"regexp"
 
 	"github.com/fatih/color"
 
@@ -18,7 +17,7 @@ import (
 func installDeps() error {
 	fmt.Println(color.YellowString("Installing dependencies."))
 
-	err := sh.Run("go", "mod", "download")
+	err := sh.Run("go", "mod", "tidy")
 
 	if err != nil {
 		return fmt.Errorf(color.RedString("Failed to install dependencies: %v\n", err))
@@ -26,14 +25,52 @@ func installDeps() error {
 	return nil
 }
 
-// Install pre-commit scripts locally
-func PreCommit() error {
+// InstallPreCommit installs pre-commit hooks locally
+func InstallPreCommit() error {
 	mg.Deps(installDeps)
 
-	fmt.Println(color.YellowString("Installing pre-commit git hook scripts."))
+	fmt.Println(color.YellowString("Installing pre-commit hooks."))
 	err := sh.Run("pre-commit", "install")
 	if err != nil {
-		return fmt.Errorf(color.RedString("Failed to install pre-commit git hook scripts: %v\n", err))
+		return fmt.Errorf(color.RedString("Failed to install pre-commit hooks: %v\n", err))
+	}
+
+	return nil
+}
+
+// RunPreCommit runs all pre-commit hooks locally
+func RunPreCommit() error {
+	mg.Deps(installDeps)
+
+	fmt.Println(color.YellowString("Updating pre-commit hooks."))
+	err := sh.RunV("pre-commit", "autoupdate")
+	if err != nil {
+		return fmt.Errorf(color.RedString("Failed to update the pre-commit hooks: %v\n", err))
+	}
+
+	fmt.Println(color.YellowString("Clearing the pre-commit cache to ensure we have a fresh start."))
+	err = sh.RunV("pre-commit", "clean")
+	if err != nil {
+		return fmt.Errorf(color.RedString("Failed to clean the pre-commit cache: %v\n", err))
+	}
+
+	fmt.Println(color.YellowString("Running all pre-commit hooks locally."))
+	err = sh.RunV("pre-commit", "run", "--all-files")
+	if err != nil {
+		return fmt.Errorf(color.RedString("Failed to run pre-commit hooks: %v\n", err))
+	}
+
+	return nil
+}
+
+// RunTests runs all of the unit tests
+func RunTests() error {
+	mg.Deps(installDeps)
+
+	fmt.Println(color.YellowString("Running unit tests."))
+	err := sh.RunV(".hooks/go-unit-tests.sh")
+	if err != nil {
+		return fmt.Errorf(color.RedString("Failed to run unit tests: %v\n", err))
 	}
 
 	return nil

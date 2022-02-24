@@ -1,30 +1,31 @@
+---
 before:
   hooks:
     - go mod tidy
 
 builds:
-- env:
-  - CGO_ENABLED=0
-  goos:
-    - windows
-    - linux
-    - darwin
-  goarch:
-    - amd64
-    - 386
-    - arm
-    - arm64
-  ignore:
-    - goos: darwin
-      goarch: '386'
-    - goos: windows
-      goarch: 'arm'
-    - goos: windows
-      goarch: 'arm64'
+  - env:
+      - CGO_ENABLED=0
+    goos:
+      - windows
+      - linux
+      - darwin
+    goarch:
+      - amd64
+      - 386
+      - arm
+      - arm64
+    ignore:
+      - goos: darwin
+        goarch: "386"
+      - goos: windows
+        goarch: "arm"
+      - goos: windows
+        goarch: "arm64"
 
 archives:
-- format: zip
-  replacements:
+  - format: zip
+    replacements:
       darwin: macOS
 
 checksum:

@@ -32,17 +32,18 @@ func TestGwd(t *testing.T) {
 }
 
 func TestRunCommand(t *testing.T) {
-	if runtime.GOOS == "linux" {
+	switch runtime.GOOS {
+	case "linux":
 		out, err := RunCommand("uname", "-a")
 		if !strings.Contains(out, "Linux") {
 			t.Fatalf("Unable to run test for RunCommand due to: %v", err)
 		}
-	} else if runtime.GOOS == "darwin" {
+	case "darwin":
 		out, err := RunCommand("uname", "-a")
 		if !strings.Contains(out, "Darwin") {
 			t.Fatalf("Unable to run test for RunCommand due to: %v", err)
 		}
-	} else {
+	default:
 		t.Fatal("Unsupported OS detected")
 	}
 }

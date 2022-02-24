@@ -1,0 +1,26 @@
+---
+name: Update pkg.go.dev
+on:
+  workflow_run:
+    workflows:
+      - "Run Pre-Commit hooks"
+    types:
+      - completed
+
+jobs:
+  build:
+    name: Update pkg.go.dev
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up git repository
+        uses: actions/checkout@v2
+
+      - name: Update the package found at https://pkg.go.dev
+        run: |
+          latest_tag=$(git describe --tags `git rev-list --tags --max-count=1`)
+          if curl --silent "https://proxy.golang.org/github.com/l50/goutils/@v/${latest_tag}.info" | grep -q 'unknown revision'; then
+              curl --silent "https://proxy.golang.org/github.com/${{ github.repository_owner }}\
+                             /${{ github.event.repository.name }}/@v/${latest_tag}.info"
+          else
+             echo 'No new tags detected.'
+          fi

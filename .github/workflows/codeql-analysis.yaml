@@ -1,4 +1,5 @@
-name: 🚨 Semgrep Analysis
+---
+name: 🚨 CodeQL Analysis
 on:
   push:
   pull_request:
@@ -14,24 +15,35 @@ on:
         required: true
         default: jayson.e.grace@gmail.com
       debug_enabled:
-        description: 'Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)'
+        description: "Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)"
         required: true
         default: "true"
 
 jobs:
-  semgrep:
+  codeql:
     name: Evaluate code for vulnerabilities
     runs-on: ubuntu-latest
-    # Skip any PR created by dependabot to avoid permission issues
-    if: (github.actor != 'dependabot[bot]')
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language: ["go"]
 
     steps:
       - name: Set up git repository
         uses: actions/checkout@v2
 
-      - uses: returntocorp/semgrep-action@v1
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v1
         with:
-          config: >- # more at semgrep.dev/explore
-            p/security-audit
-            p/secrets
-            p/golang
+          languages: ${{ matrix.language }}
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v1
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v1

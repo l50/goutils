@@ -1,5 +1,5 @@
 ---
-name: Run Pre-Commit hooks
+name: 🚨 Semgrep Analysis
 on:
   push:
   pull_request:
@@ -15,26 +15,24 @@ on:
         required: true
         default: jayson.e.grace@gmail.com
       debug_enabled:
-        description: 'Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)'
+        description: "Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)"
         required: true
         default: "true"
 
 jobs:
-  pre-commit:
-    name: Run pre-commit
+  semgrep:
+    name: Evaluate code for vulnerabilities
     runs-on: ubuntu-latest
+    # Skip any PR created by dependabot to avoid permission issues
+    if: (github.actor != 'dependabot[bot]')
+
     steps:
       - name: Set up git repository
         uses: actions/checkout@v2
 
-      - name: Install python for pre-commit
-        uses: actions/setup-python@v2
+      - uses: returntocorp/semgrep-action@v1
         with:
-          python-version: '3.7'
-
-      - name: Run pre-commit
-        uses: pre-commit/action@v2.0.3
-
-      # - name: Setup tmate session if any part of the action fails
-      #   if: ${{ failure() }}
-      #   uses: mxschmitt/action-tmate@v3
+          config: >- # more at semgrep.dev/explore
+            p/security-audit
+            p/secrets
+            p/golang

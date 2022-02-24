@@ -1,3 +1,4 @@
+---
 name: Lint test for code
 on:
   push:
@@ -14,7 +15,7 @@ on:
         required: true
         default: jayson.e.grace@gmail.com
       debug_enabled:
-        description: 'Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)'
+        description: "Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)"
         required: true
         default: "true"
 
@@ -31,7 +32,3 @@ jobs:
         with:
           version: latest
           args: --timeout 5m
-
-      # - name: Setup tmate session if any part of the action fails
-      #   if: ${{ failure() }}
-      #   uses: mxschmitt/action-tmate@v3
