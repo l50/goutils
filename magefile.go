@@ -25,9 +25,8 @@ func installDeps() error {
 	return nil
 }
 
-// InstallPreCommit installs pre-commit hooks locally
-func InstallPreCommit() error {
-	mg.Deps(installDeps)
+func installPreCommit() error {
+	mg.Deps(InstallDeps)
 
 	fmt.Println(color.YellowString("Installing pre-commit hooks."))
 	err := sh.Run("pre-commit", "install")
@@ -41,6 +40,7 @@ func InstallPreCommit() error {
 // RunPreCommit runs all pre-commit hooks locally
 func RunPreCommit() error {
 	mg.Deps(installDeps)
+	mg.Deps(installPreCommit)
 
 	fmt.Println(color.YellowString("Updating pre-commit hooks."))
 	err := sh.RunV("pre-commit", "autoupdate")
