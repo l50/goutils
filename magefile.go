@@ -5,8 +5,11 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 
 	"github.com/fatih/color"
+	utils "github.com/l50/goutils"
 
 	// mage utility functions
 	"github.com/magefile/mage/mg"
@@ -17,21 +20,20 @@ import (
 func installDeps() error {
 	fmt.Println(color.YellowString("Installing dependencies."))
 
-	err := sh.Run("go", "mod", "tidy")
-
-	if err != nil {
-		return fmt.Errorf(color.RedString("Failed to install dependencies: %v\n", err))
+	if err := utils.Tidy(); err != nil {
+		return err
 	}
+
 	return nil
 }
 
-func installPreCommit() error {
+// InstallPreCommit installs pre-commit hooks locally
+func InstallPreCommit() error {
 	mg.Deps(installDeps)
 
 	fmt.Println(color.YellowString("Installing pre-commit hooks."))
-	err := sh.Run("pre-commit", "install")
-	if err != nil {
-		return fmt.Errorf(color.RedString("Failed to install pre-commit hooks: %v\n", err))
+	if err := utils.InstallPCHooks(); err != nil {
+		return err
 	}
 
 	return nil
@@ -40,24 +42,20 @@ func installPreCommit() error {
 // RunPreCommit runs all pre-commit hooks locally
 func RunPreCommit() error {
 	mg.Deps(installDeps)
-	mg.Deps(installPreCommit)
 
 	fmt.Println(color.YellowString("Updating pre-commit hooks."))
-	err := sh.RunV("pre-commit", "autoupdate")
-	if err != nil {
-		return fmt.Errorf(color.RedString("Failed to update the pre-commit hooks: %v\n", err))
+	if err := utils.UpdatePCHooks(); err != nil {
+		return err
 	}
 
 	fmt.Println(color.YellowString("Clearing the pre-commit cache to ensure we have a fresh start."))
-	err = sh.RunV("pre-commit", "clean")
-	if err != nil {
-		return fmt.Errorf(color.RedString("Failed to clean the pre-commit cache: %v\n", err))
+	if err := utils.ClearPCCache(); err != nil {
+		return err
 	}
 
 	fmt.Println(color.YellowString("Running all pre-commit hooks locally."))
-	err = sh.RunV("pre-commit", "run", "--all-files")
-	if err != nil {
-		return fmt.Errorf(color.RedString("Failed to run pre-commit hooks: %v\n", err))
+	if err := utils.RunPCHooks(); err != nil {
+		return err
 	}
 
 	return nil
@@ -68,9 +66,8 @@ func RunTests() error {
 	mg.Deps(installDeps)
 
 	fmt.Println(color.YellowString("Running unit tests."))
-	err := sh.RunV(".hooks/go-unit-tests.sh")
-	if err != nil {
-		return fmt.Errorf(color.RedString("Failed to run unit tests: %v\n", err))
+	if err := sh.RunV(filepath.Join(".hooks", "go-unit-tests.sh")); err != nil {
+		return fmt.Errorf(color.RedString("failed to run unit tests: %w", err))
 	}
 
 	return nil
@@ -81,7 +78,40 @@ func UpdateMirror(tag string) error {
 	fmt.Println(color.YellowString("Updating pkg.go.dev with the new tag %s.", tag))
 	err := sh.RunV("curl", "--silent", fmt.Sprintf("https://proxy.golang.org/github.com/l50/goutils/@v/%s.info", tag))
 	if err != nil {
-		return fmt.Errorf(color.RedString("Failed to update pkg.go.dev: %v\n", err))
+		return fmt.Errorf(color.RedString("failed to update pkg.go.dev: %w", err))
+	}
+
+	return nil
+}
+
+func appendToFile(file string, text string) error {
+	f, err := os.OpenFile(file,
+		os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	if _, err := f.WriteString(text + "\n"); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// LocalGoMod Configures go.mod for local development
+func LocalGoMod() error {
+	fmt.Println(color.YellowString("Updating go.mod to work for local development."))
+	localChanges := []string{
+		"replace github.com/l50/goutils => ./utils",
+	}
+
+	targetFile := "go.mod"
+
+	for _, change := range localChanges {
+		err := appendToFile(targetFile, change)
+		if err != nil {
+			return fmt.Errorf(color.RedString("failed to append %s to go.mod: %v", change, err))
+		}
 	}
 
 	return nil
