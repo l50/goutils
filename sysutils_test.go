@@ -35,7 +35,7 @@ func TestRunCommand(t *testing.T) {
 	switch runtime.GOOS {
 	case "linux", "darwin":
 		out, err := RunCommand("uname", "-a")
-		if !strings.Contains(out, "Linux") || !strings.Contains(out, "Darwin") {
+		if !strings.Contains(out, "Linux") && !strings.Contains(out, "Darwin") {
 			t.Fatalf("unable to run command - RunCommand() failed: %v", err)
 		}
 	default:

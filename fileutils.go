@@ -1,10 +1,12 @@
 package utils
 
 import (
-	"io"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"strings"
+
+	"github.com/fatih/color"
 )
 
 // CreateEmptyFile creates an file based on the name input.
@@ -35,7 +37,7 @@ func FileExists(fileLoc string) bool {
 func FileToSlice(fileName string) ([]string, error) {
 	b, err := ioutil.ReadFile(fileName)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf(color.RedString("failed to read %s: %v", err))
 	}
 
 	return strings.Split(string(b), "\n"), nil
@@ -46,28 +48,19 @@ func GetHomeDir() (string, error) {
 	out, err := os.UserHomeDir()
 
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf(color.RedString("failed to get user's home directory: %v", err))
 	}
 
 	return out, nil
 }
 
 // IsDirEmpty checks if an input directory (name) is empty
-// Resource: https://socketloop.com/tutorials/golang-determine-if-directory-is-empty-with-os-file-readdir-function
 func IsDirEmpty(name string) (bool, error) {
-	f, err := os.Open(name)
+	entries, err := ioutil.ReadDir(name)
 	if err != nil {
-		return false, err
+		return false, fmt.Errorf(color.RedString("failed to determine if %s is empty: %v", name, err))
 	}
 
-	defer f.Close()
+	return len(entries) == 0, nil
 
-	// read in ONLY one file
-	_, err = f.Readdir(1)
-
-	// and if the file is EOF... well, the dir is empty.
-	if err == io.EOF {
-		return true, nil
-	}
-	return false, err
 }

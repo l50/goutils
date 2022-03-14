@@ -19,17 +19,3 @@ func TestUpdatePCHooks(t *testing.T) {
 		t.Fatal(err)
 	}
 }
-
-func TestClearPCCache(t *testing.T) {
-	if err := ClearPCCache(); err != nil {
-		t.Fatal(err)
-	}
-}
-
-// This isn't worth running - it takes forever and the function gets plenty
-// of testing with the numerous magefiles I have across projects.
-// func TestRunPCHooks(t *testing.T) {
-// 	if err := RunPCHooks(); err != nil {
-// 		t.Fatal(err)
-// 	}
-// }

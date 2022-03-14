@@ -1,9 +1,10 @@
 package utils
 
 import (
-	"log"
+	"fmt"
 	"os"
 
+	"github.com/fatih/color"
 	"github.com/go-git/go-git/v5"
 )
 
@@ -16,7 +17,7 @@ func CloneRepo(src string, dst string) bool {
 	})
 
 	if err != nil {
-		log.Printf("Failed to clone %s to %s: %v", src, dst, err)
+		fmt.Print(color.RedString("failed to clone %s to %s: %v", src, dst, err))
 		return false
 	}
 
