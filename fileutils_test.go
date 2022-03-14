@@ -17,7 +17,7 @@ func getTestFile(t *testing.T) string {
 	case "windows":
 		testFile = filepath.FromSlash("C:/WINDOWS/system32/win.ini")
 	default:
-		t.Fatal("Unsupported OS detected")
+		t.Fatal("unsupported OS detected")
 	}
 	return testFile
 }
@@ -28,13 +28,13 @@ func TestCreateEmptyFile(t *testing.T) {
 	exists := FileExists(newFile)
 
 	if !exists {
-		t.Fatalf("Unable to locate %s, FileExists() failed.", newFile)
+		t.Fatalf("unable to locate %s, FileExists() failed", newFile)
 	}
 
 	if created && exists {
 		os.Remove(newFile)
 	} else {
-		t.Fatalf("Unable to create %s, CreateEmptyFile() failed.", newFile)
+		t.Fatalf("unable to create %s, CreateEmptyFile() failed", newFile)
 	}
 }
 
@@ -43,7 +43,7 @@ func TestFileExists(t *testing.T) {
 	exists := FileExists(testFile)
 
 	if !exists {
-		t.Fatalf("Unable to locate %s, FileExists() failed.", testFile)
+		t.Fatalf("unable to locate %s, FileExists() failed", testFile)
 	}
 }
 
@@ -52,28 +52,28 @@ func TestFileToSlice(t *testing.T) {
 	exists := FileExists(testFile)
 
 	if !exists {
-		t.Fatalf("Unable to locate %s, FileExists() failed.\n", testFile)
+		t.Fatalf("unable to locate %s - FileExists() failed", testFile)
 	}
 
 	_, err := FileToSlice(testFile)
 	if err != nil {
-		t.Fatalf("Unable to convert %s to a slice due to: %v; FileToSlice() failed.\n", testFile, err.Error())
+		t.Fatalf("unable to convert %s to a slice - FileToSlice() failed: %v", testFile, err)
 	}
 }
 
 func TestGetHomeDir(t *testing.T) {
 	_, err := GetHomeDir()
 	if err != nil {
-		t.Fatal("Unable to get the user's home directory due to: ", err.Error())
+		t.Fatalf("unable to get the user's home directory - GetHomeDir() failed: %v", err)
 	}
 }
 
 func TestIsDirEmpty(t *testing.T) {
 	dirEmpty, err := IsDirEmpty("/")
 	if err != nil {
-		t.Fatal("Unable to get the tmp directory due to: ", err.Error())
+		t.Fatalf("failed to determine if / is empty - IsDirEmpty() failed: %v", err)
 	}
 	if dirEmpty != false {
-		t.Fatal("The / directory has reported back as being empty, which can not be true.")
+		t.Fatal("the / directory has reported back as being empty, which can not be true - IsDirEmpty()")
 	}
 }

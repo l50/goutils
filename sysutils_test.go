@@ -20,30 +20,25 @@ func TestCp(t *testing.T) {
 			}
 		}
 	} else {
-		t.Fatal("File creation failed, check CreateEmptyFile() in fileutils.go for issues")
+		t.Fatal("file creation failed, check CreateEmptyFile() in fileutils.go for issues - TestCp() failed")
 	}
 }
 
 func TestGwd(t *testing.T) {
 	out := Gwd()
 	if !strings.Contains(out, "goutils") {
-		t.Fatal("Unable to get the current working directory")
+		t.Fatal("unable to get the current working directory - TestGwd() failed")
 	}
 }
 
 func TestRunCommand(t *testing.T) {
 	switch runtime.GOOS {
-	case "linux":
+	case "linux", "darwin":
 		out, err := RunCommand("uname", "-a")
-		if !strings.Contains(out, "Linux") {
-			t.Fatalf("Unable to run test for RunCommand due to: %v", err)
-		}
-	case "darwin":
-		out, err := RunCommand("uname", "-a")
-		if !strings.Contains(out, "Darwin") {
-			t.Fatalf("Unable to run test for RunCommand due to: %v", err)
+		if !strings.Contains(out, "Linux") || !strings.Contains(out, "Darwin") {
+			t.Fatalf("unable to run command - RunCommand() failed: %v", err)
 		}
 	default:
-		t.Fatal("Unsupported OS detected")
+		t.Fatal("unsupported OS detected")
 	}
 }

@@ -14,7 +14,9 @@ func CreateEmptyFile(name string) bool {
 	if err != nil {
 		return false
 	}
+
 	file.Close()
+
 	return true
 }
 
@@ -24,6 +26,7 @@ func FileExists(fileLoc string) bool {
 	if _, err := os.Stat(fileLoc); !os.IsNotExist(err) {
 		return true
 	}
+
 	return false
 }
 
@@ -34,6 +37,7 @@ func FileToSlice(fileName string) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return strings.Split(string(b), "\n"), nil
 }
 
@@ -44,6 +48,7 @@ func GetHomeDir() (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	return out, nil
 }
 
@@ -54,6 +59,7 @@ func IsDirEmpty(name string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
+
 	defer f.Close()
 
 	// read in ONLY one file

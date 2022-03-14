@@ -9,7 +9,7 @@ import (
 func TestCloneRepo(t *testing.T) {
 	targetDir := "/tmp"
 	repo := "https://github.com/l50/helloworld.git"
-	cloneLoc := filepath.Clean(filepath.Join(targetDir, "helloworld"))
+	cloneLoc := filepath.Join(targetDir, "helloworld")
 
 	if FileExists(cloneLoc) {
 		os.RemoveAll(cloneLoc)
@@ -17,7 +17,7 @@ func TestCloneRepo(t *testing.T) {
 
 	cloned := CloneRepo(repo, cloneLoc)
 	if !cloned {
-		t.Fatal("Failed to clone ", repo)
+		t.Fatalf("failed to clone %s", repo)
 	}
 
 	defer os.RemoveAll(cloneLoc)

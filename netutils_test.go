@@ -7,12 +7,9 @@ import (
 func TestPublicIP(t *testing.T) {
 	protocols := []uint{4, 6}
 	for _, protocol := range protocols {
-		ip, err := PublicIP(protocol)
+		_, err := PublicIP(protocol)
 		if err != nil {
-			t.Fatalf("Unable to return public IPv%v address: %v, TestPublicIP() failed.", protocol, err)
-		} else {
-			t.Logf("IPv%v address retrieved successfully: %s\n", protocol, ip)
-			return
+			t.Fatalf("unable to return public IPv%v address - TestPublicIP() failed: %v", protocol, err)
 		}
 	}
 }

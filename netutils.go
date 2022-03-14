@@ -1,6 +1,9 @@
 package utils
 
 import (
+	"fmt"
+
+	"github.com/fatih/color"
 	externalip "github.com/glendc/go-external-ip"
 )
 
@@ -12,15 +15,15 @@ func PublicIP(protocol uint) (string, error) {
 	// Create the default consensus with the default config
 	// and no logger.
 	consensus := externalip.DefaultConsensus(nil, nil)
-	err := consensus.UseIPProtocol(protocol)
-	if err != nil {
-		return "", err
+
+	if err := consensus.UseIPProtocol(protocol); err != nil {
+		return "", fmt.Errorf(color.RedString("failed to get public IP address: %v", err))
 	}
 
 	// Retrieve the external IP address.
 	ip, err := consensus.ExternalIP()
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf(color.RedString("failed to get public IP address: %v", err))
 	}
 
 	// Return the IP address in string format.
