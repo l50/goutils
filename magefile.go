@@ -1,4 +1,3 @@
-//go:build mage
 // +build mage
 
 package main
@@ -21,7 +20,7 @@ func installDeps() error {
 	fmt.Println(color.YellowString("Installing dependencies."))
 
 	if err := utils.Tidy(); err != nil {
-		return err
+		return fmt.Errorf(color.RedString("failed to install dependencies: %w", err))
 	}
 
 	return nil
@@ -93,25 +92,6 @@ func appendToFile(file string, text string) error {
 	defer f.Close()
 	if _, err := f.WriteString(text + "\n"); err != nil {
 		return err
-	}
-
-	return nil
-}
-
-// LocalGoMod Configures go.mod for local development
-func LocalGoMod() error {
-	fmt.Println(color.YellowString("Updating go.mod to work for local development."))
-	localChanges := []string{
-		"replace github.com/l50/goutils => ./utils",
-	}
-
-	targetFile := "go.mod"
-
-	for _, change := range localChanges {
-		err := appendToFile(targetFile, change)
-		if err != nil {
-			return fmt.Errorf(color.RedString("failed to append %s to go.mod: %v", change, err))
-		}
 	}
 
 	return nil
