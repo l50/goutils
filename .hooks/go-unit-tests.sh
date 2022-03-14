@@ -1,5 +1,5 @@
 #!/bin/bash
-go test -v -race ./...
+go test -v ./...
 
 returncode=$?
 if [ $returncode -ne 0 ]; then

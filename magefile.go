@@ -26,7 +26,7 @@ func installDeps() error {
 }
 
 func installPreCommit() error {
-	mg.Deps(InstallDeps)
+	mg.Deps(installDeps)
 
 	fmt.Println(color.YellowString("Installing pre-commit hooks."))
 	err := sh.Run("pre-commit", "install")
