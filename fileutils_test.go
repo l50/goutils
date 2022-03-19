@@ -22,6 +22,34 @@ func getTestFile(t *testing.T) string {
 	return testFile
 }
 
+func TestAppendToFile(t *testing.T) {
+	testFile := "test.txt"
+	created := CreateEmptyFile(testFile)
+	exists := FileExists(testFile)
+	change := "I am a change!!"
+
+	if !exists {
+		t.Fatalf("unable to locate %s - FileExists() failed", testFile)
+	}
+
+	err := AppendToFile(testFile, change)
+	if err != nil {
+		t.Fatalf("failed to append %s to %s - AppendToFile() failed: %v",
+			change, testFile, err)
+	}
+
+	stringFoundInFile, err := StringInFile(testFile, change)
+	if err != nil || !stringFoundInFile {
+		t.Fatalf("failed to find %s in %s - StringInFile() failed: %v", change, testFile, err)
+	}
+
+	if created && exists {
+		os.Remove(testFile)
+	} else {
+		t.Fatalf("unable to create %s - CreateEmptyFile() failed", testFile)
+	}
+}
+
 func TestCreateEmptyFile(t *testing.T) {
 	newFile := "test.txt"
 	created := CreateEmptyFile(newFile)
@@ -58,5 +86,14 @@ func TestFileToSlice(t *testing.T) {
 	_, err := FileToSlice(testFile)
 	if err != nil {
 		t.Fatalf("unable to convert %s to a slice - FileToSlice() failed: %v", testFile, err)
+	}
+}
+
+func TestStringInFile(t *testing.T) {
+	testFile := getTestFile(t)
+	stringToFind := "root"
+	stringFoundInFile, err := StringInFile(testFile, stringToFind)
+	if err != nil || !stringFoundInFile {
+		t.Fatalf("failed to find %s in %s - StringInFile() failed: %v", stringToFind, testFile, err)
 	}
 }

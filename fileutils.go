@@ -1,13 +1,28 @@
 package utils
 
 import (
+	"bufio"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"strings"
-
-	"github.com/fatih/color"
 )
+
+// AppendToFile appends an input text string to
+// the end of the input file.
+func AppendToFile(file string, text string) error {
+	f, err := os.OpenFile(file,
+		os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	if _, err := f.WriteString(text + "\n"); err != nil {
+		return err
+	}
+
+	return nil
+}
 
 // CreateEmptyFile creates an file based on the name input.
 // It returns true if the file was created, otherwise it returns false.
@@ -37,8 +52,35 @@ func FileExists(fileLoc string) bool {
 func FileToSlice(fileName string) ([]string, error) {
 	b, err := ioutil.ReadFile(fileName)
 	if err != nil {
-		return nil, fmt.Errorf(color.RedString("failed to read %s: %v", err))
+		return nil, fmt.Errorf("failed to read %s: %v", fileName, err)
 	}
 
 	return strings.Split(string(b), "\n"), nil
+}
+
+// StringInFile searches for input searchStr in
+// input the input filepath.
+func StringInFile(path string, searchStr string) (bool, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return false, err
+	}
+	defer f.Close()
+
+	scanner := bufio.NewScanner(f)
+
+	line := 1
+	for scanner.Scan() {
+		if strings.Contains(scanner.Text(), searchStr) {
+			return true, nil
+		}
+
+		line++
+	}
+
+	if err := scanner.Err(); err != nil {
+		return false, err
+	}
+
+	return false, err
 }
