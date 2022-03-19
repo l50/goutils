@@ -35,6 +35,17 @@ func Cp(src string, dst string) bool {
 	return true
 }
 
+// GetHomeDir returns the path to current user's home directory
+func GetHomeDir() (string, error) {
+	out, err := os.UserHomeDir()
+
+	if err != nil {
+		return "", fmt.Errorf(color.RedString("failed to get user's home directory: %v", err))
+	}
+
+	return out, nil
+}
+
 // Gwd will return the current working directory
 func Gwd() string {
 	dir, err := os.Getwd()
@@ -44,6 +55,17 @@ func Gwd() string {
 	}
 
 	return dir
+
+}
+
+// IsDirEmpty checks if an input directory (name) is empty
+func IsDirEmpty(name string) (bool, error) {
+	entries, err := ioutil.ReadDir(name)
+	if err != nil {
+		return false, fmt.Errorf(color.RedString("failed to determine if %s is empty: %v", name, err))
+	}
+
+	return len(entries) == 0, nil
 
 }
 

@@ -24,10 +24,27 @@ func TestCp(t *testing.T) {
 	}
 }
 
+func TestGetHomeDir(t *testing.T) {
+	_, err := GetHomeDir()
+	if err != nil {
+		t.Fatalf("unable to get the user's home directory - GetHomeDir() failed: %v", err)
+	}
+}
+
 func TestGwd(t *testing.T) {
 	out := Gwd()
 	if !strings.Contains(out, "goutils") {
 		t.Fatal("unable to get the current working directory - TestGwd() failed")
+	}
+}
+
+func TestIsDirEmpty(t *testing.T) {
+	dirEmpty, err := IsDirEmpty("/")
+	if err != nil {
+		t.Fatalf("failed to determine if / is empty - IsDirEmpty() failed: %v", err)
+	}
+	if dirEmpty != false {
+		t.Fatal("the / directory has reported back as being empty, which can not be true - IsDirEmpty()")
 	}
 }
 

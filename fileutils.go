@@ -42,25 +42,3 @@ func FileToSlice(fileName string) ([]string, error) {
 
 	return strings.Split(string(b), "\n"), nil
 }
-
-// GetHomeDir returns the path to current user's home directory
-func GetHomeDir() (string, error) {
-	out, err := os.UserHomeDir()
-
-	if err != nil {
-		return "", fmt.Errorf(color.RedString("failed to get user's home directory: %v", err))
-	}
-
-	return out, nil
-}
-
-// IsDirEmpty checks if an input directory (name) is empty
-func IsDirEmpty(name string) (bool, error) {
-	entries, err := ioutil.ReadDir(name)
-	if err != nil {
-		return false, fmt.Errorf(color.RedString("failed to determine if %s is empty: %v", name, err))
-	}
-
-	return len(entries) == 0, nil
-
-}
