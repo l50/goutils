@@ -37,6 +37,15 @@ func CreateEmptyFile(name string) bool {
 	return true
 }
 
+// DeleteFile deletes the input file
+func DeleteFile(file string) error {
+	err := os.Remove(file)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // FileExists will return true if a file specified with fileLoc
 // exists. If the file does not exist, it returns false.
 func FileExists(fileLoc string) bool {

@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"os"
 	"path/filepath"
 	"runtime"
 	"testing"
@@ -44,7 +43,10 @@ func TestAppendToFile(t *testing.T) {
 	}
 
 	if created && exists {
-		os.Remove(testFile)
+		err := DeleteFile(testFile)
+		if err != nil {
+			t.Fatalf("unable to delete %s, DeleteFile() failed", testFile)
+		}
 	} else {
 		t.Fatalf("unable to create %s - CreateEmptyFile() failed", testFile)
 	}
@@ -60,9 +62,29 @@ func TestCreateEmptyFile(t *testing.T) {
 	}
 
 	if created && exists {
-		os.Remove(newFile)
+		err := DeleteFile(newFile)
+		if err != nil {
+			t.Fatalf("unable to delete %s, DeleteFile() failed", newFile)
+		}
 	} else {
 		t.Fatalf("unable to create %s, CreateEmptyFile() failed", newFile)
+	}
+}
+
+func TestDeleteFile(t *testing.T) {
+	newFile := "test.txt"
+	created := CreateEmptyFile(newFile)
+	exists := FileExists(newFile)
+
+	if !exists {
+		t.Fatalf("unable to locate %s, FileExists() failed", newFile)
+	}
+
+	if created && exists {
+		err := DeleteFile(newFile)
+		if err != nil {
+			t.Fatalf("unable to delete %s, DeleteFile() failed", newFile)
+		}
 	}
 }
 
