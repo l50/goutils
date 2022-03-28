@@ -2,7 +2,6 @@ package utils
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 
@@ -21,13 +20,13 @@ func CheckRoot() error {
 
 // Cp is used to copy a file from a src to a destination
 func Cp(src string, dst string) bool {
-	input, err := ioutil.ReadFile(src)
+	input, err := os.ReadFile(src)
 	if err != nil {
 		fmt.Print(color.RedString("failed to copy %s to %s: %v", src, dst, err))
 		return false
 	}
 
-	if err := ioutil.WriteFile(dst, input, 0644); err != nil {
+	if err := os.WriteFile(dst, input, 0644); err != nil {
 		fmt.Print(color.RedString("failed to copy %s to %s: %v", src, dst, err))
 		return false
 	}
@@ -60,7 +59,7 @@ func Gwd() string {
 
 // IsDirEmpty checks if an input directory (name) is empty
 func IsDirEmpty(name string) (bool, error) {
-	entries, err := ioutil.ReadDir(name)
+	entries, err := os.ReadDir(name)
 	if err != nil {
 		return false, fmt.Errorf(color.RedString("failed to determine if %s is empty: %v", name, err))
 	}

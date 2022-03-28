@@ -16,7 +16,7 @@ repos:
         entry: yamllint --strict -c .hooks/linters/.yaml-lint.yaml
 
   - repo: https://github.com/pre-commit/mirrors-prettier
-    rev: v2.6.0
+    rev: v2.6.1
     hooks:
       - id: prettier
         files: \.(json|md|yaml|yml)$

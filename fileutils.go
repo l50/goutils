@@ -3,7 +3,6 @@ package utils
 import (
 	"bufio"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strings"
 )
@@ -59,7 +58,7 @@ func FileExists(fileLoc string) bool {
 // FileToSlice reads an input file into a slice
 // and returns it.
 func FileToSlice(fileName string) ([]string, error) {
-	b, err := ioutil.ReadFile(fileName)
+	b, err := os.ReadFile(fileName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read %s: %v", fileName, err)
 	}
