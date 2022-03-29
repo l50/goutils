@@ -14,7 +14,7 @@ This repo is comprised of utilities that I use across various go projects.
 - [Install golang](https://go.dev/):
 
   ```bash
-  gvm install go1.16.4
+  gvm install go1.18
   ```
 
 - [Install pre-commit](https://pre-commit.com/):
@@ -29,20 +29,11 @@ This repo is comprised of utilities that I use across various go projects.
   go install github.com/magefile/mage@latest
   ```
 
-- Set up `go.mod` for development:
-
-  ```bash
-  REPO=github.com/l50/goutils
-  FORK="${PWD}"
-
-  echo -e "\nreplace ${REPO} => ${FORK}" >> go.mod
-  ```
-
 - [Optional - install gvm](https://github.com/moovweb/gvm):
 
   ```bash
   bash < <(curl -s -S -L https://raw.githubusercontent.com/moovweb/gvm/master/binscripts/gvm-installer)
-  source $GVM_BIN
+  source "${GVM_BIN}"
   ```
 
 ---
@@ -54,28 +45,40 @@ This repo is comprised of utilities that I use across various go projects.
 2. (Optional) If you installed gvm, create golang pkgset specifically for this project:
 
    ```bash
-   gvm pkgset create ws
-   gvm pkgset use ws
+   mkdir "${HOME}/go"
+   GVM_BIN="${HOME}/.gvm/scripts/gvm"
+   export GOPATH="${HOME}/go"
+   VERSION='1.18'
+   PROJECT=goutils
+
+   bash < <(curl -s -S -L https://raw.githubusercontent.com/moovweb/gvm/master/binscripts/gvm-installer)
+   source $GVM_BIN
+   gvm install "go${VERSION}"
+   gvm use "go${VERSION}"
+   gvm pkgset create "${PROJECT}"
+   gvm pkgset use "${PROJECT}"
    ```
 
-3. Install pre-commit dependencies:
+3. Generate the `magefile` binary:
 
    ```bash
-   go install golang.org/x/lint/golint@latest
-   go install golang.org/x/tools/cmd/goimports@latest
-   go install github.com/fzipp/gocyclo/cmd/gocyclo@latest
-   go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
-   go install github.com/go-critic/go-critic/cmd/gocritic@latest
+   mage -d .mage/ -compile ../magefile
    ```
 
-4. Install pre-commit hooks locally
+4. Install pre-commit hooks and dependencies:
 
    ```bash
-   mage installPreCommit
+   ./magefile installPreCommit
    ```
 
 5. Update and run pre-commit hooks locally:
 
    ```bash
-    mage runPreCommit
+   ./magefile runPreCommit
+   ```
+
+6. Set up `go.mod` for development:
+
+   ```bash
+   ./magefile localGoMod
    ```

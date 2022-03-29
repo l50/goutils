@@ -1,5 +1,4 @@
 //go:build mage
-// +build mage
 
 package main
 
@@ -16,12 +15,31 @@ import (
 	"github.com/magefile/mage/sh"
 )
 
+func init() {
+	os.Setenv("GO111MODULE", "on")
+}
+
 // Helper function to install dependencies.
 func installDeps() error {
 	fmt.Println(color.YellowString("Installing dependencies."))
 
 	if err := utils.Tidy(); err != nil {
 		return fmt.Errorf(color.RedString("failed to install dependencies: %w", err))
+	}
+
+	preCommitDeps := []string{
+		"golang.org/x/lint/golint",
+		"golang.org/x/tools/cmd/goimports",
+		"github.com/fzipp/gocyclo/cmd/gocyclo",
+		"github.com/golangci/golangci-lint/cmd/golangci-lint",
+		"github.com/go-critic/go-critic/cmd/gocritic",
+	}
+
+	for _, dep := range preCommitDeps {
+		err := sh.RunV("go", "install", dep+"@latest")
+		if err != nil {
+			return fmt.Errorf(color.RedString("failed to install dependencies: %v", err))
+		}
 	}
 
 	return nil
@@ -34,6 +52,25 @@ func InstallPreCommit() error {
 	fmt.Println(color.YellowString("Installing pre-commit hooks."))
 	if err := utils.InstallPCHooks(); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+// LocalGoMod Configures go.mod for local development
+func LocalGoMod() error {
+	fmt.Println(color.YellowString("Updating go.mod to work for local development."))
+	localChanges := []string{
+		"replace github.com/l50/goutils => ../utils",
+	}
+
+	targetFile := "go.mod"
+
+	for _, change := range localChanges {
+		err := utils.AppendToFile(targetFile, change)
+		if err != nil {
+			return fmt.Errorf(color.RedString("failed to append %s to go.mod: %v", change, err))
+		}
 	}
 
 	return nil
@@ -79,20 +116,6 @@ func UpdateMirror(tag string) error {
 	err := sh.RunV("curl", "--silent", fmt.Sprintf("https://proxy.golang.org/github.com/l50/goutils/@v/%s.info", tag))
 	if err != nil {
 		return fmt.Errorf(color.RedString("failed to update pkg.go.dev: %w", err))
-	}
-
-	return nil
-}
-
-func appendToFile(file string, text string) error {
-	f, err := os.OpenFile(file,
-		os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-	if _, err := f.WriteString(text + "\n"); err != nil {
-		return err
 	}
 
 	return nil

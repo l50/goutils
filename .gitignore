@@ -1,2 +1,4 @@
 # File created for debugging with vscode
 mage_output_file.go
+# mage binary
+magefile
