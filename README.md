@@ -2,7 +2,6 @@
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/l50/goutils)](https://goreportcard.com/badge/github.com/l50/goutils)
 [![License](http://img.shields.io/:license-mit-blue.svg)](https://github.com/l50/goutils/blob/master/LICENSE)
-[![Lint test for code](https://github.com/l50/goutils/actions/workflows/lint.yaml/badge.svg)](https://github.com/l50/goutils/actions/workflows/lint.yaml)
 [![🚨 CodeQL Analysis](https://github.com/l50/goutils/actions/workflows/codeql-analysis.yaml/badge.svg)](https://github.com/l50/goutils/actions/workflows/codeql-analysis.yaml)
 [![🚨 Semgrep Analysis](https://github.com/l50/goutils/actions/workflows/semgrep.yaml/badge.svg)](https://github.com/l50/goutils/actions/workflows/semgrep.yaml)
 [![Run Pre-Commit hooks](https://github.com/l50/goutils/actions/workflows/pre-commit.yaml/badge.svg)](https://github.com/l50/goutils/actions/workflows/pre-commit.yaml)
