@@ -26,17 +26,14 @@ jobs:
       - name: Install mage
         run: go install github.com/magefile/mage@latest
 
-      - name: Install pre-commit
-        run: brew install pre-commit
-
       - name: Compile magefile
         run: mage -d .mage/ -compile ../magefile
 
       - name: Install pre-commit hooks
-        run: ./magefile installPreCommitHooks
+        run: ./magefile installDeps
 
       - name: Run pre-commit
-        uses: ./magefile runPreCommit
+        uses: pre-commit/action@v2.0.3
 
       - name: Generate the coverage output
         run: |

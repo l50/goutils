@@ -19,8 +19,8 @@ func init() {
 	os.Setenv("GO111MODULE", "on")
 }
 
-// Helper function to install dependencies.
-func installDeps() error {
+// InstallDeps Installs go dependencies
+func InstallDeps() error {
 	fmt.Println(color.YellowString("Installing dependencies."))
 
 	if err := utils.Tidy(); err != nil {
@@ -47,7 +47,7 @@ func installDeps() error {
 
 // InstallPreCommitHooks Installs pre-commit hooks locally
 func InstallPreCommitHooks() error {
-	mg.Deps(installDeps)
+	mg.Deps(InstallDeps)
 
 	fmt.Println(color.YellowString("Installing pre-commit hooks."))
 	if err := utils.InstallPCHooks(); err != nil {
@@ -78,7 +78,7 @@ func LocalGoMod() error {
 
 // RunPreCommit runs all pre-commit hooks locally
 func RunPreCommit() error {
-	mg.Deps(installDeps)
+	mg.Deps(InstallDeps)
 
 	fmt.Println(color.YellowString("Updating pre-commit hooks."))
 	if err := utils.UpdatePCHooks(); err != nil {
@@ -100,7 +100,7 @@ func RunPreCommit() error {
 
 // RunTests runs all of the unit tests
 func RunTests() error {
-	mg.Deps(installDeps)
+	mg.Deps(InstallDeps)
 
 	fmt.Println(color.YellowString("Running unit tests."))
 	if err := sh.RunV(filepath.Join(".hooks", "go-unit-tests.sh")); err != nil {
