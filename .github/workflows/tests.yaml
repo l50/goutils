@@ -32,8 +32,8 @@ jobs:
       - name: Compile magefile
         run: mage -d .mage/ -compile ../magefile
 
-      - name: Install pre-commit dependencies
-        run: ./magefile installPreCommit
+      - name: Install pre-commit hooks
+        run: ./magefile installPreCommitHooks
 
       - name: Run pre-commit
         uses: ./magefile runPreCommit

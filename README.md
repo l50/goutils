@@ -67,7 +67,7 @@ This repo is comprised of utilities that I use across various go projects.
 4. Install pre-commit hooks and dependencies:
 
    ```bash
-   ./magefile installPreCommit
+   ./magefile installPreCommitHooks
    ```
 
 5. Update and run pre-commit hooks locally:

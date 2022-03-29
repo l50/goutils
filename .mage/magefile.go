@@ -45,8 +45,8 @@ func installDeps() error {
 	return nil
 }
 
-// InstallPreCommit installs pre-commit hooks locally
-func InstallPreCommit() error {
+// InstallPreCommitHooks Installs pre-commit hooks locally
+func InstallPreCommitHooks() error {
 	mg.Deps(installDeps)
 
 	fmt.Println(color.YellowString("Installing pre-commit hooks."))
