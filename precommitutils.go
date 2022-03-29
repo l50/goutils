@@ -51,7 +51,7 @@ func InstallGoPCDeps() error {
 	}
 
 	if err := InstallGoDeps(deps); err != nil {
-		return fmt.Errorf(color.RedString("failed to install pre-commit golang dependencies: %w", err))
+		return fmt.Errorf(color.RedString("failed to install pre-commit golang dependencies: %v", err))
 	}
 
 	return nil
@@ -64,7 +64,7 @@ func InstallPCHooks() error {
 	}
 
 	if err := runPCCmd("install"); err != nil {
-		return fmt.Errorf(color.RedString("failed to install pre-commit hooks: %w", err))
+		return fmt.Errorf(color.RedString("failed to install pre-commit hooks: %v", err))
 	}
 
 	return nil
@@ -77,7 +77,7 @@ func UpdatePCHooks() error {
 	}
 
 	if err := runPCCmd("autoupdate"); err != nil {
-		return fmt.Errorf(color.RedString("failed to update the pre-commit hooks: %w", err))
+		return fmt.Errorf(color.RedString("failed to update the pre-commit hooks: %v", err))
 	}
 
 	return nil
@@ -90,7 +90,7 @@ func ClearPCCache() error {
 	}
 
 	if err := runPCCmd("clean"); err != nil {
-		return fmt.Errorf(color.RedString("failed to clear the pre-commit cache: %w", err))
+		return fmt.Errorf(color.RedString("failed to clear the pre-commit cache: %v", err))
 	}
 
 	return nil
@@ -103,7 +103,7 @@ func RunPCHooks() error {
 	}
 
 	if err := runPCCmd("run", "--all-files"); err != nil {
-		return fmt.Errorf(color.RedString("failed to run pre-commit hooks: %w", err))
+		return fmt.Errorf(color.RedString("failed to run pre-commit hooks: %v", err))
 	}
 
 	return nil
