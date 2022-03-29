@@ -1,22 +1,39 @@
 ---
-name: Code Coverage
+name: Tests
 on:
-  push:
   pull_request:
+  push:
+    branches: [main]
 
 jobs:
-  coverage:
-    name: Determine the amount of coverage for the code base.
+  tests:
+    name: Run tests - includes pre-commit hooks and determining code coverage %
     runs-on: ubuntu-latest
-
     steps:
       - name: Set up git repository
         uses: actions/checkout@v2
+
+      - name: Install python for pre-commit
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3"
 
       - name: Set up Go
         uses: actions/setup-go@v2
         with:
           go-version: 1.18
+
+      - name: Install mage
+        run: go install github.com/magefile/mage@latest
+
+      - name: Compile magefile
+        run: mage -d .mage/ -compile ../magefile
+
+      - name: Install pre-commit dependencies
+        run: ./magefile installPreCommit
+
+      - name: Run pre-commit
+        uses: ./magefile runPreCommit
 
       - name: Generate the coverage output
         run: |
