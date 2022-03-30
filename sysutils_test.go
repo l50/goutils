@@ -64,7 +64,7 @@ func TestRunCommand(t *testing.T) {
 func TestRunCommandWithTimeout(t *testing.T) {
 	switch runtime.GOOS {
 	case "linux", "darwin":
-		seconds := 4
+		seconds := 8
 		// Test #1
 		cmd := []string{"ping", "baidu.com"}
 		_, _, err := RunCommandWithTimeout(seconds, cmd[0], cmd[1:]...)
@@ -80,6 +80,7 @@ func TestRunCommandWithTimeout(t *testing.T) {
 			t.Fatalf("%v expected to not time out - RunCommandWithTimeout() Test #2 has failed: %v",
 				strings.Trim(fmt.Sprint(cmd), "[]"), err)
 		}
+
 	default:
 		t.Fatal("unsupported OS detected")
 	}

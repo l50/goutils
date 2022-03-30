@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strconv"
 	"time"
 
 	"github.com/fatih/color"
@@ -84,21 +85,29 @@ func RunCommand(cmd string, args ...string) (string, error) {
 }
 
 // RunCommandWithTimeout runs a command for a specified number of seconds before timing out.
-func RunCommandWithTimeout(timeout int, command string, args ...string) (stdout string, isKilled bool, stderr error) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
-	defer cancel()
+// It will kill any subprocesses spawned by the parent process.
+// Thanks to Ron Minnich for his help in figuring this out:
+// https://github.com/u-root/u-root/pull/2372
+func RunCommandWithTimeout(seconds int, command string, args ...string) (stdout string, isKilled bool, err error) {
+	var v = func(string, ...interface{}) {}
 
-	cmd := exec.CommandContext(ctx, command, args...)
-	out, err := cmd.Output()
+	timeout := strconv.Itoa(seconds) + "s"
 
-	if ctx.Err() == context.DeadlineExceeded {
-		return string(out), true, fmt.Errorf("command %s timed out - args: %s, stdout: %s, err: %v",
-			command, args, cmd.Stdout, cmd.Stderr)
+	v("Run %q", command)
+	ctx := context.Background()
+
+	d, err := time.ParseDuration(timeout)
+	if err != nil {
+		return "", false, fmt.Errorf("failed to parse timeout: %v", err)
 	}
 
+	ctx, cancel := context.WithDeadline(ctx, time.Now().Add(d))
+
+	defer cancel()
+	out, err := exec.CommandContext(ctx, command, args...).Output()
 	if err != nil {
-		return "", false, fmt.Errorf("failed to run %s: args: %s, stdout: %s, err: %v",
-			command, args, cmd.Stdout, cmd.Stderr)
+		return string(out), true, fmt.Errorf("failed to run %s timed out - args: %s",
+			command, args)
 	}
 
 	return string(out), false, nil
