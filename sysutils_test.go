@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"fmt"
 	"os"
 	"runtime"
 	"strings"
@@ -54,6 +55,30 @@ func TestRunCommand(t *testing.T) {
 		out, err := RunCommand("uname", "-a")
 		if !strings.Contains(out, "Linux") && !strings.Contains(out, "Darwin") {
 			t.Fatalf("unable to run command - RunCommand() failed: %v", err)
+		}
+	default:
+		t.Fatal("unsupported OS detected")
+	}
+}
+
+func TestRunCommandWithTimeout(t *testing.T) {
+	switch runtime.GOOS {
+	case "linux", "darwin":
+		seconds := 4
+		// Test #1
+		cmd := []string{"ping", "baidu.com"}
+		_, _, err := RunCommandWithTimeout(seconds, cmd[0], cmd[1:]...)
+		if err == nil {
+			t.Fatalf("%v expected to time out - RunCommandWithTimeout() Test #1 has failed: %v",
+				strings.Trim(fmt.Sprint(cmd), "[]"), err)
+		}
+
+		// Test #2
+		cmd = []string{"whoami"}
+		_, _, err = RunCommandWithTimeout(seconds, cmd[0], cmd[1:]...)
+		if err != nil {
+			t.Fatalf("%v expected to not time out - RunCommandWithTimeout() Test #2 has failed: %v",
+				strings.Trim(fmt.Sprint(cmd), "[]"), err)
 		}
 	default:
 		t.Fatal("unsupported OS detected")

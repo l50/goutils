@@ -1,9 +1,11 @@
 package utils
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"os/exec"
+	"time"
 
 	"github.com/fatih/color"
 )
@@ -79,4 +81,25 @@ func RunCommand(cmd string, args ...string) (string, error) {
 
 	return string(out), nil
 
+}
+
+// RunCommandWithTimeout runs a command for a specified number of seconds before timing out.
+func RunCommandWithTimeout(timeout int, command string, args ...string) (stdout string, isKilled bool, stderr error) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	defer cancel()
+
+	cmd := exec.CommandContext(ctx, command, args...)
+	out, err := cmd.Output()
+
+	if ctx.Err() == context.DeadlineExceeded {
+		return string(out), true, fmt.Errorf("command %s timed out - args: %s, stdout: %s, err: %v",
+			command, args, cmd.Stdout, cmd.Stderr)
+	}
+
+	if err != nil {
+		return "", false, fmt.Errorf("failed to run %s: args: %s, stdout: %s, err: %v",
+			command, args, cmd.Stdout, cmd.Stderr)
+	}
+
+	return string(out), false, nil
 }
