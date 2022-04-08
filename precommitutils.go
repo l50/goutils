@@ -26,11 +26,9 @@ func runPCCmd(args ...string) error {
 		return err
 	}
 
-	for _, arg := range args {
-		if err := sh.RunV("pre-commit", arg); err != nil {
-			return err
-		}
-
+	err := sh.RunV("pre-commit", args...)
+	if err != nil {
+		return err
 	}
 
 	return nil
