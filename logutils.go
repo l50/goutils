@@ -42,7 +42,7 @@ func CreateLogFile() (LogInfo, error) {
 		err = os.MkdirAll(logInfo.Dir, os.ModePerm)
 		if err != nil {
 			return logInfo, fmt.Errorf(color.RedString(
-				"failed to create %s:%v", logInfo.Dir, err))
+				"failed to create %s: %v", logInfo.Dir, err))
 		}
 	}
 
