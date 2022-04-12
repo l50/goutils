@@ -86,7 +86,7 @@ func RunPreCommit() error {
 
 	fmt.Println(color.YellowString("Running all pre-commit hooks locally."))
 	if err := sh.RunV("pre-commit", "run", "--all-files"); err != nil {
-		return fmt.Errorf(color.RedString("failed to run unit tests: %v", err))
+		return fmt.Errorf(color.RedString("failed to run pre-commit hooks: %v", err))
 	}
 
 	return nil
