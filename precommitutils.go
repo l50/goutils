@@ -8,6 +8,8 @@ import (
 	"github.com/magefile/mage/sh"
 )
 
+var pc = sh.RunCmd("pre-commit")
+
 // Make sure the project utilizes pre-commit,
 // otherwise these utilities are not very useful to run.
 func checkPCProject() error {
@@ -15,20 +17,6 @@ func checkPCProject() error {
 	pcFile := ".pre-commit-config.yaml"
 	if !FileExists(pcFile) {
 		return errors.New("pre-commit is not configure for the current project")
-	}
-
-	return nil
-}
-
-// Run pre-commit with input arguments.
-func runPCCmd(args ...string) error {
-	if err := checkPCProject(); err != nil {
-		return err
-	}
-
-	err := sh.RunV("pre-commit", args...)
-	if err != nil {
-		return err
 	}
 
 	return nil
@@ -61,7 +49,7 @@ func InstallPCHooks() error {
 		return err
 	}
 
-	if err := runPCCmd("install"); err != nil {
+	if err := pc("install"); err != nil {
 		return fmt.Errorf(color.RedString("failed to install pre-commit hooks: %v", err))
 	}
 
@@ -74,7 +62,7 @@ func UpdatePCHooks() error {
 		return err
 	}
 
-	if err := runPCCmd("autoupdate"); err != nil {
+	if err := pc("autoupdate"); err != nil {
 		return fmt.Errorf(color.RedString("failed to update the pre-commit hooks: %v", err))
 	}
 
@@ -87,22 +75,27 @@ func ClearPCCache() error {
 		return err
 	}
 
-	if err := runPCCmd("clean"); err != nil {
+	if err := pc("clean"); err != nil {
 		return fmt.Errorf(color.RedString("failed to clear the pre-commit cache: %v", err))
 	}
 
 	return nil
 }
 
-// RunPCHooks Runs all pre-commit hooks locally.
-func RunPCHooks() error {
-	if err := checkPCProject(); err != nil {
-		return err
-	}
+// Something here is simply not working properly - test with ./magefile runPreCommit
+// // RunPCHooks Runs all pre-commit hooks locally.
+// func RunPCHooks() error {
+// 	// if err := checkPCProject(); err != nil {
+// 	// 	return err
+// 	// }
 
-	if err := runPCCmd("run", "--all-files"); err != nil {
-		return fmt.Errorf(color.RedString("failed to run pre-commit hooks: %v", err))
-	}
+// 	// _, err := RunCommand("pre-commit", "run", "--all-files")
+// 	// if err != nil {
+// 	// 	return fmt.Errorf(color.RedString("failed to run pre-commit hooks: %v", err))
+// 	// }
+// 	if err := sh.RunV("pre-commit", "run", "--all-files"); err != nil {
+// 		return fmt.Errorf(color.RedString("failed to run pre-commit hooks: %v", err))
+// 	}
 
-	return nil
-}
+// 	return nil
+// }
