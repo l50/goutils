@@ -22,3 +22,15 @@ func TestStringToInt64(t *testing.T) {
 		t.Fatalf("error running StringToInt64(): %v", err)
 	}
 }
+
+func TestRandomString(t *testing.T) {
+	length := 10
+	randStr, err := RandomString(10)
+	if err != nil {
+		t.Fatalf("error creating random string of length %d: %v", length, err)
+	}
+
+	if len(randStr) != length {
+		t.Fatalf("length of the random string does not match the input length %d", length)
+	}
+}

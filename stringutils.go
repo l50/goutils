@@ -1,6 +1,8 @@
 package utils
 
 import (
+	"crypto/rand"
+	"fmt"
 	"strconv"
 	"strings"
 )
@@ -24,4 +26,17 @@ func StringToInt64(value string) (int64, error) {
 	}
 
 	return n, nil
+}
+
+// RandomString returns a random string
+// of the specified length.
+func RandomString(length int) (string, error) {
+	b := make([]byte, length)
+
+	_, err := rand.Read(b)
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("%x", b)[:length], nil
 }
