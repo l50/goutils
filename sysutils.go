@@ -21,6 +21,18 @@ func CheckRoot() error {
 	return nil
 }
 
+// Cd is used to change the current working directory
+// to the specified destination.
+func Cd(dst string) error {
+	err := os.Chdir(dst)
+	if err != nil {
+		fmt.Print(color.RedString("failed to change directory to %s: %v", dst, err))
+		return err
+	}
+
+	return nil
+}
+
 // Cp is used to copy a file from a src to a destination
 func Cp(src string, dst string) bool {
 	input, err := os.ReadFile(src)

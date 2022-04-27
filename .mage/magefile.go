@@ -33,6 +33,11 @@ func InstallDeps() error {
 			"failed to install pre-commit dependencies: %v", err))
 	}
 
+	if err := utils.InstallVSCodeModules(); err != nil {
+		return fmt.Errorf(color.RedString(
+			"failed to install vscode-go modules: %v", err))
+	}
+
 	return nil
 }
 

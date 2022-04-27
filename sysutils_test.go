@@ -8,6 +8,25 @@ import (
 	"testing"
 )
 
+func TestCd(t *testing.T) {
+	dst := ".mage"
+
+	src := Gwd()
+	if !strings.Contains(src, "goutils") {
+		t.Fatal("unable to get the current working directory - Gwd() failed")
+	}
+
+	err := Cd(dst)
+	if err != nil {
+		t.Fatalf("failed to change directory to %s: %v - Cd() failed", dst, err)
+	}
+
+	cwd := Gwd()
+	if !strings.Contains(cwd, dst) {
+		t.Fatalf("failed to change directory to %s - Cd() failed", dst)
+	}
+}
+
 func TestCp(t *testing.T) {
 	file := "test.txt"
 	copyLoc := "testing.txt"
@@ -21,21 +40,21 @@ func TestCp(t *testing.T) {
 			}
 		}
 	} else {
-		t.Fatal("file creation failed, check CreateEmptyFile() in fileutils.go for issues - TestCp() failed")
+		t.Fatalf("failed to copy %s to %s - Cp() failed", file, copyLoc)
 	}
 }
 
 func TestGetHomeDir(t *testing.T) {
 	_, err := GetHomeDir()
 	if err != nil {
-		t.Fatalf("unable to get the user's home directory - GetHomeDir() failed: %v", err)
+		t.Fatalf("failed to get the user's home directory - GetHomeDir() failed: %v", err)
 	}
 }
 
 func TestGwd(t *testing.T) {
 	out := Gwd()
 	if !strings.Contains(out, "goutils") {
-		t.Fatal("unable to get the current working directory - TestGwd() failed")
+		t.Fatal("unable to get the current working directory - Gwd() failed")
 	}
 }
 
