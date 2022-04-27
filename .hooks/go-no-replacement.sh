@@ -1,9 +1,14 @@
 #!/bin/bash
 
-REPO=$(cat .git/config | grep url | awk -F 'https://' '{print $2}' \
-    | rev | cut -c5- | rev)
+REPO=$(grep "url" .git/config)
 
-if grep "replace ${REPO}" $@ 2>&1 >/dev/null ; then
+if [[ "${REPO}" == *https* ]]; then
+    echo "${REPO}" | awk -F '://' '{print $2}' | awk -F '.git' '{print $1}'
+else
+    echo "${REPO}" | awk -F '@' '{print $2}' | tr : / | awk -F '.git' '{print $1}'
+fi
+
+if grep "replace ${REPO}" "$@" 2>&1; then
     echo "ERROR: Don't commit a replacement in go.mod!"
     exit 1
 fi
