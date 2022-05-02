@@ -16,7 +16,8 @@ func checkPCProject() error {
 
 	pcFile := ".pre-commit-config.yaml"
 	if !FileExists(pcFile) {
-		return errors.New("pre-commit is not configure for the current project")
+		return errors.New(color.RedString(
+			"pre-commit is not configured for the current project"))
 	}
 
 	return nil
@@ -37,7 +38,8 @@ func InstallGoPCDeps() error {
 	}
 
 	if err := InstallGoDeps(deps); err != nil {
-		return fmt.Errorf(color.RedString("failed to install pre-commit golang dependencies: %v", err))
+		return fmt.Errorf(color.RedString(
+			"failed to install pre-commit golang dependencies: %v", err))
 	}
 
 	return nil
@@ -50,7 +52,8 @@ func InstallPCHooks() error {
 	}
 
 	if err := pc("install"); err != nil {
-		return fmt.Errorf(color.RedString("failed to install pre-commit hooks: %v", err))
+		return fmt.Errorf(color.RedString(
+			"failed to install pre-commit hooks: %v", err))
 	}
 
 	return nil
