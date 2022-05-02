@@ -33,7 +33,6 @@ func InstallVSCodeModules() error {
 
 // Tidy runs go mod tidy.
 func Tidy() error {
-
 	if err := sh.Run("go", "mod", "tidy"); err != nil {
 		return fmt.Errorf(
 			color.RedString("failed to run go mod tidy: %v", err))
@@ -45,14 +44,23 @@ func Tidy() error {
 // UpdateMageDeps updates mage-specific dependencies
 // using the input path to the associated go.mod.
 func UpdateMageDeps(magedir string) error {
+	cwd := Gwd()
 	if err := Cd(magedir); err != nil {
 		return fmt.Errorf(
-			color.RedString("failed to cd to %s: %v", magedir, err))
+			color.RedString(
+				"failed to cd from %s to %s: %v", cwd, magedir, err))
 	}
 
 	if err := Tidy(); err != nil {
 		return fmt.Errorf(
-			color.RedString("failed to update mage dependencies in %s: %v", magedir, err))
+			color.RedString(
+				"failed to update mage dependencies in %s: %v", magedir, err))
+	}
+
+	if err := Cd(cwd); err != nil {
+		return fmt.Errorf(
+			color.RedString(
+				"failed to cd from %s to %s: %v", magedir, cwd, err))
 	}
 
 	return nil
