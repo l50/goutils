@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -34,6 +35,24 @@ func CreateEmptyFile(name string) bool {
 	file.Close()
 
 	return true
+}
+
+// CreateFile creates a file at the input filePath
+// with the specified fileContents.
+func CreateFile(fileContents []byte, filePath string) error {
+	err := os.MkdirAll(filepath.Dir(filePath), os.ModePerm)
+	if err != nil {
+		return fmt.Errorf("cannot create dir portion"+
+			"of filepath %s: %v", filePath, err)
+	}
+
+	err = os.WriteFile(filePath, fileContents, os.ModePerm)
+	if err != nil {
+		return fmt.Errorf("cannot write to file %s: %v",
+			filePath, err)
+	}
+
+	return nil
 }
 
 // DeleteFile deletes the input file

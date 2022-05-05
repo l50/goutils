@@ -71,6 +71,37 @@ func TestCreateEmptyFile(t *testing.T) {
 	}
 }
 
+func TestCreateFile(t *testing.T) {
+	newFile := "test.txt"
+	contents := "stuff"
+
+	err := CreateFile([]byte(contents), newFile)
+	if err != nil {
+		t.Fatalf("unable to create %s, CreateFile() failed: %v", newFile, err)
+	}
+
+	exists := FileExists(newFile)
+
+	if !exists {
+		t.Fatalf("unable to locate %s, FileExists() failed", newFile)
+	}
+
+	stringFoundInFile, err := StringInFile(newFile, contents)
+	if err != nil || !stringFoundInFile {
+		t.Fatalf("failed to find %s in %s - StringInFile() failed: %v",
+			contents, newFile, err)
+	}
+
+	if exists {
+		err := DeleteFile(newFile)
+		if err != nil {
+			t.Fatalf("unable to delete %s, DeleteFile() failed", newFile)
+		}
+	} else {
+		t.Fatalf("unable to create %s, CreateEmptyFile() failed", newFile)
+	}
+}
+
 func TestDeleteFile(t *testing.T) {
 	newFile := "test.txt"
 	created := CreateEmptyFile(newFile)
