@@ -40,6 +40,29 @@ func init() {
 	}
 }
 
+func createTestFile(filePath string, content []byte) error {
+	err := CreateFile(content, filePath)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func TestAddFile(t *testing.T) {
+	filePath := filepath.Join(Gwd(), "example-git-file")
+	content := []byte("hello world!")
+	if err := createTestFile(filePath, content); err != nil {
+		t.Fatalf("failed to create test file: %v", err)
+
+	}
+
+	if err := AddFile(filePath); err != nil {
+		t.Fatalf("failed to add %s: %v - AddFile() failed",
+			filePath, err)
+	}
+}
+
 func TestGetTags(t *testing.T) {
 	if _, err := GetTags(repo); err != nil {
 		t.Fatalf("failed to get tags: %v - GetTags() failed", err)

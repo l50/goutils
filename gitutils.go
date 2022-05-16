@@ -1,9 +1,10 @@
 package utils
 
 import (
-	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/fatih/color"
@@ -16,8 +17,7 @@ import (
 )
 
 var (
-	errMsg string
-	tags   []string
+	tags []string
 )
 
 // GitConfigUserInfo holds a username and
@@ -43,10 +43,50 @@ func GetSSHPubKey(keyName string, password string) (*ssh.PublicKeys, error) {
 	sshPath := os.Getenv("HOME") + "/.ssh/" + keyName
 	publicKey, err := ssh.NewPublicKeysFromFile("git", sshPath, password)
 	if err != nil {
-		return nil, err
+		return nil,
+			fmt.Errorf(color.RedString(
+				"failed to retrieve public SSH key %s: %v",
+				keyName, err))
 	}
 
 	return publicKey, nil
+}
+
+// AddFile adds the `file` at the input `filePath` to
+// the staging area for its associated repo.
+func AddFile(filePath string) error {
+	successString := "A  example-git-file"
+
+	repo, err := git.PlainOpen(filepath.Dir(filePath))
+	if err != nil {
+		return fmt.Errorf(color.RedString(
+			"failed to open %s repo: %v", repo, err))
+	}
+
+	w, err := repo.Worktree()
+	if err != nil {
+		return fmt.Errorf(color.RedString(
+			"failed to retrieve worktree: %v", err))
+	}
+
+	_, err = w.Add(filepath.Base(filePath))
+	if err != nil {
+		return fmt.Errorf(color.RedString(
+			"failed to run `git add` on %s: %v", filePath, err))
+	}
+
+	status, err := w.Status()
+	if err != nil {
+		return fmt.Errorf(color.RedString(
+			"failed to run `git status` on %s: %v", filePath, err))
+	}
+
+	if !strings.Contains(status.String(), successString) {
+		return fmt.Errorf(color.RedString(
+			"failed to add %s: %v", filePath, err))
+	}
+
+	return nil
 }
 
 // CloneRepo clones the repo specified with the input `url` to
@@ -76,13 +116,11 @@ func CloneRepo(url string, clonePath string, auth transport.AuthMethod) (
 	repo, err = git.PlainClone(clonePath, false, cloneOptions)
 	if err != nil {
 		if err == git.ErrRepositoryAlreadyExists {
-			errMsg = fmt.Sprint(color.RedString(
+			return nil, fmt.Errorf(color.RedString(
 				"%s was already cloned to %s", url, clonePath))
-			return nil, errors.New(errMsg)
 		}
-		errMsg = fmt.Sprint(color.RedString(
+		return nil, fmt.Errorf(color.RedString(
 			"failed to clone %s to %s: %v", url, clonePath, err))
-		return nil, errors.New(errMsg)
 	}
 
 	return repo, nil
@@ -92,9 +130,8 @@ func CloneRepo(url string, clonePath string, auth transport.AuthMethod) (
 func GetTags(repo *git.Repository) ([]string, error) {
 	tagObjects, err := repo.TagObjects()
 	if err != nil {
-		errMsg = fmt.Sprint(color.RedString(
+		return tags, fmt.Errorf(color.RedString(
 			"failed to retrieve repo tags: %v", err))
-		return tags, errors.New(errMsg)
 	}
 
 	err = tagObjects.ForEach(func(t *object.Tag) error {
@@ -103,9 +140,8 @@ func GetTags(repo *git.Repository) ([]string, error) {
 	})
 
 	if err != nil {
-		errMsg = fmt.Sprint(color.RedString(
+		return tags, fmt.Errorf(color.RedString(
 			"failed to retrieve repo tags: %v", err))
-		return tags, errors.New(errMsg)
 	}
 
 	return tags, err
