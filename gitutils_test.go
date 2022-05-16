@@ -49,17 +49,22 @@ func createTestFile(filePath string, content []byte) error {
 	return nil
 }
 
-func TestAddFile(t *testing.T) {
-	filePath := filepath.Join(Gwd(), "example-git-file")
+func TestCommit(t *testing.T) {
+	testFilePath := filepath.Join(clonePath, "example-git-file")
 	content := []byte("hello world!")
-	if err := createTestFile(filePath, content); err != nil {
-		t.Fatalf("failed to create test file: %v", err)
 
+	if err := createTestFile(testFilePath, content); err != nil {
+		t.Fatalf("failed to create test file: %v", err)
 	}
 
-	if err := AddFile(filePath); err != nil {
+	if err := AddFile(testFilePath); err != nil {
 		t.Fatalf("failed to add %s: %v - AddFile() failed",
-			filePath, err)
+			testFilePath, err)
+	}
+
+	if err := Commit(repo, testFilePath); err != nil {
+		t.Fatalf("failed to commit staged files in %s: %v",
+			testFilePath, err)
 	}
 }
 

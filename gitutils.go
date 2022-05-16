@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/fatih/color"
@@ -55,8 +54,6 @@ func GetSSHPubKey(keyName string, password string) (*ssh.PublicKeys, error) {
 // AddFile adds the `file` at the input `filePath` to
 // the staging area for its associated repo.
 func AddFile(filePath string) error {
-	successString := "A  example-git-file"
-
 	repo, err := git.PlainOpen(filepath.Dir(filePath))
 	if err != nil {
 		return fmt.Errorf(color.RedString(
@@ -81,9 +78,54 @@ func AddFile(filePath string) error {
 			"failed to run `git status` on %s: %v", filePath, err))
 	}
 
-	if !strings.Contains(status.String(), successString) {
+	if status.IsClean() {
 		return fmt.Errorf(color.RedString(
-			"failed to add %s: %v", filePath, err))
+			"status is clean - failed to run `git add` "+
+				"on %s: %v", filePath, err))
+	}
+
+	return nil
+}
+
+// Commit commits the current staging area
+// for the input `repo`.
+func Commit(repo *git.Repository, msg string) error {
+	cfg, err := GetGlobalUserCfg()
+	if err != nil {
+		return fmt.Errorf(color.RedString(
+			"failed get repo config: %v", err))
+	}
+
+	w, err := repo.Worktree()
+	if err != nil {
+		return fmt.Errorf(color.RedString(
+			"failed to retrieve worktree: %v", err))
+	}
+
+	commit, err := w.Commit(msg, &git.CommitOptions{
+		Author: &object.Signature{
+			Name:  cfg.User,
+			Email: cfg.Email,
+			When:  time.Now(),
+		},
+	})
+	if err != nil {
+		return fmt.Errorf(color.RedString(
+			"failed to commit current staging area`: %v",
+			err))
+	}
+
+	obj, err := repo.CommitObject(commit)
+	if err != nil {
+		return fmt.Errorf(color.RedString(
+			"failed to run `git show`: %v", err))
+	}
+
+	if obj.Author.Email != cfg.Email {
+		return fmt.Errorf(color.RedString(
+			"author email in commit doesn't match "+
+				"global git config email - Commit() failed: %v",
+			err))
 	}
 
 	return nil
