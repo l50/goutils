@@ -26,13 +26,6 @@ type GitConfigUserInfo struct {
 	Email string
 }
 
-// SSHKeyInfo is used to hold the name of an SSH Key
-// file and a password for decryption.
-type SSHKeyInfo struct {
-	Name string
-	PW   string
-}
-
 // GetSSHPubKey returns the public SSH key for the input
 // `keyName` and uses the input `password` (if provided)
 // to decrypt the associated private key.
