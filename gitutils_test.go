@@ -49,7 +49,7 @@ func createTestFile(filePath string, content []byte) error {
 	return nil
 }
 
-func TestCommit(t *testing.T) {
+func TestPush(t *testing.T) {
 	testFilePath := filepath.Join(clonePath, "example-git-file")
 	content := []byte("hello world!")
 
@@ -65,6 +65,19 @@ func TestCommit(t *testing.T) {
 	if err := Commit(repo, testFilePath); err != nil {
 		t.Fatalf("failed to commit staged files in %s: %v",
 			testFilePath, err)
+	}
+
+	// personal access token example
+	token := "notrealtoken"
+	auth := &http.BasicAuth{
+		// this can be anything except for an empty string
+		Username: "abc123",
+		Password: token,
+	}
+
+	if err := Push(repo, auth); err == nil {
+		t.Fatalf("push should not be possible with "+
+			"bogus credentials - Push() failed: %v", err)
 	}
 }
 

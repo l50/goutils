@@ -126,9 +126,6 @@ func Commit(repo *git.Repository, msg string) error {
 
 // CloneRepo clones the repo specified with the input `url` to
 // `clonePath`.
-//
-// To clone a repo using an SSH key, provide
-// the name of the key file for `sshKey.Name`.
 func CloneRepo(url string, clonePath string, auth transport.AuthMethod) (
 	*git.Repository, error) {
 	var err error
@@ -262,14 +259,58 @@ func CreateTag(repo *git.Repository, tag string) error {
 	return nil
 }
 
+// Push pushes the contents of the input
+// `repo` to the default remote (origin).
+func Push(repo *git.Repository, auth transport.AuthMethod) error {
+	var pushOptions *git.PushOptions
+
+	if auth != nil {
+		pushOptions = &git.PushOptions{
+			RemoteName: "origin",
+			Progress:   os.Stdout,
+			Auth:       auth,
+		}
+	} else {
+		pushOptions = &git.PushOptions{
+			RemoteName: "origin",
+			Progress:   os.Stdout,
+		}
+	}
+
+	err := repo.Push(pushOptions)
+
+	if err != nil {
+		if err == git.NoErrAlreadyUpToDate {
+			fmt.Print(color.YellowString(
+				"origin remote is up-to-date, no push was executed."))
+			return nil
+		}
+		return fmt.Errorf(color.RedString(
+			"error pushing to remote origin: %v", err))
+	}
+
+	return nil
+}
+
 // PushTag is used to push a tag to remote.
 func PushTag(repo *git.Repository, tag string, auth transport.AuthMethod) error {
-	pushOptions := &git.PushOptions{
-		RemoteName: "origin",
-		Progress:   os.Stdout,
-		RefSpecs: []config.RefSpec{config.RefSpec(
-			"refs/tags/*:refs/tags/*")},
-		Auth: auth,
+	var pushOptions *git.PushOptions
+
+	if auth != nil {
+		pushOptions = &git.PushOptions{
+			RemoteName: "origin",
+			Progress:   os.Stdout,
+			RefSpecs: []config.RefSpec{config.RefSpec(
+				"refs/tags/*:refs/tags/*")},
+			Auth: auth,
+		}
+	} else {
+		pushOptions = &git.PushOptions{
+			RemoteName: "origin",
+			Progress:   os.Stdout,
+			RefSpecs: []config.RefSpec{config.RefSpec(
+				"refs/tags/*:refs/tags/*")},
+		}
 	}
 
 	err := repo.Push(pushOptions)
