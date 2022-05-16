@@ -44,7 +44,7 @@ repos:
       - id: go-unit-tests
         name: Go unit tests
         language: script
-        entry: .hooks/go-unit-tests.sh
+        entry: .hooks/go-unit-tests.sh short
         files: '\.go$'
 
   - repo: https://github.com/igorshubovych/markdownlint-cli

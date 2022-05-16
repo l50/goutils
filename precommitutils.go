@@ -13,7 +13,6 @@ var pc = sh.RunCmd("pre-commit")
 // Make sure the project utilizes pre-commit,
 // otherwise these utilities are not very useful to run.
 func checkPCProject() error {
-
 	pcFile := ".pre-commit-config.yaml"
 	if !FileExists(pcFile) {
 		return errors.New(color.RedString(

@@ -24,6 +24,11 @@ jobs:
       - name: Compile magefile
         run: mage -d .mage/ -compile ../magefile
 
+      - name: Set git config
+        run: |
+          git config --global user.name "John Doe"
+          git config --global user.email johndoe@example.com
+
       - name: Install pre-commit hooks
         run: ./magefile installDeps
 
@@ -32,7 +37,7 @@ jobs:
 
       - name: Generate the coverage output
         run: |
-          go test -race -failfast -tags=integration -coverprofile=coverage-all.out ./...
+          bash .hooks/go-unit-tests.sh coverage
 
       - name: Send the coverage output
         uses: shogo82148/actions-goveralls@v1
@@ -41,7 +46,9 @@ jobs:
 
       - name: Report failure
         uses: nashmaniac/create-issue-action@v1.1
-        # Only report failures of pushes (PRs have are visible through the Checks section) to the default branch
+        # Only report failures of pushes
+        # (PRs have are visible through the Checks
+        # section) to the default branch
         if: failure() && github.event_name == 'push' && github.ref == 'refs/heads/main'
         with:
           title: 🐛 Coverage report failed for ${{ github.sha }}
