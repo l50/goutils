@@ -1,10 +1,8 @@
 ---
-before:
-  hooks:
-    - go mod tidy
+builds:
+  - id: "goutils"
+    # This is a library - there are no binaries to build
+    skip: true
 
-build:
-  skip: true
-
-checksum:
-  algorithm: sha256
+    hooks:
+      pre: go mod tidy

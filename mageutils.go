@@ -85,7 +85,7 @@ func InstallGoDeps(deps []string) error {
 	return nil
 }
 
-// Create artifacts for upload to github
+// CreateArtifacts creates artifacts for upload to github.
 func CreateArtifacts(os []string, binPath string) error {
 	operatingSystems := os
 	for _, os := range operatingSystems {
