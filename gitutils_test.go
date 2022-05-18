@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/fatih/color"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
 )
@@ -132,9 +133,9 @@ func TestDeletePushedTag(t *testing.T) {
 
 	pubKey, err := GetSSHPubKey(keyName, "")
 	if err == nil {
-		t.Fatalf("expected to fail with %s as this key should "+
-			"always be encrypted at rest and we didn't provide a"+
-			"decryption key: %v", keyName, err)
+		fmt.Print(color.RedString(
+			"security concern: %s is not encrypted at rest",
+			keyName))
 	}
 
 	if err := DeletePushedTag(repo, tag, pubKey); err == nil {

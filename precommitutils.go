@@ -3,6 +3,8 @@ package utils
 import (
 	"errors"
 	"fmt"
+	"path/filepath"
+	"strings"
 
 	"github.com/fatih/color"
 	"github.com/magefile/mage/sh"
@@ -13,7 +15,14 @@ var pc = sh.RunCmd("pre-commit")
 // Make sure the project utilizes pre-commit,
 // otherwise these utilities are not very useful to run.
 func checkPCProject() error {
-	pcFile := ".pre-commit-config.yaml"
+	var pcFile string
+	cwd := Gwd()
+
+	if strings.Contains(cwd, ".mage") {
+		pcFile = filepath.Join("..", ".pre-commit-config.yaml")
+	} else {
+		pcFile = ".pre-commit-config.yaml"
+	}
 	if !FileExists(pcFile) {
 		return errors.New(color.RedString(
 			"pre-commit is not configured for the current project"))
