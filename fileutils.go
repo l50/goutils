@@ -6,6 +6,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/fatih/color"
 )
 
 // AppendToFile appends an input text string to
@@ -53,6 +55,21 @@ func CreateFile(fileContents []byte, filePath string) error {
 	}
 
 	return nil
+}
+
+// CreateDirectory creates a directory at the input path.
+// If any part of the input path doesn't exist, create it.
+// Return an error if the path already exists.
+func CreateDirectory(path string) error {
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		if err := os.MkdirAll(path, os.ModePerm); err != nil {
+			return fmt.Errorf(color.RedString(
+				"failed to create %s: %v", path, err))
+		}
+	}
+
+	return nil
+
 }
 
 // DeleteFile deletes the input file
@@ -110,4 +127,15 @@ func StringInFile(path string, searchStr string) (bool, error) {
 	}
 
 	return false, err
+}
+
+// RmRf removes an input path and everything in it.
+// If the input path doesn't exist, an error is returned.
+func RmRf(path string) error {
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		if err := os.RemoveAll(path); err != nil {
+			return err
+		}
+	}
+	return nil
 }

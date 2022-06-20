@@ -102,6 +102,14 @@ func TestCreateFile(t *testing.T) {
 	}
 }
 
+func TestCreateDirectory(t *testing.T) {
+	newDir := filepath.Join("/tmp", "bla", "foo")
+	if err := CreateDirectory(newDir); err != nil {
+		t.Fatalf("unable to create %s, CreateDirectory() failed: %v", newDir, err)
+
+	}
+}
+
 func TestDeleteFile(t *testing.T) {
 	newFile := "test.txt"
 	created := CreateEmptyFile(newFile)
@@ -148,5 +156,18 @@ func TestStringInFile(t *testing.T) {
 	stringFoundInFile, err := StringInFile(testFile, stringToFind)
 	if err != nil || !stringFoundInFile {
 		t.Fatalf("failed to find %s in %s - StringInFile() failed: %v", stringToFind, testFile, err)
+	}
+}
+
+func TestRmRf(t *testing.T) {
+	newDir := filepath.Join("/tmp", "bla", "foo")
+	if err := CreateDirectory(newDir); err != nil {
+		t.Fatalf("unable to create %s, CreateDirectory() failed: %v", newDir, err)
+
+	}
+
+	if err := RmRf(newDir); err != nil {
+		t.Fatalf("unable to delete %s, RmRf() failed: %v", newDir, err)
+
 	}
 }
