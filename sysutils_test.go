@@ -3,9 +3,11 @@ package utils
 import (
 	"fmt"
 	"os"
+	"reflect"
 	"runtime"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestCd(t *testing.T) {
@@ -69,6 +71,20 @@ func TestGwd(t *testing.T) {
 	out := Gwd()
 	if !strings.Contains(out, "goutils") {
 		t.Fatal("unable to get the current working directory - Gwd() failed")
+	}
+}
+
+func isTime(obj reflect.Value) bool {
+	_, ok := obj.Interface().(time.Time)
+	return ok
+}
+
+func TestGetFutureTime(t *testing.T) {
+	futureTime := GetFutureTime(2, 2, 3)
+
+	ft := reflect.ValueOf(futureTime)
+	if !isTime(ft) {
+		t.Fatal("failed to run GetFutureTime(): incorrect value returned")
 	}
 }
 

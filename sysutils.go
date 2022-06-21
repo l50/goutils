@@ -87,6 +87,14 @@ func Gwd() string {
 
 }
 
+// GetFutureTime returns the date and time of the input
+// years, months, and days parameters from the current time.
+func GetFutureTime(years int, months int, days int) time.Time {
+	t := time.Now()
+	exp := t.AddDate(years, months, days)
+	return exp
+}
+
 // IsDirEmpty checks if an input directory (name) is empty
 func IsDirEmpty(name string) (bool, error) {
 	entries, err := os.ReadDir(name)
@@ -138,12 +146,4 @@ func RunCommandWithTimeout(seconds int, command string, args ...string) (stdout 
 	}
 
 	return string(out), false, nil
-}
-
-// GetFutureTime returns the date and time of the input
-// years, months, and days parameters from the current time.
-func GetFutureTime(years int, months int, days int) time.Time {
-	t := time.Now()
-	exp := t.AddDate(years, months, days)
-	return exp
 }
