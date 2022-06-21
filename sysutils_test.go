@@ -44,6 +44,20 @@ func TestCp(t *testing.T) {
 	}
 }
 
+func TestEnvVarSet(t *testing.T) {
+	key := "TEST_KEY"
+	os.Setenv(key, "test_value")
+	if err := EnvVarSet(key); err != nil {
+		t.Fatalf("failed to run EnvVarSet(): %v", err)
+	}
+
+	emptykey := "EMPTY_TEST_KEY"
+
+	if err := EnvVarSet(emptykey); err == nil {
+		t.Fatalf("failed to run EnvVarSet(): %v", err)
+	}
+}
+
 func TestGetHomeDir(t *testing.T) {
 	_, err := GetHomeDir()
 	if err != nil {

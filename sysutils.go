@@ -2,6 +2,7 @@ package utils
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -47,6 +48,20 @@ func Cp(src string, dst string) bool {
 	}
 
 	return true
+}
+
+// EnvVarSet checks if an input environment variable
+// is set by checking the input key for
+// an associated value.
+// If an env var is not set, an error is returned.
+func EnvVarSet(key string) error {
+	_, ok := os.LookupEnv(key)
+	if !ok {
+		err := errors.New(key + " not set")
+		return err
+	}
+
+	return nil
 }
 
 // GetHomeDir returns the path to current user's home directory
