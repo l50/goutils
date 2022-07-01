@@ -7,4 +7,5 @@ magefile
 # Code coverage output file
 coverage-all.out
 
+# Distribution directory for binaries
 dist/
