@@ -10,7 +10,7 @@ repos:
       - id: check-added-large-files
 
   - repo: https://github.com/adrienverge/yamllint.git
-    rev: v1.26.3
+    rev: v1.27.1
     hooks:
       - id: yamllint
         entry: yamllint --strict -c .hooks/linters/.yaml-lint.yaml
@@ -20,6 +20,15 @@ repos:
     hooks:
       - id: prettier
         files: \.(json|md|yaml|yml)$
+
+  - repo: https://github.com/jumanjihouse/pre-commit-hooks
+    rev: 2.1.6
+    hooks:
+      - id: script-must-have-extension
+        name: Ensure shell scripts end with .sh
+        types: [shell]
+      - id: shellcheck
+      - id: shfmt
 
   - repo: https://github.com/dnephin/pre-commit-golang
     rev: v0.5.0
@@ -48,7 +57,7 @@ repos:
         files: '\.go$'
 
   - repo: https://github.com/igorshubovych/markdownlint-cli
-    rev: v0.31.1
+    rev: v0.32.0
     hooks:
       - id: markdownlint
 
