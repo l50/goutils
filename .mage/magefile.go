@@ -7,7 +7,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/bitfield/script"
 	"github.com/fatih/color"
 	utils "github.com/l50/goutils"
 
@@ -91,10 +90,8 @@ func RunPreCommit() error {
 	}
 
 	fmt.Println(color.YellowString("Running all pre-commit hooks locally."))
-	cmd := "pre-commit run --show-diff-on-failure --color=always --all-files"
-
-	if _, err := script.Exec(cmd).String(); err != nil {
-		return fmt.Errorf(color.RedString("failed to run pre-commit hooks: %v", err))
+	if err := utils.RunPCHooks(); err != nil {
+		return err
 	}
 
 	return nil

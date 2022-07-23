@@ -1,6 +1,8 @@
 package utils
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestInstallGoPCDeps(t *testing.T) {
 	if err := InstallGoPCDeps(); err != nil {
@@ -20,27 +22,31 @@ func TestUpdatePCHooks(t *testing.T) {
 	}
 }
 
-// Currently not running because I need to figure out how to stop
-// this test from calling itself repeatedly.
-
+// Currently not running because this test
+// will create a ton of processes that
+// you have to pkill by hand. It's annoying
+// as all hell.
 // func TestRunPCHooks(t *testing.T) {
-// 	seconds := 1
+// 	seconds := 120
 // 	timeout := time.After(time.Duration(seconds) * time.Second)
 // 	errors := make(chan error)
 // 	done := make(chan bool)
 // 	go func() {
 // 		if err := RunPCHooks(); err != nil {
-// 			errors <- fmt.Errorf("received error from RunHooks(): %v", err)
+// 			errors <- fmt.Errorf(
+// 				"received error from RunPCHooks(): %v", err)
 // 		}
 // 		done <- true
 // 	}()
 
 // 	select {
 // 	case <-timeout:
-// 		fmt.Printf("timed out TestRunPCHooks() after %ds to stop the test from infinitely calling itself",
+// 		fmt.Printf("timed out TestRunPCHooks() after %ds to "+
+// 			"stop the test from infinitely calling itself",
 // 			seconds)
 // 	case <-done:
 // 	case err := <-errors:
-// 		t.Fatalf("test fail - TestRunPCHooks() in precommitutils_test.go: %v", err)
+// 		t.Fatalf("test fail - TestRunPCHooks() "+
+// 			"in precommitutils_test.go: %v", err)
 // 	}
 // }

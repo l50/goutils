@@ -100,7 +100,6 @@ func RunPCHooks() error {
 		return err
 	}
 
-	fmt.Println(color.YellowString("Running all pre-commit hooks locally."))
 	cmd := "pre-commit run --show-diff-on-failure --color=always --all-files"
 
 	if _, err := script.Exec(cmd).String(); err != nil {
