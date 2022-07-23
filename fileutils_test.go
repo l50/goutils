@@ -150,6 +150,26 @@ func TestFileToSlice(t *testing.T) {
 	}
 }
 
+func TestListFiles(t *testing.T) {
+	targetPath := "/tmp/"
+	_, err := ListFiles(targetPath)
+
+	if err != nil {
+		t.Fatalf("unable to list files in %s - ListFiles() failed: %v",
+			targetPath, err)
+	}
+
+	targetPath = "/root/"
+	_, err = ListFiles(targetPath)
+
+	if err == nil {
+		t.Fatalf("%s is accessible.\n "+
+			"You really shouldn't run things as root\n "+
+			"unless you really need to.\n "+
+			"TestListFiles() failed", targetPath)
+	}
+}
+
 func TestStringInFile(t *testing.T) {
 	testFile := getTestFile(t)
 	stringToFind := "root"

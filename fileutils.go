@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/bitfield/script"
 	"github.com/fatih/color"
 )
 
@@ -100,6 +101,17 @@ func FileToSlice(fileName string) ([]string, error) {
 	}
 
 	return strings.Split(string(b), "\n"), nil
+}
+
+// ListFiles lists the files found recursively
+// from the input path.
+func ListFiles(path string) (string, error) {
+	result, err := script.FindFiles(path).String()
+	if err != nil {
+		return "", err
+	}
+
+	return result, nil
 }
 
 // StringInFile searches for input searchStr in
