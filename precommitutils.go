@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/bitfield/script"
 	"github.com/fatih/color"
 	"github.com/magefile/mage/sh"
 )
@@ -93,20 +94,18 @@ func ClearPCCache() error {
 	return nil
 }
 
-// Something here is simply not working properly - test with ./magefile runPreCommit
-// // RunPCHooks Runs all pre-commit hooks locally.
-// func RunPCHooks() error {
-// 	// if err := checkPCProject(); err != nil {
-// 	// 	return err
-// 	// }
+// RunPCHooks Runs all pre-commit hooks locally.
+func RunPCHooks() error {
+	if err := checkPCProject(); err != nil {
+		return err
+	}
 
-// 	// _, err := RunCommand("pre-commit", "run", "--all-files")
-// 	// if err != nil {
-// 	// 	return fmt.Errorf(color.RedString("failed to run pre-commit hooks: %v", err))
-// 	// }
-// 	if err := sh.RunV("pre-commit", "run", "--all-files"); err != nil {
-// 		return fmt.Errorf(color.RedString("failed to run pre-commit hooks: %v", err))
-// 	}
+	fmt.Println(color.YellowString("Running all pre-commit hooks locally."))
+	cmd := "pre-commit run --show-diff-on-failure --color=always --all-files"
 
-// 	return nil
-// }
+	if _, err := script.Exec(cmd).String(); err != nil {
+		return fmt.Errorf(color.RedString("failed to run pre-commit hooks: %v", err))
+	}
+
+	return nil
+}
