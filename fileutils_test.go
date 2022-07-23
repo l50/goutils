@@ -146,12 +146,13 @@ func TestFileToSlice(t *testing.T) {
 
 	_, err := FileToSlice(testFile)
 	if err != nil {
-		t.Fatalf("unable to convert %s to a slice - FileToSlice() failed: %v", testFile, err)
+		t.Fatalf("unable to convert %s to a slice - FileToSlice() failed: %v",
+			testFile, err)
 	}
 }
 
 func TestListFiles(t *testing.T) {
-	targetPath := "/tmp/"
+	targetPath := "."
 	_, err := ListFiles(targetPath)
 
 	if err != nil {
