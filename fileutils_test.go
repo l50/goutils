@@ -108,7 +108,6 @@ func TestCreateDirectory(t *testing.T) {
 	newDir := filepath.Join("/tmp", "bla", "foo")
 	if err := CreateDirectory(newDir); err != nil {
 		t.Fatalf("unable to create %s, CreateDirectory() failed: %v", newDir, err)
-
 	}
 }
 
@@ -154,8 +153,8 @@ func TestFileToSlice(t *testing.T) {
 }
 
 func TestFindFile(t *testing.T) {
-	testFile := getTestFile(t)
-	_, err := FindFile(testFile, []string{"/etc", "."})
+	testFile := ".bashrc"
+	_, err := FindFile(testFile, []string{"."})
 	if err != nil {
 		t.Fatalf("unable to find %s - FindFile() failed", testFile)
 	}
