@@ -2,6 +2,7 @@ package utils
 
 import (
 	"path/filepath"
+	"reflect"
 	"runtime"
 	"testing"
 )
@@ -153,6 +154,7 @@ func TestFileToSlice(t *testing.T) {
 
 func TestListFiles(t *testing.T) {
 	targetPath := "."
+	var results []string
 	_, err := ListFiles(targetPath)
 
 	if err != nil {
@@ -169,6 +171,20 @@ func TestListFiles(t *testing.T) {
 			"unless you really need to.\n "+
 			"TestListFiles() failed", targetPath)
 	}
+
+	targetPath = "."
+	results, err = ListFiles(targetPath)
+	if err != nil {
+		t.Fatalf("unable to list files in %s - ListFiles() failed: %v",
+			targetPath, err)
+	}
+
+	if reflect.TypeOf(results).Elem().Kind() != reflect.String {
+		t.Fatalf(
+			"error - unable to list files in %s - ListFiles() failed: %v",
+			targetPath, err)
+	}
+
 }
 
 func TestStringInFile(t *testing.T) {

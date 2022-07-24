@@ -7,6 +7,19 @@ import (
 	"strings"
 )
 
+// RandomString returns a random string
+// of the specified length.
+func RandomString(length int) (string, error) {
+	b := make([]byte, length)
+
+	_, err := rand.Read(b)
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("%x", b)[:length], nil
+}
+
 // StringInSlice determines if an input string exists in an input slice.
 // It returns true if the string is found, otherwise it returns false.
 func StringInSlice(strToFind string, inputSlice []string) bool {
@@ -28,15 +41,9 @@ func StringToInt64(value string) (int64, error) {
 	return n, nil
 }
 
-// RandomString returns a random string
-// of the specified length.
-func RandomString(length int) (string, error) {
-	b := make([]byte, length)
-
-	_, err := rand.Read(b)
-	if err != nil {
-		return "", err
-	}
-
-	return fmt.Sprintf("%x", b)[:length], nil
+// StringToSlice converts an input string (`delimStr`)
+// using the accompanying delimiter (`delim`)
+// to a string slice.
+func StringToSlice(delimStr string, delim string) []string {
+	return strings.Split(delimStr, delim)
 }

@@ -104,14 +104,16 @@ func FileToSlice(fileName string) ([]string, error) {
 }
 
 // ListFiles lists the files found recursively
-// from the input path.
-func ListFiles(path string) (string, error) {
+// from the input `path`.
+func ListFiles(path string) ([]string, error) {
 	result, err := script.FindFiles(path).String()
 	if err != nil {
-		return "", err
+		return []string{}, err
 	}
 
-	return result, nil
+	fileList := StringToSlice(result, "\n")
+
+	return fileList, nil
 }
 
 // StringInFile searches for input searchStr in

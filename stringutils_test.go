@@ -1,6 +1,8 @@
 package utils
 
 import (
+	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -20,6 +22,17 @@ func TestStringToInt64(t *testing.T) {
 	_, err = StringToInt64("chicken")
 	if err == nil {
 		t.Fatalf("error running StringToInt64(): %v", err)
+	}
+}
+
+func TestStringToSlice(t *testing.T) {
+	delimStr := "asasdf\nasdf\nb\ndsfsdf,c"
+	delim := "\n"
+	ss := strings.Split(delimStr, delim)
+	if reflect.TypeOf(ss).Elem().Kind() != reflect.String {
+		t.Fatalf(
+			"error - failed to convert %s using %s delimiter to a string slice",
+			delimStr, delim)
 	}
 }
 
