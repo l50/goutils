@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/bitfield/script"
@@ -101,6 +102,28 @@ func FileToSlice(fileName string) ([]string, error) {
 	}
 
 	return strings.Split(string(b), "\n"), nil
+}
+
+// FindFile looks for an input `filename` in the specified
+// set of `dirs`. The filepath is returned if the `filename` is found.
+func FindFile(fileName string, dirs []string) (string, error) {
+	for _, d := range dirs {
+		files, err := ListFiles(d)
+		if err != nil {
+			return "", err
+		}
+		for _, f := range files {
+			fileReg := `/` + fileName + `$`
+			m, err := regexp.MatchString(fileReg, f)
+			if err != nil {
+				return "", fmt.Errorf(
+					color.RedString("error - failed to locate %f: %v", fileReg, err))
+			} else if m {
+				return f, nil
+			}
+		}
+	}
+	return "", nil
 }
 
 // ListFiles lists the files found recursively

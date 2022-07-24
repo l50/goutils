@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"math/rand"
 	"path/filepath"
 	"reflect"
 	"runtime"
@@ -152,6 +153,18 @@ func TestFileToSlice(t *testing.T) {
 	}
 }
 
+func TestFindFile(t *testing.T) {
+	testFile := getTestFile(t)
+	_, err := FindFile(testFile, []string{"/etc", "."})
+	if err != nil {
+		t.Fatalf("unable to find %s - FindFile() failed", testFile)
+	}
+}
+
+func randInt(min int, max int) int {
+	return min + rand.Intn(max-min)
+}
+
 func TestListFiles(t *testing.T) {
 	targetPath := "."
 	var results []string
@@ -162,14 +175,16 @@ func TestListFiles(t *testing.T) {
 			targetPath, err)
 	}
 
-	targetPath = "/root/"
+	targetPath, err = RandomString(randInt(8, 15))
+	if err != nil {
+		t.Fatalf("failed to generate RandomString - TestListFiles() failed: %v",
+			err)
+	}
+
 	_, err = ListFiles(targetPath)
 
 	if err == nil {
-		t.Fatalf("%s is accessible.\n "+
-			"You really shouldn't run things as root\n "+
-			"unless you really need to.\n "+
-			"TestListFiles() failed", targetPath)
+		t.Fatalf("%s should not exist - TestListFiles() failed", targetPath)
 	}
 
 	targetPath = "."
