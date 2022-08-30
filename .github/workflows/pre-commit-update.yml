@@ -1,0 +1,56 @@
+---
+name: Pre-commit auto-update
+on:
+  pull_request:
+  push:
+    branches: [main]
+  # Run this on every release so new release can have
+  # updated version
+  release:
+    types:
+      - published
+  # on demand
+  workflow_dispatch:
+
+jobs:
+  auto-update:
+    name: Update pre-commit hooks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up git repository
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.18
+
+      - name: Install shfmt
+        run: go install mvdan.cc/sh/v3/cmd/shfmt@latest
+
+      - name: Install mage
+        run: go install github.com/magefile/mage@latest
+
+      - name: Compile magefile
+        run: mage -d .mage/ -compile ../magefile
+
+      - name: Install pre-commit hooks
+        run: ./magefile installDeps
+
+      - name: Run pre-commit autoupdate action
+        uses: browniebroke/pre-commit-autoupdate-action@main
+
+      - name: Run pre-commit
+        uses: pre-commit/action@v2.0.3
+
+      - name: Create Pull Request with updates
+        uses: peter-evans/create-pull-request@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: update/pre-commit-hooks
+          title: Update pre-commit hooks
+          commit-message: "chore: update pre-commit hooks"
+          body: Update versions of pre-commit hooks to latest version.
