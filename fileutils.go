@@ -86,11 +86,17 @@ func DeleteFile(file string) error {
 // FileExists will return true if a file specified with fileLoc
 // exists. If the file does not exist, it returns false.
 func FileExists(fileLoc string) bool {
-	if _, err := os.Stat(fileLoc); !os.IsNotExist(err) {
-		return true
+	_, err := os.Stat(fileLoc)
+	if err != nil {
+		// `fileLoc` does not exist
+		if os.IsNotExist(err) {
+			return false
+		}
+		panic(fmt.Sprintf(
+			"failed to check for the existence of %s: %v", fileLoc, err))
 	}
 
-	return false
+	return true
 }
 
 // FileToSlice reads an input file into a slice
@@ -171,8 +177,10 @@ func StringInFile(path string, searchStr string) (bool, error) {
 func RmRf(path string) error {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		if err := os.RemoveAll(path); err != nil {
-			return err
+			return fmt.Errorf("failed to run RmRf on %s: %v", path, err)
 		}
+		return fmt.Errorf("failed to os.Stat on %s: %v", path, err)
 	}
+
 	return nil
 }

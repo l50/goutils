@@ -8,36 +8,30 @@ import (
 	"time"
 
 	"github.com/fatih/color"
-	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
-)
-
-var (
-	cloneDir  string
-	clonePath string
-	err       error
-	repo      *git.Repository
-	repoURL   string
 )
 
 func init() {
 	cloneDir = "/tmp"
 	repoURL = "https://github.com/l50/helloworld.git"
 	// Used to create a random directory name
-	currentTime := time.Now()
+	currentTime = time.Now()
 	clonePath = filepath.Join(
 		cloneDir, fmt.Sprintf(
-			"helloworld-%s", currentTime.Format("2006-01-02-15-04-05"),
+			"gitutils-%s", currentTime.Format("2006-01-02-15-04-05"),
 		),
 	)
 
-	repo, err = CloneRepo(repoURL, clonePath, nil)
-	if err != nil {
-		log.Fatalf(
-			"failed to clone %s: %v - CloneRepo() failed",
-			repo,
-			err,
-		)
+	// Only clone if the clone path doesn't already exist.
+	if !FileExists(clonePath) {
+		repo, err = CloneRepo(repoURL, clonePath, nil)
+		if err != nil {
+			log.Fatalf(
+				"failed to clone %s - CloneRepo() failed: %v",
+				repo,
+				err,
+			)
+		}
 	}
 }
 

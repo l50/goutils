@@ -68,7 +68,7 @@ func InstallPCHooks() error {
 	return nil
 }
 
-// UpdatePCHooks Updates pre-commmit hooks locally.
+// UpdatePCHooks Updates pre-commit hooks locally.
 func UpdatePCHooks() error {
 	if err := checkPCProject(); err != nil {
 		return err
@@ -102,7 +102,7 @@ func RunPCHooks() error {
 
 	cmd := "pre-commit run --show-diff-on-failure --color=always --all-files"
 
-	if _, err := script.Exec(cmd).String(); err != nil {
+	if _, err := script.Exec(cmd).Stdout(); err != nil {
 		return fmt.Errorf(color.RedString("failed to run pre-commit hooks: %v", err))
 	}
 

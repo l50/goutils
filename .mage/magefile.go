@@ -102,7 +102,7 @@ func RunTests() error {
 	mg.Deps(InstallDeps)
 
 	fmt.Println(color.YellowString("Running unit tests."))
-	if err := sh.RunV(filepath.Join(".hooks", "go-unit-tests.sh")); err != nil {
+	if err := sh.RunV(filepath.Join(".hooks", "go-unit-tests.sh"), "all"); err != nil {
 		return fmt.Errorf(color.RedString("failed to run unit tests: %v", err))
 	}
 

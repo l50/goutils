@@ -15,10 +15,6 @@ import (
 	"github.com/magefile/mage/sh"
 )
 
-var (
-	tags []string
-)
-
 // GitConfigUserInfo holds a username and
 // email to use for user.name and user.email.
 type GitConfigUserInfo struct {

@@ -31,7 +31,32 @@ func InstallVSCodeModules() error {
 	return nil
 }
 
-// Tidy runs go mod tidy.
+// ModUpdate runs `go get -u` or
+// `go get -u ./... if `recursive` is set to true.
+// The `v` parameter provides verbose output
+// if set to true.
+func ModUpdate(recursive bool, v bool) error {
+	verbose := ""
+	if v {
+		verbose = "-v"
+	}
+
+	if recursive {
+		if err := sh.Run("go", "get", "-u", verbose, "./..."); err != nil {
+			return fmt.Errorf(
+				color.RedString("failed to run `go get -u %v ./...`: %v", verbose, err))
+		}
+	}
+
+	if err := sh.Run("go", "get", "-u", verbose); err != nil {
+		return fmt.Errorf(
+			color.RedString("failed to run go get -u %v", err))
+	}
+
+	return nil
+}
+
+// Tidy runs `go mod tidy`.
 func Tidy() error {
 	if err := sh.Run("go", "mod", "tidy"); err != nil {
 		return fmt.Errorf(
@@ -45,10 +70,19 @@ func Tidy() error {
 // using the input path to the associated go.mod.
 func UpdateMageDeps(magedir string) error {
 	cwd := Gwd()
+	recursive := false
+	verbose := false
+
 	if err := Cd(magedir); err != nil {
 		return fmt.Errorf(
 			color.RedString(
 				"failed to cd from %s to %s: %v", cwd, magedir, err))
+	}
+
+	if err := ModUpdate(recursive, verbose); err != nil {
+		return fmt.Errorf(
+			color.RedString(
+				"failed to update mage dependencies in %s: %v", magedir, err))
 	}
 
 	if err := Tidy(); err != nil {
