@@ -3,6 +3,7 @@ package utils
 import (
 	"fmt"
 
+	"github.com/cavaliergopher/grab/v3"
 	"github.com/fatih/color"
 	externalip "github.com/glendc/go-external-ip"
 )
@@ -28,4 +29,15 @@ func PublicIP(protocol uint) (string, error) {
 
 	// Return the IP address in string format.
 	return ip.String(), nil
+}
+
+// DownloadFile downloads the file at the input `url` to the
+// specified `dest` on the local filesystem.
+func DownloadFile(url string, dest string) (string, error) {
+	resp, err := grab.Get(dest, url)
+	if err != nil {
+		return resp.Filename, fmt.Errorf(color.RedString("failed to download %s to %s: %v", url, dest, err))
+	}
+
+	return resp.Filename, nil
 }

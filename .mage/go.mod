@@ -14,6 +14,7 @@ require (
 	github.com/ProtonMail/go-crypto v0.0.0-20220824120805-4b6e5c587895 // indirect
 	github.com/acomagu/bufpipe v1.0.3 // indirect
 	github.com/bitfield/script v0.20.2 // indirect
+	github.com/cavaliergopher/grab/v3 v3.0.1 // indirect
 	github.com/cloudflare/circl v1.2.0 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/glendc/go-external-ip v0.1.0 // indirect

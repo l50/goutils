@@ -3,11 +3,14 @@ package utils
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"reflect"
 	"runtime"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/bitfield/script"
 )
 
 func TestCd(t *testing.T) {
@@ -111,25 +114,73 @@ func TestRunCommand(t *testing.T) {
 }
 
 func TestRunCommandWithTimeout(t *testing.T) {
+	downloadURL := "https://raw.githubusercontent.com/rebootuser/LinEnum/master/LinEnum.sh"
+	targetPath := filepath.Join("/tmp", "Linenum.sh")
+	dlFilePath, err := DownloadFile(downloadURL, targetPath)
+	if err != nil {
+		t.Fatal("failed to run DownloadFile()")
+	}
+
+	cmd := "chmod +x " + dlFilePath
+	if _, err := script.Exec(cmd).Stdout(); err != nil {
+		t.Errorf("failed to run `chmod +x` on %s: %v", dlFilePath, err)
+	}
+
+	type args struct {
+		// timeout time.Duration
+		timeout string
+		command string
+	}
+
+	tests := []struct {
+		name    string
+		args    args
+		want    string
+		wantErr bool
+	}{
+		{
+			name: "Test command that runs quickly",
+			args: args{
+				timeout: "5s",
+				command: "echo hi",
+			},
+			wantErr: false,
+			want:    "hi",
+		},
+		{
+			name: "Test running command that will not finish quickly",
+			args: args{
+				timeout: "5s",
+				command: "sleep 250",
+			},
+			wantErr: true,
+			want:    "",
+		},
+		{
+			name: "Test long-running bash script that will not finish quickly",
+			args: args{
+				timeout: "10s",
+				command: "bash " + dlFilePath,
+			},
+			wantErr: true,
+			want:    "",
+		},
+	}
+
 	switch runtime.GOOS {
 	case "linux", "darwin":
-		seconds := 8
-		// Test #1
-		cmd := []string{"ping", "baidu.com"}
-		_, _, err := RunCommandWithTimeout(seconds, cmd[0], cmd[1:]...)
-		if err == nil {
-			t.Fatalf("%v expected to time out - RunCommandWithTimeout() Test #1 has failed: %v",
-				strings.Trim(fmt.Sprint(cmd), "[]"), err)
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+				got, err := RunCommandWithTimeout(tt.args.timeout, tt.args.command)
+				fmt.Println(got)
+				if (err != nil) != tt.wantErr {
+					t.Errorf("error: RunCommandWithTimeout() err = %v, want %v", err, tt.wantErr)
+				}
+				if len(got) == 0 && tt.want != "" && got != tt.want {
+					t.Errorf("error: RunCommandWithTimeout() got = %v, want %v", got, tt.want)
+				}
+			})
 		}
-
-		// Test #2
-		cmd = []string{"whoami"}
-		_, _, err = RunCommandWithTimeout(seconds, cmd[0], cmd[1:]...)
-		if err != nil {
-			t.Fatalf("%v expected to not time out - RunCommandWithTimeout() Test #2 has failed: %v",
-				strings.Trim(fmt.Sprint(cmd), "[]"), err)
-		}
-
 	default:
 		t.Fatal("unsupported OS detected")
 	}
