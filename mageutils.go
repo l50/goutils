@@ -50,7 +50,7 @@ func ModUpdate(recursive bool, v bool) error {
 
 	if err := sh.Run("go", "get", "-u", verbose); err != nil {
 		return fmt.Errorf(
-			color.RedString("failed to run go get -u %v", err))
+			color.RedString("failed to run `go get -u %v`", err))
 	}
 
 	return nil
@@ -60,7 +60,7 @@ func ModUpdate(recursive bool, v bool) error {
 func Tidy() error {
 	if err := sh.Run("go", "mod", "tidy"); err != nil {
 		return fmt.Errorf(
-			color.RedString("failed to run go mod tidy: %v", err))
+			color.RedString("failed to run `go mod tidy`: %v", err))
 	}
 
 	return nil
