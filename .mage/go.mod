@@ -5,7 +5,7 @@ go 1.18
 require (
 	github.com/fatih/color v1.13.0
 	github.com/l50/goutils v1.1.3
-	github.com/magefile/mage v1.13.0
+	github.com/magefile/mage v1.14.0
 )
 
 require (
@@ -33,7 +33,7 @@ require (
 	github.com/xanzy/ssh-agent v0.3.2 // indirect
 	golang.org/x/crypto v0.0.0-20220829220503-c86fa9a7ed90 // indirect
 	golang.org/x/net v0.0.0-20220909164309-bea034e7d591 // indirect
-	golang.org/x/sys v0.0.0-20220909162455-aba9fc2a8ff2 // indirect
+	golang.org/x/sys v0.0.0-20220915200043-7b5979e65e41 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 )
 
