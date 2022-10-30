@@ -3,7 +3,6 @@ package utils
 import (
 	"fmt"
 	"log"
-	"os"
 	"path/filepath"
 	"testing"
 	"time"
@@ -74,7 +73,7 @@ func TestUpdateMageDeps(t *testing.T) {
 			log.Fatal(err)
 		}
 	}
-	if err := UpdateMageDeps(".mage"); err != nil {
+	if err := UpdateMageDeps("magefiles"); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -86,19 +85,6 @@ func TestInstallGoDeps(t *testing.T) {
 	}
 
 	if err := InstallGoDeps(sampleDeps); err != nil {
-		t.Fatal(err)
-	}
-}
-
-func TestCreateArtifacts(t *testing.T) {
-	operatingSystems := []string{"linux", "darwin", "windows"}
-	binPath := filepath.Join("../", "dist", "goutils")
-	if err := CreateArtifacts(operatingSystems, binPath); err != nil {
-		t.Fatal(err)
-	}
-
-	// clean up
-	if err := os.RemoveAll(filepath.Dir(binPath)); err != nil {
 		t.Fatal(err)
 	}
 }

@@ -118,17 +118,3 @@ func InstallGoDeps(deps []string) error {
 
 	return nil
 }
-
-// CreateArtifacts creates artifacts for upload to github.
-func CreateArtifacts(os []string, binPath string) error {
-	operatingSystems := os
-	for _, os := range operatingSystems {
-		err := sh.Run("mage", "-d", ".mage", "-compile", binPath+"-"+os)
-		if err != nil {
-			return fmt.Errorf(
-				color.RedString("failed to create artifacts at %s: %v", binPath, err))
-		}
-	}
-
-	return nil
-}

@@ -14,7 +14,7 @@ import (
 )
 
 func TestCd(t *testing.T) {
-	dst := ".mage"
+	dst := "magefiles"
 
 	src := Gwd()
 	if !strings.Contains(src, "goutils") {
