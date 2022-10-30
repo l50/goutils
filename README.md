@@ -46,6 +46,7 @@ This repo is comprised of utilities that I use across various go projects.
 2. (Optional) If you installed gvm, create golang pkgset specifically for this project:
 
    ```bash
+   source "${HOME}/.gvm"
    mkdir "${HOME}/go"
    GVM_BIN="${HOME}/.gvm/scripts/gvm"
    export GOPATH="${HOME}/go"
