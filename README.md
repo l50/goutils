@@ -22,7 +22,7 @@ This repo is comprised of utilities that I use across various go projects.
 - [Install golang](https://go.dev/):
 
   ```bash
-  gvm install go1.18
+  source .gvm
   ```
 
 - [Install pre-commit](https://pre-commit.com/):
