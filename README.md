@@ -16,7 +16,6 @@ This repo is comprised of utilities that I use across various go projects.
 
   ```bash
   bash < <(curl -s -S -L https://raw.githubusercontent.com/moovweb/gvm/master/binscripts/gvm-installer)
-  source "${GVM_BIN}"
   ```
 
 - [Install golang](https://go.dev/):
