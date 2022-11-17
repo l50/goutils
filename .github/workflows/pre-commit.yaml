@@ -39,6 +39,11 @@ jobs:
           brew install pre-commit
           brew install shellcheck
 
+      - name: Run go mod tidy - necessary to avoid errors with dependabot PRs
+        run: |
+          go mod tidy
+          pushd magefiles; go mod tidy; popd
+
       - name: Install pre-commit dependencies
         run: mage installDeps
 
