@@ -18,22 +18,17 @@ jobs:
         with:
           go-version: 1.18
 
-      - name: Install shfmt
-        run: go install mvdan.cc/sh/v3/cmd/shfmt@latest
+      - name: Install homebrew
+        uses: homebrew/actions/setup-homebrew@master
 
-      - name: Install mage
-        run: go install github.com/magefile/mage@latest
+      - name: Install brew dependencies
+        run: |
+          brew install pre-commit
 
       - name: Set git config
         run: |
           git config --global user.name "John Doe"
           git config --global user.email johndoe@example.com
-
-      - name: Install pre-commit hooks
-        run: mage installDeps
-
-      - name: Run pre-commit
-        uses: pre-commit/action@v3.0.0
 
       - name: Generate the coverage output
         run: |
@@ -52,6 +47,7 @@ jobs:
         if: failure() && github.event_name == 'push' && github.ref == 'refs/heads/main'
         with:
           title: 🐛 Coverage report failed for ${{ github.sha }}
+          base: main
           token: ${{ secrets.GITHUB_TOKEN }}
           labels: kind/bug
           body: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
