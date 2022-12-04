@@ -49,8 +49,6 @@ jobs:
 
       - name: Run pre-commit autoupdate action
         uses: browniebroke/pre-commit-autoupdate-action@main
-        with:
-          base: main
 
       - name: Create Pull Request with updates
         uses: peter-evans/create-pull-request@v4
