@@ -23,7 +23,7 @@ jobs:
 
       - name: Install brew dependencies
         run: |
-          brew install pre-commit
+          brew install goreleaser pre-commit
 
       - name: Set git config
         run: |

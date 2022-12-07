@@ -1,11 +1,34 @@
 package utils
 
 import (
+	"errors"
 	"fmt"
 
+	"github.com/bitfield/script"
 	"github.com/fatih/color"
 	"github.com/magefile/mage/sh"
 )
+
+// GoReleaser Runs goreleaser to generate all of the supported binaries
+// specified in `.goreleaser`.
+func GoReleaser() error {
+	if FileExists(".goreleaser.yaml") || FileExists(".goreleaser.yml") {
+		if CmdExists("goreleaser") {
+			if _, err := script.Exec("goreleaser --snapshot --rm-dist").Stdout(); err != nil {
+				return fmt.Errorf(color.RedString(
+					"failed to run goreleaser: %v", err))
+			}
+		} else {
+			return errors.New(color.RedString(
+				"goreleaser not found in $PATH"))
+		}
+	} else {
+		return errors.New(color.RedString(
+			"no .goreleaser file found"))
+	}
+
+	return nil
+}
 
 // InstallVSCodeModules installs the modules used by the vscode-go extension in VSCode.
 func InstallVSCodeModules() error {

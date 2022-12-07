@@ -3,6 +3,7 @@ package utils
 import (
 	"fmt"
 	"log"
+	"os"
 	"path/filepath"
 	"testing"
 	"time"
@@ -28,6 +29,18 @@ func init() {
 				repo,
 				err,
 			)
+		}
+	}
+}
+
+func TestGoReleaser(t *testing.T) {
+	if err := GoReleaser(); err != nil {
+		t.Fatal(err)
+	}
+	// Clean up
+	if FileExists("dist") {
+		if err := os.RemoveAll("dist"); err != nil {
+			t.Fatal(err)
 		}
 	}
 }
