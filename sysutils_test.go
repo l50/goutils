@@ -32,6 +32,17 @@ func TestCd(t *testing.T) {
 	}
 }
 
+func TestCmdExists(t *testing.T) {
+	fail := "asdf"
+	cmds := []string{"ls", "whoami", fail}
+	for _, cmd := range cmds {
+		if CmdExists(cmd) && cmd == fail {
+			t.Fatalf(
+				"failed to properly identify installed cmd: %v - CmdExists() failed", err)
+		}
+	}
+}
+
 func TestCp(t *testing.T) {
 	file := "test.txt"
 	copyLoc := "testing.txt"
