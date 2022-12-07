@@ -9,6 +9,7 @@ import (
 
 	"github.com/bitfield/script"
 	"github.com/fatih/color"
+	cp "github.com/otiai10/copy"
 )
 
 // CheckRoot will check to see if the process is being run as root
@@ -33,20 +34,14 @@ func Cd(dst string) error {
 	return nil
 }
 
-// Cp is used to copy a file from a src to a destination
-func Cp(src string, dst string) bool {
-	input, err := os.ReadFile(src)
-	if err != nil {
+// Cp is used to copy a file from `src` to `dst`.
+func Cp(src string, dst string) error {
+	if err := cp.Copy(src, dst); err != nil {
 		fmt.Print(color.RedString("failed to copy %s to %s: %v", src, dst, err))
-		return false
+		return err
 	}
 
-	if err := os.WriteFile(dst, input, 0644); err != nil {
-		fmt.Print(color.RedString("failed to copy %s to %s: %v", src, dst, err))
-		return false
-	}
-
-	return true
+	return nil
 }
 
 // EnvVarSet checks if an input environment variable

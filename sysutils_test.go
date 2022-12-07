@@ -37,15 +37,13 @@ func TestCp(t *testing.T) {
 	copyLoc := "testing.txt"
 	created := CreateEmptyFile(file)
 	if created {
-		copied := Cp(file, copyLoc)
-		if copied {
-			if FileExists(copyLoc) {
-				os.Remove(file)
-				os.Remove(copyLoc)
-			}
+		if err := Cp(file, copyLoc); err != nil {
+			t.Fatalf("failed to copy %s to %s - Cp() failed", file, copyLoc)
 		}
-	} else {
-		t.Fatalf("failed to copy %s to %s - Cp() failed", file, copyLoc)
+		if FileExists(copyLoc) {
+			os.Remove(file)
+			os.Remove(copyLoc)
+		}
 	}
 }
 
