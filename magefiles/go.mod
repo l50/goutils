@@ -20,7 +20,7 @@ require (
 	github.com/glendc/go-external-ip v0.1.0 // indirect
 	github.com/go-git/gcfg v1.5.0 // indirect
 	github.com/go-git/go-billy/v5 v5.3.1 // indirect
-	github.com/go-git/go-git/v5 v5.5.0 // indirect
+	github.com/go-git/go-git/v5 v5.5.1 // indirect
 	github.com/imdario/mergo v0.3.13 // indirect
 	github.com/itchyny/gojq v0.12.10 // indirect
 	github.com/itchyny/timefmt-go v0.1.5 // indirect
