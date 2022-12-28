@@ -19,11 +19,12 @@ func checkPCProject() error {
 	var pcFile string
 	cwd := Gwd()
 
-	if strings.Contains(cwd, ".mage") {
+	if strings.Contains(cwd, "magefiles") {
 		pcFile = filepath.Join("..", ".pre-commit-config.yaml")
 	} else {
 		pcFile = ".pre-commit-config.yaml"
 	}
+
 	if !FileExists(pcFile) {
 		return errors.New(color.RedString(
 			"pre-commit is not configured for the current project"))

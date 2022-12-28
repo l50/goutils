@@ -42,44 +42,30 @@ This repo is comprised of utilities that I use across various go projects.
 
 1. [Fork this project](https://docs.github.com/en/get-started/quickstart/fork-a-repo)
 
-2. (Optional) If you installed gvm, create golang pkgset specifically for this project:
+1. (Optional) If you installed gvm, create golang pkgset specifically for this project:
 
    ```bash
    source "${HOME}/.gvm"
-   mkdir "${HOME}/go"
-   GVM_BIN="${HOME}/.gvm/scripts/gvm"
-   export GOPATH="${HOME}/go"
-   VERSION='1.18'
-   PROJECT=goutils
-
-   bash < <(curl -s -S -L https://raw.githubusercontent.com/moovweb/gvm/master/binscripts/gvm-installer)
-   source $GVM_BIN
-   gvm install "go${VERSION}"
-   gvm use "go${VERSION}"
-   gvm pkgset create "${PROJECT}"
-   gvm pkgset use "${PROJECT}"
    ```
 
-3. Generate the `magefile` binary:
+1. Install pre-commit hooks and dependencies:
 
    ```bash
-   mage -d .mage/ -compile ../magefile
+   mage installPreCommitHooks
    ```
 
-4. Install pre-commit hooks and dependencies:
+1. Update and run pre-commit hooks locally:
 
    ```bash
-   ./magefile installPreCommitHooks
+   mage runPreCommit
    ```
 
-5. Update and run pre-commit hooks locally:
+---
 
-   ```bash
-   ./magefile runPreCommit
-   ```
+## Create New Release
 
-6. Set up `go.mod` for development:
+This requires the [GitHub CLI](https://github.com/cli/cli#installation)
 
-   ```bash
-   ./magefile localGoMod
-   ```
+```bash
+gh release create
+```

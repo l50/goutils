@@ -53,27 +53,6 @@ func InstallPreCommitHooks() error {
 	return nil
 }
 
-// LocalGoMod Configures go.mod for local development
-func LocalGoMod() error {
-	fmt.Println(color.YellowString(
-		"Updating go.mod to work for local development."))
-	localChanges := []string{
-		"replace github.com/l50/goutils => ../utils",
-	}
-
-	targetFile := "go.mod"
-
-	for _, change := range localChanges {
-		err := goutils.AppendToFile(targetFile, change)
-		if err != nil {
-			return fmt.Errorf(color.RedString(
-				"failed to append %s to go.mod: %v", change, err))
-		}
-	}
-
-	return nil
-}
-
 // RunPreCommit runs all pre-commit hooks locally
 func RunPreCommit() error {
 	mg.Deps(InstallDeps)
