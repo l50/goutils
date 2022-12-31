@@ -105,9 +105,19 @@ func TestCreateFile(t *testing.T) {
 }
 
 func TestCreateDirectory(t *testing.T) {
-	newDir := filepath.Join("/tmp", "bla", "foo")
+	rs, err := RandomString(5)
+	if err != nil {
+		t.Fatal("failed to get random string for directory name with RandomString()")
+
+	}
+	newDir := filepath.Join("/tmp", "bla", rs)
 	if err := CreateDirectory(newDir); err != nil {
 		t.Fatalf("unable to create %s, CreateDirectory() failed: %v", newDir, err)
+	}
+
+	sameDir := newDir
+	if err := CreateDirectory(sameDir); err == nil {
+		t.Fatalf("error: CreateDirectory() should not overwrite an existing directory")
 	}
 }
 
@@ -164,30 +174,30 @@ func randInt(min int, max int) int {
 	return min + rand.Intn(max-min)
 }
 
-func TestListFiles(t *testing.T) {
+func TestListFilesR(t *testing.T) {
 	targetPath := "."
 	var results []string
-	_, err := ListFiles(targetPath)
+	_, err := ListFilesR(targetPath)
 
 	if err != nil {
-		t.Fatalf("unable to list files in %s - ListFiles() failed: %v",
+		t.Fatalf("unable to list files in %s - ListFilesR() failed: %v",
 			targetPath, err)
 	}
 
 	targetPath, err = RandomString(randInt(8, 15))
 	if err != nil {
-		t.Fatalf("failed to generate RandomString - TestListFiles() failed: %v",
+		t.Fatalf("failed to generate RandomString - TestListFilesR() failed: %v",
 			err)
 	}
 
-	_, err = ListFiles(targetPath)
+	_, err = ListFilesR(targetPath)
 
 	if err == nil {
 		t.Fatalf("%s should not exist - TestListFiles() failed", targetPath)
 	}
 
 	targetPath = "."
-	results, err = ListFiles(targetPath)
+	results, err = ListFilesR(targetPath)
 	if err != nil {
 		t.Fatalf("unable to list files in %s - ListFiles() failed: %v",
 			targetPath, err)
@@ -211,7 +221,12 @@ func TestStringInFile(t *testing.T) {
 }
 
 func TestRmRf(t *testing.T) {
-	newDir := filepath.Join("/tmp", "bla", "foo")
+	rs, err := RandomString(5)
+	if err != nil {
+		t.Fatal("failed to get random string for directory name with RandomString()")
+
+	}
+	newDir := filepath.Join("/tmp", "bla", rs)
 	if err := CreateDirectory(newDir); err != nil {
 		t.Fatalf("unable to create %s, CreateDirectory() failed: %v", newDir, err)
 
@@ -219,6 +234,5 @@ func TestRmRf(t *testing.T) {
 
 	if err := RmRf(newDir); err != nil {
 		t.Fatalf("unable to delete %s, RmRf() failed: %v", newDir, err)
-
 	}
 }

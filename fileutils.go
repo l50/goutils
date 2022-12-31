@@ -63,15 +63,29 @@ func CreateFile(fileContents []byte, filePath string) error {
 // If any part of the input path doesn't exist, create it.
 // Return an error if the path already exists.
 func CreateDirectory(path string) error {
-	if _, err := os.Stat(path); os.IsNotExist(err) {
-		if err := os.MkdirAll(path, os.ModePerm); err != nil {
-			return fmt.Errorf(color.RedString(
-				"failed to create %s: %v", path, err))
+	// Check if the input path is absolute
+	if !filepath.IsAbs(path) {
+		// If the input path is relative, attempt to convert it to an absolute path.
+		absDir, err := filepath.Abs(path)
+		if err != nil {
+			return fmt.Errorf(color.RedString("failed to convert input "+
+				"relative path to an absolute path: %v", err))
 		}
+		path = absDir
+	}
+
+	// Check if the directory already exists
+	if _, err := os.Stat(path); err == nil {
+		return fmt.Errorf(color.RedString("%s already exists", path))
+	}
+
+	// Create the input directory if we've gotten here successfully
+	if err := os.MkdirAll(path, 0755); err != nil {
+		return fmt.Errorf(color.RedString(
+			"failed to create new directory at %s: %v", path, err))
 	}
 
 	return nil
-
 }
 
 // DeleteFile deletes the input file
@@ -114,7 +128,7 @@ func FileToSlice(fileName string) ([]string, error) {
 // set of `dirs`. The filepath is returned if the `filename` is found.
 func FindFile(fileName string, dirs []string) (string, error) {
 	for _, d := range dirs {
-		files, err := ListFiles(d)
+		files, err := ListFilesR(d)
 		if err != nil {
 			return "", err
 		}
@@ -132,9 +146,9 @@ func FindFile(fileName string, dirs []string) (string, error) {
 	return "", nil
 }
 
-// ListFiles lists the files found recursively
+// ListFilesR lists the files found recursively
 // from the input `path`.
-func ListFiles(path string) ([]string, error) {
+func ListFilesR(path string) ([]string, error) {
 	result, err := script.FindFiles(path).String()
 	if err != nil {
 		return []string{}, err
