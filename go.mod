@@ -7,7 +7,7 @@ require (
 	github.com/cavaliergopher/grab/v3 v3.0.1
 	github.com/fatih/color v1.13.0
 	github.com/glendc/go-external-ip v0.1.0
-	github.com/go-git/go-git/v5 v5.5.1
+	github.com/go-git/go-git/v5 v5.5.2
 	github.com/magefile/mage v1.14.0
 	github.com/otiai10/copy v1.9.0
 )
