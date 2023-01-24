@@ -1,8 +1,10 @@
 package utils
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -105,6 +107,61 @@ func RunPCHooks() error {
 
 	if _, err := script.Exec(cmd).Stdout(); err != nil {
 		return fmt.Errorf(color.RedString("failed to run pre-commit hooks: %v", err))
+	}
+
+	return nil
+}
+
+// AddFencedCB helps to address MD040 issues found with markdownlint
+// by adding the input language to fenced code blocks in the input filePath.
+func AddFencedCB(filePath string, language string) error {
+	fmt.Println(language)
+	// Open the file
+	file, err := os.Open(filePath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	// Create a new file to write the modified content to
+	newFile, err := os.Create(filePath + ".tmp")
+	if err != nil {
+		return err
+	}
+	defer newFile.Close()
+
+	// Create a scanner to read the file line by line
+	scanner := bufio.NewScanner(file)
+
+	// Create a variable to track whether the current line is a fenced code block
+	inCodeBlock := false
+
+	// Iterate through each line
+	for scanner.Scan() {
+		line := scanner.Text()
+
+		// Check if a line starts with a fenced code block
+		// and that we're not already in one.
+		if strings.HasPrefix(line, "```") {
+			if !inCodeBlock {
+				line = "```" + language
+				inCodeBlock = true
+			} else if inCodeBlock {
+				inCodeBlock = false
+			}
+		}
+
+		// fmt.Printf("Now writing %s\n", line)
+		// Write the modified line to the new file
+		if _, err = newFile.WriteString(line + "\n"); err != nil {
+			return err
+		}
+	}
+
+	// Rename the new file to the original file name
+	err = os.Rename(filePath+".tmp", filePath)
+	if err != nil {
+		return err
 	}
 
 	return nil

@@ -21,8 +21,7 @@ func TestCd(t *testing.T) {
 		t.Fatal("unable to get the current working directory - Gwd() failed")
 	}
 
-	err := Cd(dst)
-	if err != nil {
+	if err := Cd(dst); err != nil {
 		t.Fatalf("failed to change directory to %s: %v - Cd() failed", dst, err)
 	}
 

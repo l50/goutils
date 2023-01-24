@@ -1,0 +1,6 @@
+{
+  "go.toolsEnvVars": {
+    "GO111MODULE": "on",
+    "GOARCH": "arm64"
+  }
+}
