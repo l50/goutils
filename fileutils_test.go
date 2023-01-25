@@ -33,8 +33,7 @@ func TestAppendToFile(t *testing.T) {
 		t.Fatalf("unable to locate %s - FileExists() failed", testFile)
 	}
 
-	err := AppendToFile(testFile, change)
-	if err != nil {
+	if err := AppendToFile(testFile, change); err != nil {
 		t.Fatalf("failed to append %s to %s - AppendToFile() failed: %v",
 			change, testFile, err)
 	}
@@ -45,8 +44,7 @@ func TestAppendToFile(t *testing.T) {
 	}
 
 	if created && exists {
-		err := DeleteFile(testFile)
-		if err != nil {
+		if err := DeleteFile(testFile); err != nil {
 			t.Fatalf("unable to delete %s, DeleteFile() failed", testFile)
 		}
 	} else {
@@ -55,52 +53,49 @@ func TestAppendToFile(t *testing.T) {
 }
 
 func TestCreateEmptyFile(t *testing.T) {
-	newFile := "test.txt"
-	created := CreateEmptyFile(newFile)
-	exists := FileExists(newFile)
+	testFile := "test.txt"
+	created := CreateEmptyFile(testFile)
+	exists := FileExists(testFile)
 
 	if !exists {
-		t.Fatalf("unable to locate %s, FileExists() failed", newFile)
+		t.Fatalf("unable to locate %s, FileExists() failed", testFile)
 	}
 
 	if created && exists {
-		err := DeleteFile(newFile)
-		if err != nil {
-			t.Fatalf("unable to delete %s, DeleteFile() failed", newFile)
+		if err := DeleteFile(testFile); err != nil {
+			t.Fatalf("unable to delete %s, DeleteFile() failed", testFile)
 		}
 	} else {
-		t.Fatalf("unable to create %s, CreateEmptyFile() failed", newFile)
+		t.Fatalf("unable to create %s, CreateEmptyFile() failed", testFile)
 	}
 }
 
 func TestCreateFile(t *testing.T) {
-	newFile := "test.txt"
-	contents := "stuff"
+	testFile := "test.txt"
+	testFileContent := "stuff"
 
-	err := CreateFile([]byte(contents), newFile)
-	if err != nil {
-		t.Fatalf("unable to create %s, CreateFile() failed: %v", newFile, err)
+	if err := CreateFile(testFile, []byte(testFileContent)); err != nil {
+		t.Fatalf("failed to create %s with %s using CreateFile(): %v", testFile, testFileContent, err)
 	}
 
-	exists := FileExists(newFile)
+	exists := FileExists(testFile)
 
 	if !exists {
-		t.Fatalf("unable to locate %s, FileExists() failed", newFile)
+		t.Fatalf("unable to locate %s, FileExists() failed", testFile)
 	}
 
-	stringFoundInFile, err := StringInFile(newFile, contents)
+	stringFoundInFile, err := StringInFile(testFile, testFileContent)
 	if err != nil || !stringFoundInFile {
 		t.Fatalf("failed to find %s in %s - StringInFile() failed: %v",
-			contents, newFile, err)
+			testFileContent, testFile, err)
 	}
 
 	if exists {
-		err := DeleteFile(newFile)
-		if err != nil {
-			t.Fatalf("unable to delete %s, DeleteFile() failed", newFile)
+		if err := DeleteFile(testFile); err != nil {
+			t.Fatalf("unable to delete %s, DeleteFile() failed", testFile)
 		}
 	} else {
-		t.Fatalf("unable to create %s, CreateEmptyFile() failed", newFile)
+		t.Fatalf("unable to create %s, CreateEmptyFile() failed", testFile)
 	}
 }
 
@@ -122,18 +117,17 @@ func TestCreateDirectory(t *testing.T) {
 }
 
 func TestDeleteFile(t *testing.T) {
-	newFile := "test.txt"
-	created := CreateEmptyFile(newFile)
-	exists := FileExists(newFile)
+	testFile := "test.txt"
+	created := CreateEmptyFile(testFile)
+	exists := FileExists(testFile)
 
 	if !exists {
-		t.Fatalf("unable to locate %s, FileExists() failed", newFile)
+		t.Fatalf("unable to locate %s, FileExists() failed", testFile)
 	}
 
 	if created && exists {
-		err := DeleteFile(newFile)
-		if err != nil {
-			t.Fatalf("unable to delete %s, DeleteFile() failed", newFile)
+		if err := DeleteFile(testFile); err != nil {
+			t.Fatalf("unable to delete %s, DeleteFile() failed", testFile)
 		}
 	}
 }
@@ -155,8 +149,7 @@ func TestFileToSlice(t *testing.T) {
 		t.Fatalf("unable to locate %s - FileExists() failed", testFile)
 	}
 
-	_, err := FileToSlice(testFile)
-	if err != nil {
+	if _, err := FileToSlice(testFile); err != nil {
 		t.Fatalf("unable to convert %s to a slice - FileToSlice() failed: %v",
 			testFile, err)
 	}
@@ -164,8 +157,7 @@ func TestFileToSlice(t *testing.T) {
 
 func TestFindFile(t *testing.T) {
 	testFile := ".bashrc"
-	_, err := FindFile(testFile, []string{"."})
-	if err != nil {
+	if _, err := FindFile(testFile, []string{"."}); err != nil {
 		t.Fatalf("unable to find %s - FindFile() failed", testFile)
 	}
 }
@@ -190,9 +182,7 @@ func TestListFilesR(t *testing.T) {
 			err)
 	}
 
-	_, err = ListFilesR(targetPath)
-
-	if err == nil {
+	if _, err = ListFilesR(targetPath); err == nil {
 		t.Fatalf("%s should not exist - TestListFiles() failed", targetPath)
 	}
 

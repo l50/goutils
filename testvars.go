@@ -7,11 +7,12 @@ import (
 )
 
 var (
-	cloneDir    string
-	clonePath   string
-	currentTime time.Time
-	err         error
-	repo        *git.Repository
-	repoURL     string
-	tags        []string
+	currentTime     time.Time
+	cloneDir        = "/tmp"
+	err             error
+	repo            *git.Repository
+	tags            []string
+	testFile        string
+	testFileContent string
+	testRepoURL     = "https://github.com/l50/helloworld.git"
 )

@@ -20,9 +20,25 @@ func AppendToFile(file string, text string) error {
 	if err != nil {
 		return err
 	}
-	defer f.Close()
+
+	// Create channel to grab any errors from the anonymous function below.
+	errCh := make(chan error)
+
+	defer func(*os.File) {
+		if err := f.Close(); err != nil {
+			errCh <- err
+		}
+	}(f)
+
 	if _, err := f.WriteString(text + "\n"); err != nil {
 		return err
+	}
+
+	// Check if an error was sent through the channel
+	select {
+	case err := <-errCh:
+		return err
+	default:
 	}
 
 	return nil
@@ -43,15 +59,13 @@ func CreateEmptyFile(name string) bool {
 
 // CreateFile creates a file at the input filePath
 // with the specified fileContents.
-func CreateFile(fileContents []byte, filePath string) error {
-	err := os.MkdirAll(filepath.Dir(filePath), os.ModePerm)
-	if err != nil {
+func CreateFile(filePath string, fileContents []byte) error {
+	if err := os.MkdirAll(filepath.Dir(filePath), os.ModePerm); err != nil {
 		return fmt.Errorf("cannot create dir portion"+
 			"of filepath %s: %v", filePath, err)
 	}
 
-	err = os.WriteFile(filePath, fileContents, os.ModePerm)
-	if err != nil {
+	if err := os.WriteFile(filePath, fileContents, os.ModePerm); err != nil {
 		return fmt.Errorf("cannot write to file %s: %v",
 			filePath, err)
 	}
@@ -90,10 +104,10 @@ func CreateDirectory(path string) error {
 
 // DeleteFile deletes the input file
 func DeleteFile(file string) error {
-	err := os.Remove(file)
-	if err != nil {
+	if err := os.Remove(file); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -166,7 +180,15 @@ func StringInFile(path string, searchStr string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	defer f.Close()
+
+	// Create channel to grab any errors from the anonymous function below.
+	errCh := make(chan error)
+
+	defer func(*os.File) {
+		if err := f.Close(); err != nil {
+			errCh <- err
+		}
+	}(f)
 
 	scanner := bufio.NewScanner(f)
 
@@ -175,7 +197,6 @@ func StringInFile(path string, searchStr string) (bool, error) {
 		if strings.Contains(scanner.Text(), searchStr) {
 			return true, nil
 		}
-
 		line++
 	}
 
@@ -183,16 +204,34 @@ func StringInFile(path string, searchStr string) (bool, error) {
 		return false, err
 	}
 
-	return false, err
+	// Check if an error was sent through the channel
+	select {
+	case err := <-errCh:
+		return false, err
+	default:
+	}
+
+	return false, nil
 }
 
 // RmRf removes an input path and everything in it.
 // If the input path doesn't exist, an error is returned.
 func RmRf(path string) error {
-	if _, err := os.Stat(path); os.IsNotExist(err) {
-		if err := os.RemoveAll(path); err != nil {
-			return fmt.Errorf("failed to run RmRf on %s: %v", path, err)
+	if _, err := os.Stat(path); err == nil {
+		if info, err := os.Stat(path); err == nil {
+			if info.IsDir() {
+				if err := os.RemoveAll(path); err != nil {
+					return fmt.Errorf("failed to run RmRf on %s: %v", path, err)
+				}
+			} else {
+				if err := os.Remove(path); err != nil {
+					return fmt.Errorf("failed to run RmRf on %s: %v", path, err)
+				}
+			}
+		} else {
+			return fmt.Errorf("failed to os.Stat on %s: %v", path, err)
 		}
+	} else {
 		return fmt.Errorf("failed to os.Stat on %s: %v", path, err)
 	}
 

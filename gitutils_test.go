@@ -5,61 +5,60 @@ import (
 	"log"
 	"path/filepath"
 	"testing"
-	"time"
 
 	"github.com/fatih/color"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
 )
 
+var (
+	clonePath      string
+	gitCleanupDirs []string
+	tag            string
+)
+
 func init() {
-	cloneDir = "/tmp"
-	repoURL = "https://github.com/l50/helloworld.git"
-	// Used to create a random directory name
-	currentTime = time.Now()
-	clonePath = filepath.Join(
+	tag = "v6.6.6"
+	// Create test repo and queue it for cleanup
+	randStr, _ := RandomString(8)
+	clonePath = createTestRepo(fmt.Sprintf("gitutils-%s", randStr))
+	gitCleanupDirs = append(gitCleanupDirs, clonePath)
+}
+
+func createTestRepo(name string) string {
+	targetPath := filepath.Join(
 		cloneDir, fmt.Sprintf(
-			"gitutils-%s", currentTime.Format("2006-01-02-15-04-05"),
+			"%s-%s", name, currentTime.Format("2006-01-02-15-04-05"),
 		),
 	)
 
-	// Only clone if the clone path doesn't already exist.
-	if !FileExists(clonePath) {
-		repo, err = CloneRepo(repoURL, clonePath, nil)
-		if err != nil {
-			log.Fatalf(
-				"failed to clone %s - CloneRepo() failed: %v",
-				repo,
-				err,
-			)
-		}
-	}
-}
-
-func createTestFile(filePath string, content []byte) error {
-	err := CreateFile(content, filePath)
+	repo, err = CloneRepo(testRepoURL, targetPath, nil)
 	if err != nil {
-		return err
+		log.Fatalf(
+			"failed to clone to %s - CloneRepo() failed: %v",
+			targetPath,
+			err,
+		)
 	}
 
-	return nil
+	return targetPath
 }
 
 func TestPush(t *testing.T) {
-	testFilePath := filepath.Join(clonePath, "example-git-file")
-	content := []byte("hello world!")
+	testFile := filepath.Join(clonePath, "example-git-file")
+	testFileContent := "hello world!"
 
-	if err := createTestFile(testFilePath, content); err != nil {
-		t.Fatalf("failed to create test file: %v", err)
+	if err := CreateFile(testFile, []byte(testFileContent)); err != nil {
+		t.Errorf("failed to create %s with %s using CreateFile(): %v", testFile, testFileContent, err)
 	}
 
-	if err := AddFile(testFilePath); err != nil {
+	if err := AddFile(testFile); err != nil {
 		t.Fatalf("failed to add %s: %v - AddFile() failed",
-			testFilePath, err)
+			testFile, err)
 	}
 
-	if err := Commit(repo, testFilePath); err != nil {
+	if err := Commit(repo, testFile); err != nil {
 		t.Fatalf("failed to commit staged files in %s: %v",
-			testFilePath, err)
+			testFile, err)
 	}
 
 	// personal access token example
@@ -83,12 +82,6 @@ func TestGetTags(t *testing.T) {
 }
 
 func TestPushTag(t *testing.T) {
-	tag := "v6.6.6"
-
-	if err := CreateTag(repo, tag); err != nil {
-		t.Fatalf("failed to create %s tag: %v", tag, err)
-	}
-
 	// personal access token example
 	token := "notrealtoken"
 	auth := &http.BasicAuth{
@@ -113,12 +106,15 @@ func TestGetGlobalUserCfg(t *testing.T) {
 }
 
 func TestDeletePushedTag(t *testing.T) {
-	tag := "v7.7.7"
-	keyName := "github_rsa"
+	t.Cleanup(func() {
+		cleanupGitUtils(t)
+	})
 
 	if err := CreateTag(repo, tag); err != nil {
 		t.Fatalf("failed to create %s tag: %v", tag, err)
 	}
+
+	keyName := "github_rsa"
 
 	if err := DeleteTag(repo, tag); err != nil {
 		t.Fatalf("failed to delete %s tag: %v - DeleteTag() failed",
@@ -137,5 +133,14 @@ func TestDeletePushedTag(t *testing.T) {
 			"in this test. There are not sufficient permissions " +
 			"from the previous steps to do so - " +
 			"DeletePushedTag() failed")
+	}
+
+}
+
+func cleanupGitUtils(t *testing.T) {
+	for _, dir := range gitCleanupDirs {
+		if err := RmRf(dir); err != nil {
+			fmt.Println("failed to clean up gitUtils: ", err.Error())
+		}
 	}
 }

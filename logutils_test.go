@@ -1,18 +1,19 @@
 package utils
 
 import (
-	"os"
 	"testing"
 )
 
 func TestCreateLogFile(t *testing.T) {
-	_, err := CreateLogFile()
-	if err != nil {
+	if _, err := CreateLogFile(); err != nil {
 		t.Fatalf("failed to create log file: %v", err)
 	}
 
-	err = os.RemoveAll("logs")
-	if err != nil {
-		t.Fatalf("unable to delete the logs directory - DeleteFile() failed: %v", err)
-	}
+	// Remove the temporary file after the test completes.
+	defer func() {
+		dir := "./logs"
+		if err := RmRf(dir); err != nil {
+			t.Fatalf("unable to delete %s, RmRf() failed", dir)
+		}
+	}()
 }

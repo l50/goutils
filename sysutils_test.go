@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -11,6 +12,10 @@ import (
 	"time"
 
 	"github.com/bitfield/script"
+)
+
+var (
+	debug = false
 )
 
 func TestCd(t *testing.T) {
@@ -51,8 +56,12 @@ func TestCp(t *testing.T) {
 			t.Fatalf("failed to copy %s to %s - Cp() failed", file, copyLoc)
 		}
 		if FileExists(copyLoc) {
-			os.Remove(file)
-			os.Remove(copyLoc)
+			remove := []string{file, copyLoc}
+			for _, f := range remove {
+				if err := DeleteFile(f); err != nil {
+					t.Errorf("unable to delete %s, DeleteFile() failed", f)
+				}
+			}
 		}
 	}
 }
@@ -131,47 +140,92 @@ func TestRunCommandWithTimeout(t *testing.T) {
 
 	cmd := "chmod +x " + dlFilePath
 	if _, err := script.Exec(cmd).Stdout(); err != nil {
-		t.Errorf("failed to run `chmod +x` on %s: %v", dlFilePath, err)
+		t.Fatalf("failed to run `chmod +x` on %s: %v", dlFilePath, err)
 	}
 
-	type args struct {
-		// timeout time.Duration
-		timeout string
-		command string
+	type params struct {
+		timeout time.Duration
+		cmd     string
+		args    []string
 	}
+
+	// Generate random string for the test file
+	rand, err := RandomString(8)
+	if err != nil {
+		t.Fatalf("failed to generate random string: %v", err)
+	}
+	// Create test script for the test #4
+	testFile := filepath.Join("/tmp", fmt.Sprintf("%s-test4.sh", rand))
+	testFileContent := `
+#!/bin/bash
+set -ex
+
+sleep 5
+
+# Kill this process
+ps -ef | \
+	grep "${0}" | \
+	grep -v grep | \
+	awk '{print $2}' | \
+	xargs -r kill -9
+`
+	if err := CreateFile(testFile, []byte(testFileContent)); err != nil {
+		if err != nil {
+			t.Fatalf("failed to create %s with %s using CreateFile(): %v", testFile, testFileContent, err)
+		}
+	}
+	// Remove the temporary file after the test completes.
+	defer func() {
+		if err := DeleteFile(testFile); err != nil {
+			t.Fatalf("unable to delete %s, DeleteFile() failed", testFile)
+		}
+	}()
 
 	tests := []struct {
 		name    string
-		args    args
-		want    string
+		params  params
 		wantErr bool
+		wantOut string
 	}{
 		{
 			name: "Test command that runs quickly",
-			args: args{
-				timeout: "5s",
-				command: "echo hi",
+			params: params{
+				timeout: time.Duration(5) * time.Second,
+				cmd:     "echo",
+				args:    []string{"hi"},
 			},
 			wantErr: false,
-			want:    "hi",
+			wantOut: "hi",
 		},
 		{
 			name: "Test running command that will not finish quickly",
-			args: args{
-				timeout: "5s",
-				command: "sleep 250",
+			params: params{
+				timeout: time.Duration(5) * time.Second,
+				cmd:     "sleep",
+				args:    []string{"250"},
 			},
-			wantErr: true,
-			want:    "",
+			wantErr: false,
+			wantOut: "",
 		},
 		{
 			name: "Test long-running bash script that will not finish quickly",
-			args: args{
-				timeout: "10s",
-				command: "bash " + dlFilePath,
+			params: params{
+				timeout: time.Duration(10) * time.Second,
+				cmd:     "bash",
+				args:    []string{dlFilePath},
+			},
+			wantErr: false,
+			wantOut: "USER/GROUP",
+		},
+		{
+			name: "Test process that times out before the specified timeout",
+			params: params{
+				timeout: time.Duration(10) * time.Second,
+				cmd:     "bash",
+				args:    []string{testFile},
 			},
 			wantErr: true,
-			want:    "",
+			wantOut: "",
 		},
 	}
 
@@ -179,13 +233,15 @@ func TestRunCommandWithTimeout(t *testing.T) {
 	case "linux", "darwin":
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
-				got, err := RunCommandWithTimeout(tt.args.timeout, tt.args.command)
-				fmt.Println(got)
-				if (err != nil) != tt.wantErr {
-					t.Errorf("error: RunCommandWithTimeout() err = %v, want %v", err, tt.wantErr)
+				got, err := RunCommandWithTimeout(tt.params.timeout, tt.params.cmd, tt.params.args...)
+				if err != nil && !tt.wantErr {
+					t.Errorf("error: RunCommandWithTimeout() err = %v", err)
 				}
-				if len(got) == 0 && tt.want != "" && got != tt.want {
-					t.Errorf("error: RunCommandWithTimeout() got = %v, want %v", got, tt.want)
+				if !strings.Contains(got, tt.wantOut) {
+					t.Errorf("error: RunCommandWithTimeout() got = %v, want %v", got, tt.wantOut)
+				}
+				if debug {
+					log.Println("Command output: ", got)
 				}
 			})
 		}

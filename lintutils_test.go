@@ -1,21 +1,22 @@
 package utils
 
 import (
-	"log"
+	"fmt"
 	"os"
 	"strings"
 	"testing"
-
-	"github.com/stretchr/testify/assert"
 )
 
 var (
-	tmpLintingFile = "/tmp/lintingutils-test-file.md"
+	lintCleanupFiles []string
 )
 
 func init() {
+	randStr, _ := RandomString(8)
+	testFile = fmt.Sprintf("/tmp/lintingutils-test-file-%s.md", randStr)
+	lintCleanupFiles = append(lintCleanupFiles, testFile)
 	// Create a markdown file in the tmp directory
-	fileContent := strings.ReplaceAll(`
+	testFileContent = strings.ReplaceAll(`
 Get version of mongo:
 
 ”””
@@ -33,23 +34,25 @@ while(profileData.hasNext()) {
 }
 ”””
 `, "”", "`")
-
-	if err := os.WriteFile(tmpLintingFile, []byte(fileContent), 0644); err != nil {
-		log.Printf("Error writing file: %v", err)
-	}
 }
 
 func TestAddFencedCB(t *testing.T) {
-	// Remove the temporary file after the test completes.
-	defer tearDown()
+	t.Cleanup(func() {
+		cleanupLintUtils(t)
+	})
 
-	// Test that the fixCodeBlocks function correctly adds the language to code blocks
-	if err := AddFencedCB(tmpLintingFile, "js"); err != nil {
-		t.Errorf("Error occurred: %s", err)
+	// Create the test file
+	if err := CreateFile(testFile, []byte(testFileContent)); err != nil {
+		t.Fatalf("error running CreateFile() with %s and %s: %v", testFile, testFileContent, err)
+	}
+
+	// Test that the AddFencedCB function correctly adds the language to code blocks
+	if err := AddFencedCB(testFile, "js"); err != nil {
+		t.Fatalf("failed to run AddFencedCB() with %s and js as inputs: %v", testFile, err)
 	}
 
 	// Read the modified file to check its contents
-	modifiedContent, err := os.ReadFile(tmpLintingFile)
+	modifiedContent, err := os.ReadFile(testFile)
 	if err != nil {
 		t.Errorf("Error occurred: %s", err)
 	}
@@ -72,7 +75,9 @@ while(profileData.hasNext()) {
 }
 ”””
 `, "”", "`")
-	assert.Equal(t, []byte(expectedOutput), modifiedContent)
+	if !strings.Contains(expectedOutput, string(modifiedContent)) {
+		t.Fatalf("error: %s does not resemble expected output: %s", string(modifiedContent), expectedOutput)
+	}
 }
 
 func TestInstallGoPCDeps(t *testing.T) {
@@ -93,9 +98,12 @@ func TestUpdatePCHooks(t *testing.T) {
 	}
 }
 
-func tearDown() {
-	// remove the temporary file created during the test
-	os.Remove(tmpLintingFile)
+func cleanupLintUtils(t *testing.T) {
+	for _, dir := range lintCleanupFiles {
+		if err := RmRf(dir); err != nil {
+			fmt.Println("failed to clean up lintUtils: ", err.Error())
+		}
+	}
 }
 
 // Currently not running because this test

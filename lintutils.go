@@ -115,20 +115,35 @@ func RunPCHooks() error {
 // AddFencedCB helps to address MD040 issues found with markdownlint
 // by adding the input language to fenced code blocks in the input filePath.
 func AddFencedCB(filePath string, language string) error {
-	fmt.Println(language)
 	// Open the file
 	file, err := os.Open(filePath)
 	if err != nil {
 		return err
 	}
-	defer file.Close()
+
+	// Create channel to grab any errors from the anonymous function below.
+	errCh1 := make(chan error)
+
+	defer func(*os.File) {
+		if err := file.Close(); err != nil {
+			errCh1 <- err
+		}
+	}(file)
 
 	// Create a new file to write the modified content to
 	newFile, err := os.Create(filePath + ".tmp")
 	if err != nil {
 		return err
 	}
-	defer newFile.Close()
+
+	// Create channel to grab any errors from the anonymous function below.
+	errCh2 := make(chan error)
+
+	defer func(*os.File) {
+		if err := newFile.Close(); err != nil {
+			errCh2 <- err
+		}
+	}(newFile)
 
 	// Create a scanner to read the file line by line
 	scanner := bufio.NewScanner(file)
@@ -151,7 +166,6 @@ func AddFencedCB(filePath string, language string) error {
 			}
 		}
 
-		// fmt.Printf("Now writing %s\n", line)
 		// Write the modified line to the new file
 		if _, err = newFile.WriteString(line + "\n"); err != nil {
 			return err
@@ -162,6 +176,20 @@ func AddFencedCB(filePath string, language string) error {
 	err = os.Rename(filePath+".tmp", filePath)
 	if err != nil {
 		return err
+	}
+
+	// Check if an error was sent through the first channel
+	select {
+	case err := <-errCh1:
+		return err
+	default:
+	}
+
+	// Check if an error was sent through the second channel
+	select {
+	case err := <-errCh2:
+		return err
+	default:
 	}
 
 	return nil

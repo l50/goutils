@@ -2,46 +2,37 @@ package utils
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"testing"
-	"time"
+)
+
+var (
+	mageCleanupDirs []string
 )
 
 func init() {
-	cloneDir = "/tmp"
-	repoURL = "https://github.com/l50/helloworld.git"
-	// Used to create a random directory name
-	currentTime = time.Now()
-	clonePath = filepath.Join(
-		cloneDir, fmt.Sprintf(
-			"mageutils-%s", currentTime.Format("2006-01-02-15-04-05"),
-		),
-	)
-
-	// Only clone if the clone path doesn't already exist.
-	if !FileExists(clonePath) {
-		repo, err = CloneRepo(repoURL, clonePath, nil)
-		if err != nil {
-			log.Fatalf(
-				"failed to clone %s - CloneRepo() failed: %v",
-				repo,
-				err,
-			)
-		}
-	}
+	// Create test repo and queue it for cleanup
+	randStr, _ := RandomString(8)
+	clonePath = createTestRepo(fmt.Sprintf("mageutils-%s", randStr))
+	mageCleanupDirs = append(mageCleanupDirs, clonePath)
 }
 
 func TestGoReleaser(t *testing.T) {
-	if err := GoReleaser(); err != nil {
+	t.Cleanup(func() {
+		cleanupMageUtils(t)
+	})
+
+	cwd, err := os.Getwd()
+	if err != nil {
 		t.Fatal(err)
 	}
-	// Clean up
-	if FileExists("dist") {
-		if err := os.RemoveAll("dist"); err != nil {
-			t.Fatal(err)
-		}
+
+	releaserDir := filepath.Join(cwd, "dist")
+	mageCleanupDirs = append(mageCleanupDirs, releaserDir)
+
+	if err := GoReleaser(); err != nil {
+		t.Fatal(err)
 	}
 }
 
@@ -74,18 +65,6 @@ func TestTidy(t *testing.T) {
 }
 
 func TestUpdateMageDeps(t *testing.T) {
-	clonePath = filepath.Join(
-		cloneDir, fmt.Sprintf(
-			"helloworld-%s", currentTime.Format("2006-01-02-15-04-05"),
-		),
-	)
-
-	// If the `clonePath` already exists, clean it up.
-	if FileExists(clonePath) {
-		if err := RmRf(clonePath); err != nil {
-			log.Fatal(err)
-		}
-	}
 	if err := UpdateMageDeps("magefiles"); err != nil {
 		t.Fatal(err)
 	}
@@ -99,5 +78,13 @@ func TestInstallGoDeps(t *testing.T) {
 
 	if err := InstallGoDeps(sampleDeps); err != nil {
 		t.Fatal(err)
+	}
+}
+
+func cleanupMageUtils(t *testing.T) {
+	for _, dir := range mageCleanupDirs {
+		if err := RmRf(dir); err != nil {
+			fmt.Println("failed to clean up mageUtils: ", err.Error())
+		}
 	}
 }
