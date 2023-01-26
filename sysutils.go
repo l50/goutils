@@ -92,7 +92,6 @@ func Gwd() string {
 	}
 
 	return dir
-
 }
 
 // GetFutureTime returns the date and time of the input

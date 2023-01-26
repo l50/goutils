@@ -8,6 +8,7 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
+	"github.com/stretchr/testify/assert"
 )
 
 var (
@@ -135,6 +136,15 @@ func TestDeletePushedTag(t *testing.T) {
 			"DeletePushedTag() failed")
 	}
 
+}
+
+func TestRepoRoot(t *testing.T) {
+	root, err := RepoRoot()
+	if err != nil {
+		t.Fatalf("failed to retrieve root - RepoRoot() failed: %v", err)
+	}
+
+	assert.Contains(t, root, "goutils", "Expected repo root to contain the word 'goutils'")
 }
 
 func cleanupGitUtils(t *testing.T) {

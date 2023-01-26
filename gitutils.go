@@ -360,3 +360,23 @@ func DeletePushedTag(repo *git.Repository, tag string, auth transport.AuthMethod
 
 	return nil
 }
+
+// RepoRoot returns the root of the git repo a user is currently in.
+func RepoRoot() (string, error) {
+	cwd, err := os.Getwd()
+	if err != nil {
+		return "", err
+	}
+
+	for {
+		if _, err := os.Stat(filepath.Join(cwd, ".git")); err == nil {
+			return cwd, nil
+		}
+
+		parent := filepath.Dir(cwd)
+		if parent == cwd {
+			return "", fmt.Errorf("git root not found")
+		}
+		cwd = parent
+	}
+}

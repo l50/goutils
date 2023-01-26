@@ -22,8 +22,8 @@ func KeeperLoggedIn(email string) bool {
 	r, w, _ := os.Pipe()
 	os.Stdout = w
 
-	// Get the keeper menu output and exit
-	// Semgrep is falsely flagging this as a SQLi
+	// Get the keeper menu output and exit.
+	// Semgrep is falsely flagging this as a SQLi, so we need to add this:
 	// nosemgrep
 	_, err := script.Echo("q").Exec("keeper login " + email).Stdout()
 
