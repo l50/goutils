@@ -1,7 +1,7 @@
 #!/bin/bash
 set -ex
 
-pkg=$(go list ./...)
+pkg=$(go list .)
 for dir in */; do
     if [[ "${dir}" != ".mage" ]] \
                               && [[ "${dir}" != ".hooks/" ]] \
