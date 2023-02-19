@@ -40,12 +40,14 @@ func Cd(dst string) error {
 }
 
 // CmdExists checks $PATH for
-// for the input `cmd`.
+// for the input cmd.
 // It returns true if the command is found,
 // otherwise it returns false.
 func CmdExists(cmd string) bool {
-	_, err := exec.LookPath(cmd)
-	return err == nil
+	if _, err := exec.LookPath(cmd); err != nil {
+		return false
+	}
+	return true
 }
 
 // Cp is used to copy a file from `src` to `dst`.
