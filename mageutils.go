@@ -9,6 +9,37 @@ import (
 	"github.com/magefile/mage/sh"
 )
 
+// GHRelease creates a new release with the input newVer using the gh cli tool.
+// Example newVer: v1.0.1
+func GHRelease(newVer string) error {
+	cmd := "gh"
+	if !CmdExists("gh") {
+		return errors.New(color.RedString(
+			"required cmd %s not found in $PATH: %v", cmd, err))
+	}
+
+	cl := "CHANGELOG.md"
+	// Generate CHANGELOG
+	if err := sh.RunV("gh", "changelog", "new", "--next-version", newVer); err != nil {
+		return fmt.Errorf(color.RedString(
+			"failed to create changelog for new release %s: %v", newVer, err))
+	}
+
+	// Create release using CHANGELOG
+	if err := sh.RunV("gh", "release", "create", newVer, "-F", cl); err != nil {
+		return fmt.Errorf(color.RedString(
+			"failed to create new release %s: %v", newVer, err))
+	}
+
+	// Remove created CHANGELOG file
+	if err := DeleteFile(cl); err != nil {
+		return fmt.Errorf(color.RedString(
+			"failed to delete generated CHANGELOG: %v", err))
+	}
+
+	return nil
+}
+
 // GoReleaser Runs goreleaser to generate all of the supported binaries
 // specified in `.goreleaser`.
 func GoReleaser() error {

@@ -18,6 +18,14 @@ func init() {
 	mageCleanupDirs = append(mageCleanupDirs, clonePath)
 }
 
+func TestGHRelease(t *testing.T) {
+	// Call the function with an old version
+	newVer := "v1.0.0"
+	if err := GHRelease(newVer); err == nil {
+		t.Errorf("release %s should not have been created: %v", newVer, err)
+	}
+}
+
 func TestGoReleaser(t *testing.T) {
 	t.Cleanup(func() {
 		cleanupMageUtils(t)
