@@ -60,12 +60,43 @@ This repo is comprised of utilities that I use across various go projects.
    mage runPreCommit
    ```
 
+1. Install keeper commander:
+
+   ```bash
+   python3 -m pip install --upgrade pip
+   python3 -m pip install keepercommander
+   ```
+
+1. Install `rvm` and `ruby` (for markdownlint):
+
+   ```bash
+   gpg --keyserver keyserver.ubuntu.com --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB
+   \curl -sSL https://get.rvm.io | bash -s stable --ruby
+   rvm install ruby-3.2.1
+   ```
+
 ---
 
 ## Create New Release
 
 This requires the [GitHub CLI](https://github.com/cli/cli#installation)
+and [gh-changelog GitHub CLI extension](https://github.com/chelnak/gh-changelog).
+
+Install changelog extension:
 
 ```bash
-gh release create
+gh extension install chelnak/gh-changelog
+```
+
+Generate changelog:
+
+```bash
+NEXT_VERSION=v1.1.3
+gh changelog new --next-version "${NEXT_VERSION}"
+```
+
+Create release:
+
+```bash
+gh release create "${NEXT_VERSION}" -F CHANGELOG.md
 ```

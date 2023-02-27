@@ -47,6 +47,7 @@ func InstallGoPCDeps() error {
 		"github.com/fzipp/gocyclo/cmd/gocyclo",
 		"github.com/golangci/golangci-lint/cmd/golangci-lint",
 		"github.com/go-critic/go-critic/cmd/gocritic",
+		"github.com/goreleaser/goreleaser",
 	}
 
 	if err := InstallGoDeps(deps); err != nil {

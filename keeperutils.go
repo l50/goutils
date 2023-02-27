@@ -1,80 +1,121 @@
 package utils
 
 import (
+	"errors"
 	"fmt"
-	"io"
-	"os"
+	"path/filepath"
+	"regexp"
 	"strings"
 
-	"github.com/bitfield/script"
 	"github.com/fatih/color"
+	"github.com/spf13/cobra"
 )
+
+// KeeperRecord represents a record maintained by Keeper.
+type KeeperRecord struct {
+	UID      string
+	Title    string
+	Username string
+	Password string
+}
+
+// CommanderInstalled returns true if keeper
+// commander is installed on the current system.
+func CommanderInstalled() bool {
+	return CmdExists("keeper")
+}
 
 // KeeperLoggedIn returns true if keeper vault
 // is logged in with the input `email`.
 // Otherwise, it returns false.
-func KeeperLoggedIn(email string) bool {
+func KeeperLoggedIn() bool {
+	if !CommanderInstalled() {
+		err := errors.New(color.RedString(
+			"keeper commander is not installed - please install and try again"))
+		fmt.Println(err)
+		return false
+	}
+
+	home, err := GetHomeDir()
+	cobra.CheckErr(err)
+
+	if err := Cd(filepath.Join(home, ".keeper")); err != nil {
+		fmt.Print("failed to change into the keeper config directory: ", err)
+		return false
+	}
+
 	fmt.Println(color.YellowString(
 		"Checking if we are logged into Keeper vault"))
 	loggedIn := "My Vault>"
 
-	rescueStdout := os.Stdout
-	r, w, _ := os.Pipe()
-	os.Stdout = w
-
-	// Get the keeper menu output and exit.
-	// Semgrep is falsely flagging this as a SQLi, so we need to add this:
-	// nosemgrep
-	_, err := script.Echo("q").Exec("keeper login " + email).Stdout()
-
-	w.Close()
-	out, _ := io.ReadAll(r)
-	os.Stdout = rescueStdout
-
+	out, err := RunCommandWithTimeout(5, "keeper", "shell")
 	if err != nil {
-		fmt.Printf("failed to check login state "+
-			"for keeper vault: %v", err)
+		fmt.Print("failed to check login state "+
+			"for keeper vault: ", err)
 		return false
 	}
 
-	// The output response has a ton of newlines -
-	// split on newlines to make it easier to
-	// get the auth URL.
-	outSlice := strings.Split(string(out), "\n")
-
-	for _, output := range outSlice {
-		if strings.Contains(output, loggedIn) {
-			return true
-		}
+	if strings.Contains(out, loggedIn) {
+		return true
 	}
 
 	return false
-
 }
 
 // RetrieveKeeperPW returns the password found at
-// the specified input path.
-func RetrieveKeeperPW(path string) (string, error) {
-	fmt.Println(color.YellowString(
-		"Retrieving %s from keeper", path))
+// the input keeperPath.
+func RetrieveKeeperPW(keeperPath string) (string, error) {
+	// Ensure keeper commander is installed and
+	// there is a valid keeper session.
+	if !CommanderInstalled() || !KeeperLoggedIn() {
+		return "", errors.New(
+			color.RedString("error: ensure keeper commander is installed and a valid keeper session is established"))
+	}
 
-	cmd := fmt.Sprintf("keeper find-password '%s'", path)
-
-	rescueStdout := os.Stdout
-	r, w, _ := os.Pipe()
-	os.Stdout = w
+	fmt.Printf("Retrieving password from %s in keeper", keeperPath)
 
 	// Get password
-	_, err := script.Exec(cmd).Stdout()
-
-	w.Close()
-	out, _ := io.ReadAll(r)
-	os.Stdout = rescueStdout
-
+	pw, err := RunCommand("keeper", "find-password", keeperPath)
 	if err != nil {
 		return "", err
 	}
 
 	// Remove newlines from output
-	return strings.ReplaceAll(string(out), "\n", ""), nil
+	return strings.ReplaceAll(string(pw), "\n", ""), nil
+}
+
+// SearchKeeperRecords searches the logged-in user's
+// keeper records for the input query. The searchTerm
+// can be a string or regex.
+func SearchKeeperRecords(searchTerm string) (KeeperRecord, error) {
+	var record KeeperRecord
+
+	// Ensure keeper commander is installed and
+	// there is a valid keeper session.
+	if !CommanderInstalled() || !KeeperLoggedIn() {
+		return record, errors.New(
+			color.RedString("error: ensure keeper commander is installed and a valid keeper session is established"))
+	}
+
+	fmt.Println(color.YellowString(
+		"Searching keeper for records matching %s, please wait...", searchTerm))
+
+	cmd := []string{"keeper", "search", searchTerm}
+	output, err := RunCommand(cmd[0], cmd[1:]...)
+	if err != nil {
+		return record, err
+	}
+
+	// Regular expressions to extract relevant information from the output.
+	uidRegex := regexp.MustCompile(`UID:\s+(\S+)`)
+	titleRegex := regexp.MustCompile(`Title:\s+(.+)`)
+	usernameRegex := regexp.MustCompile(`Login:\s+(\S+)`)
+	passwordRegex := regexp.MustCompile(`Password:\s+(\S+)`)
+
+	record.UID = uidRegex.FindStringSubmatch(output)[1]
+	record.Title = titleRegex.FindStringSubmatch(output)[1]
+	record.Username = usernameRegex.FindStringSubmatch(output)[1]
+	record.Password = passwordRegex.FindStringSubmatch(output)[1]
+
+	return record, nil
 }
