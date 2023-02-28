@@ -18,6 +18,15 @@ type KeeperRecord struct {
 	Password string
 }
 
+// keeperConfigPath returns the path of the keeper config file.
+func keeperConfigPath() (string, error) {
+	home, err := GetHomeDir()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(home, ".keeper", "config.json"), nil
+}
+
 // CommanderInstalled returns true if keeper
 // commander is installed on the current system.
 func CommanderInstalled() bool {
@@ -35,22 +44,19 @@ func KeeperLoggedIn() bool {
 		return false
 	}
 
-	home, err := GetHomeDir()
-	if err != nil {
-		fmt.Println("failed to get current user's home directory: ", err.Error())
-		return false
-	}
-
-	if err := Cd(filepath.Join(home, ".keeper")); err != nil {
-		fmt.Print("failed to change into the keeper config directory: ", err.Error())
-		return false
-	}
-
 	fmt.Println(color.YellowString(
 		"Checking if we are logged into Keeper vault"))
-	loggedIn := "My Vault>"
 
-	out, err := RunCommandWithTimeout(5, "keeper", "shell")
+	configPath, err := keeperConfigPath()
+	if err != nil {
+		err := errors.New(color.RedString(
+			"failed to retrieve keeper config path"))
+		fmt.Println(err)
+		return false
+	}
+
+	loggedIn := "My Vault>"
+	out, err := RunCommandWithTimeout(5, "keeper", "shell", "--config", configPath)
 	if err != nil {
 		fmt.Print("failed to check login state "+
 			"for keeper vault: ", err)
@@ -72,19 +78,17 @@ func RetrieveKeeperPW(keeperPath string) (string, error) {
 	if !CommanderInstalled() || !KeeperLoggedIn() {
 		return "", errors.New("error: ensure keeper commander is installed and a valid keeper session is established")
 	}
-	home, err := GetHomeDir()
-	if err != nil {
-		return "", err
-	}
-
-	if err := Cd(filepath.Join(home, ".keeper")); err != nil {
-		return "", err
-	}
 
 	fmt.Printf("Retrieving password from %s in keeper\n", keeperPath)
 
 	// Get password
-	pw, err := RunCommand("keeper", "find-password", keeperPath)
+	configPath, err := keeperConfigPath()
+	if err != nil {
+		err := errors.New(color.RedString(
+			"failed to retrieve keeper config path"))
+		return "", err
+	}
+	pw, err := RunCommand("keeper", "find-password", keeperPath, "--config", configPath)
 	if err != nil {
 		return "", err
 	}
@@ -105,20 +109,17 @@ func SearchKeeperRecords(searchTerm string) (KeeperRecord, error) {
 		return record, errors.New("error: ensure keeper commander is installed and a valid keeper session is established")
 	}
 
-	home, err := GetHomeDir()
+	fmt.Printf("Searching keeper for records matching %s, please wait...\n", searchTerm)
+
+	// Get password
+	configPath, err := keeperConfigPath()
 	if err != nil {
+		err := errors.New(color.RedString(
+			"failed to retrieve keeper config path"))
 		return record, err
 	}
 
-	if err := Cd(filepath.Join(home, ".keeper")); err != nil {
-		return record, err
-	}
-
-	fmt.Println(color.YellowString(
-		"Searching keeper for records matching %s, please wait...", searchTerm))
-
-	cmd := []string{"keeper", "search", searchTerm}
-	output, err := RunCommand(cmd[0], cmd[1:]...)
+	output, err := RunCommand("keeper", "search", searchTerm, "--config", configPath)
 	if err != nil {
 		return record, err
 	}
@@ -126,13 +127,11 @@ func SearchKeeperRecords(searchTerm string) (KeeperRecord, error) {
 	// Regular expressions to extract relevant information from the output.
 	uidRegex := regexp.MustCompile(`UID:\s+(\S+)`)
 	titleRegex := regexp.MustCompile(`Title:\s+(.+)`)
-	usernameRegex := regexp.MustCompile(`Login:\s+(\S+)`)
-	passwordRegex := regexp.MustCompile(`Password:\s+(.*)`)
+	usernameRegex := regexp.MustCompile(`\(login\):\s(.*)`)
 
 	record.UID = uidRegex.FindStringSubmatch(output)[1]
 	record.Title = titleRegex.FindStringSubmatch(output)[1]
 	record.Username = usernameRegex.FindStringSubmatch(output)[1]
-	record.Password = passwordRegex.FindStringSubmatch(output)[1]
 
 	return record, nil
 }
