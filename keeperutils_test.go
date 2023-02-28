@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"fmt"
 	"os"
 	"testing"
 
@@ -9,13 +8,6 @@ import (
 )
 
 const TestRecord = "TESTRECORD"
-
-func init() {
-	if os.Getenv("SKIP_KEEPER_TESTS") != "" {
-		fmt.Println("Skipping tests because SKIP_KEEPER_TESTS environment variable is set.")
-		return
-	}
-}
 
 // Added 1 to test name to ensure this test gets run before all others.
 func Test1CommanderInstalled(t *testing.T) {
@@ -25,11 +17,17 @@ func Test1CommanderInstalled(t *testing.T) {
 
 // Added 2 to test name to ensure this test gets run before all others (except for Test1).
 func Test2KeeperLoggedIn(t *testing.T) {
+	if os.Getenv("SKIP_KEEPER_TESTS") != "" {
+		t.Skip("Skipping test because SKIP_KEEPER_TESTS environment variable is set.")
+	}
 	// Ensure a valid keeper session exists
 	assert.True(t, KeeperLoggedIn(), "no valid keeper session. Please log in to keeper before running tests.")
 }
 
 func TestRetrieveKeeperPW(t *testing.T) {
+	if os.Getenv("SKIP_KEEPER_TESTS") != "" {
+		t.Skip("Skipping test because SKIP_KEEPER_TESTS environment variable is set.")
+	}
 	// Test case for existing path
 	password, err := RetrieveKeeperPW(TestRecord)
 	assert.NoError(t, err, "failed to retrieve password")
@@ -48,6 +46,9 @@ func TestRetrieveKeeperPW(t *testing.T) {
 }
 
 func TestSearchKeeperRecords(t *testing.T) {
+	if os.Getenv("SKIP_KEEPER_TESTS") != "" {
+		t.Skip("Skipping test because SKIP_KEEPER_TESTS environment variable is set.")
+	}
 	_, err := SearchKeeperRecords(TestRecord)
 	assert.NoError(t, err, "failed to retrieve test record")
 

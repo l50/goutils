@@ -5,6 +5,10 @@ on:
   push:
     branches: [main]
 
+env:
+  # Skip keeper tests
+  SKIP_KEEPER_TESTS: true
+
 jobs:
   tests:
     name: Run tests - includes pre-commit hooks and determining code coverage %
@@ -30,6 +34,14 @@ jobs:
           git config --global user.name "John Doe"
           git config --global user.email johndoe@example.com
 
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.x"
+
+      - name: Install dependencies
+        run: pip3 install keepercommander
+
       - name: Generate the coverage output
         run: |
           bash .hooks/go-unit-tests.sh coverage
@@ -41,9 +53,6 @@ jobs:
 
       - name: Report failure
         uses: nashmaniac/create-issue-action@v1.1
-        # Only report failures of pushes
-        # (PRs have are visible through the Checks
-        # section) to the default branch
         if: failure() && github.event_name == 'push' && github.ref == 'refs/heads/main'
         with:
           title: 🐛 Coverage report failed for ${{ github.sha }}
