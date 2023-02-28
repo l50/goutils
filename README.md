@@ -42,7 +42,7 @@ This repo is comprised of utilities that I use across various go projects.
 
 1. [Fork this project](https://docs.github.com/en/get-started/quickstart/fork-a-repo)
 
-1. (Optional) If you installed gvm, create golang pkgset specifically for this project:
+1. (Optional) If you installed gvm:
 
    ```bash
    source "${HOME}/.gvm"
