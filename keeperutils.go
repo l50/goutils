@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/fatih/color"
-	"github.com/spf13/cobra"
 )
 
 // KeeperRecord represents a record maintained by Keeper.
@@ -37,10 +36,13 @@ func KeeperLoggedIn() bool {
 	}
 
 	home, err := GetHomeDir()
-	cobra.CheckErr(err)
+	if err != nil {
+		fmt.Println("failed to get current user's home directory: ", err.Error())
+		return false
+	}
 
 	if err := Cd(filepath.Join(home, ".keeper")); err != nil {
-		fmt.Print("failed to change into the keeper config directory: ", err)
+		fmt.Print("failed to change into the keeper config directory: ", err.Error())
 		return false
 	}
 
@@ -68,11 +70,18 @@ func RetrieveKeeperPW(keeperPath string) (string, error) {
 	// Ensure keeper commander is installed and
 	// there is a valid keeper session.
 	if !CommanderInstalled() || !KeeperLoggedIn() {
-		return "", errors.New(
-			color.RedString("error: ensure keeper commander is installed and a valid keeper session is established"))
+		return "", errors.New("error: ensure keeper commander is installed and a valid keeper session is established")
+	}
+	home, err := GetHomeDir()
+	if err != nil {
+		return "", err
 	}
 
-	fmt.Printf("Retrieving password from %s in keeper", keeperPath)
+	if err := Cd(filepath.Join(home, ".keeper")); err != nil {
+		return "", err
+	}
+
+	fmt.Printf("Retrieving password from %s in keeper\n", keeperPath)
 
 	// Get password
 	pw, err := RunCommand("keeper", "find-password", keeperPath)
@@ -93,8 +102,16 @@ func SearchKeeperRecords(searchTerm string) (KeeperRecord, error) {
 	// Ensure keeper commander is installed and
 	// there is a valid keeper session.
 	if !CommanderInstalled() || !KeeperLoggedIn() {
-		return record, errors.New(
-			color.RedString("error: ensure keeper commander is installed and a valid keeper session is established"))
+		return record, errors.New("error: ensure keeper commander is installed and a valid keeper session is established")
+	}
+
+	home, err := GetHomeDir()
+	if err != nil {
+		return record, err
+	}
+
+	if err := Cd(filepath.Join(home, ".keeper")); err != nil {
+		return record, err
 	}
 
 	fmt.Println(color.YellowString(
@@ -110,7 +127,7 @@ func SearchKeeperRecords(searchTerm string) (KeeperRecord, error) {
 	uidRegex := regexp.MustCompile(`UID:\s+(\S+)`)
 	titleRegex := regexp.MustCompile(`Title:\s+(.+)`)
 	usernameRegex := regexp.MustCompile(`Login:\s+(\S+)`)
-	passwordRegex := regexp.MustCompile(`Password:\s+(\S+)`)
+	passwordRegex := regexp.MustCompile(`Password:\s+(.*)`)
 
 	record.UID = uidRegex.FindStringSubmatch(output)[1]
 	record.Title = titleRegex.FindStringSubmatch(output)[1]
