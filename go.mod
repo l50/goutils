@@ -10,7 +10,7 @@ require (
 	github.com/go-git/go-git/v5 v5.5.2
 	github.com/magefile/mage v1.14.0
 	github.com/otiai10/copy v1.9.0
-	github.com/shirou/gopsutil/v3 v3.23.1
+	github.com/shirou/gopsutil/v3 v3.23.2
 	github.com/stretchr/testify v1.8.2
 	github.com/tidwall/gjson v1.14.4
 )
