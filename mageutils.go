@@ -123,6 +123,13 @@ func Tidy() error {
 // UpdateMageDeps updates mage-specific dependencies
 // using the input path to the associated go.mod.
 func UpdateMageDeps(magedir string) error {
+	// If no input is provided, default to magefiles.
+	// As per the mage docs, the magefiles directory
+	// is the default location for mage.
+	if magedir == "" {
+		magedir = "magefiles"
+	}
+
 	cwd := Gwd()
 	recursive := false
 	verbose := false
