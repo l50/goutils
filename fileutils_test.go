@@ -1,7 +1,9 @@
 package utils
 
 import (
+	"encoding/csv"
 	"math/rand"
+	"os"
 	"path/filepath"
 	"reflect"
 	"runtime"
@@ -130,6 +132,67 @@ func TestDeleteFile(t *testing.T) {
 			t.Fatalf("unable to delete %s, DeleteFile() failed", testFile)
 		}
 	}
+}
+
+func TestCSVToLines(t *testing.T) {
+	testFile := "test.csv"
+
+	file, err := os.Create(testFile)
+	if err != nil {
+		t.Fatalf("failed to create test file: %v", err)
+	}
+	defer file.Close()
+
+	// write test data to file
+	writer := csv.NewWriter(file)
+	if err := writer.WriteAll([][]string{
+		{"Header1", "Header2"},
+		{"Data1", "Data2"},
+		{"Data3", "Data4"},
+	}); err != nil {
+		t.Fatalf("failed to write test data to %p: %v", file, err)
+
+	}
+	writer.Flush()
+
+	// call function under test
+	got, err := CSVToLines(testFile)
+	if err != nil {
+		t.Fatalf("CSVToLines failed: %v", err)
+	}
+
+	// check expected output
+	want := [][]string{
+		{"Data1", "Data2"},
+		{"Data3", "Data4"},
+	}
+
+	if len(got) != len(want) {
+		t.Errorf("unexpected number of records, got %d, want %d", len(got), len(want))
+	}
+
+	for i := range want {
+		if !equal(got[i], want[i]) {
+			t.Errorf("unexpected record %v, want %v", got[i], want[i])
+		}
+	}
+
+	// Clean up
+	if err := DeleteFile(testFile); err != nil {
+		t.Fatalf("unable to delete %s, DeleteFile() failed", testFile)
+	}
+}
+
+func equal(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
 }
 
 func TestFileExists(t *testing.T) {

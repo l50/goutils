@@ -2,6 +2,7 @@ package utils
 
 import (
 	"bufio"
+	"encoding/csv"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -100,6 +101,36 @@ func CreateDirectory(path string) error {
 	}
 
 	return nil
+}
+
+// CSVToLines reads the contents of the specified CSV file and returns
+// its contents as a two-dimensional string slice, where each element
+// in the outer slice represents a row in the CSV file, and each element
+// in the inner slice represents a value in that row. The first row in
+// the CSV file is skipped, as it is assumed to contain column headers.
+// If the file cannot be read or parsed, an error is returned.
+func CSVToLines(filename string) ([][]string, error) {
+	f, err := os.Open(filename)
+	if err != nil {
+		return [][]string{}, err
+	}
+
+	// close the file at the end of the function call
+	defer f.Close()
+
+	r := csv.NewReader(f)
+	// skip first line
+	if _, err := r.Read(); err != nil {
+		return [][]string{}, err
+	}
+
+	records, err := r.ReadAll()
+
+	if err != nil {
+		return [][]string{}, err
+	}
+
+	return records, nil
 }
 
 // DeleteFile deletes the input file
