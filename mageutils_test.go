@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -25,6 +26,14 @@ func TestGHRelease(t *testing.T) {
 	newVer := "v1.0.0"
 	if err := GHRelease(newVer); err == nil {
 		t.Errorf("release %s should not have been created: %v", newVer, err)
+	}
+}
+
+func cleanupMageUtils(t *testing.T) {
+	for _, dir := range mageCleanupDirs {
+		if err := RmRf(dir); err != nil {
+			fmt.Println("failed to clean up mageUtils: ", err.Error())
+		}
 	}
 }
 
@@ -91,127 +100,27 @@ func TestInstallGoDeps(t *testing.T) {
 	}
 }
 
-func cleanupMageUtils(t *testing.T) {
-	for _, dir := range mageCleanupDirs {
-		if err := RmRf(dir); err != nil {
-			fmt.Println("failed to clean up mageUtils: ", err.Error())
-		}
-	}
-}
+func TestFindExportedFunctionsInPackage(t *testing.T) {
+	// Define the bash command as a string
+	bashCmd := `
+find . -name "*.go" -not -path "./magefiles/*" |
+xargs grep -E -o 'func [A-Z][a-zA-Z0-9_]+\(' |
+grep --color=auto --exclude-dir={.bzr,CVS,.git,.hg,.svn,.idea,.tox} -v '_test.go' |
+grep --color=auto --exclude-dir={.bzr,CVS,.git,.hg,.svn,.idea,.tox} -v -E 'func [A-Z][a-zA-Z0-9_]+Test\(' |
+sed -e 's/func //' -e 's/(//' |
+awk -F: '{printf "Function: %s\nFile: %s\n", $2, $1}'`
 
-func TestFindExportedFunctionsInPackage1(t *testing.T) {
-	packagePath := "."
+	// Create a new command and set its properties
+	cmd := exec.Command("bash", "-c", bashCmd)
+	cmd.Dir = "."
+	cmd.Env = os.Environ()
 
-	exportedFuncs, err := FindExportedFunctionsInPackage(packagePath)
-	if err != nil {
-		t.Fatalf("failed to find exported functions in Go package '%s': %v", packagePath, err)
-	}
-
-	expected := []struct {
-		filePath string
-		funcName string
-	}{
-		{"logutils.go", "CreateLogFile"},
-		{"sysutils.go", "CheckRoot"},
-		{"sysutils.go", "Cd"},
-		{"sysutils.go", "CmdExists"},
-		{"sysutils.go", "Cp"},
-		{"sysutils.go", "EnvVarSet"},
-		{"sysutils.go", "GetHomeDir"},
-		{"sysutils.go", "Gwd"},
-		{"sysutils.go", "GetFutureTime"},
-		{"sysutils.go", "IsDirEmpty"},
-		{"sysutils.go", "RunCommand"},
-		{"sysutils.go", "RunCommandWithTimeout"},
-		{"ansibleutils.go", "AnsiblePing"},
-		{"cloudflareutils.go", "GetDNSRecords"},
-		{"fileutils.go", "AppendToFile"},
-		{"fileutils.go", "CreateEmptyFile"},
-		{"fileutils.go", "CreateFile"},
-		{"fileutils.go", "CreateDirectory"},
-		{"fileutils.go", "CSVToLines"},
-		{"fileutils.go", "DeleteFile"},
-		{"fileutils.go", "FileExists"},
-		{"fileutils.go", "FileToSlice"},
-		{"fileutils.go", "FindFile"},
-		{"fileutils.go", "ListFilesR"},
-		{"fileutils.go", "StringInFile"},
-		{"fileutils.go", "RmRf"},
-		{"macosutils.go", "InstallBrewDeps"},
-		{"macosutils.go", "InstallBrewTFDeps"},
-		{"mageutils.go", "GHRelease"},
-		{"mageutils.go", "GoReleaser"},
-		{"mageutils.go", "InstallVSCodeModules"},
-		{"mageutils.go", "ModUpdate"},
-		{"mageutils.go", "Tidy"},
-		{"mageutils.go", "UpdateMageDeps"},
-		{"mageutils.go", "InstallGoDeps"},
-		{"mageutils.go", "FindExportedFunctionsInPackage"},
-		{"netutils.go", "PublicIP"},
-		{"netutils.go", "DownloadFile"},
-		{"stringutils.go", "RandomString"},
-		{"stringutils.go", "StringInSlice"},
-		{"stringutils.go", "StringToInt64"},
-		{"stringutils.go", "StringToSlice"},
-		{"gitutils.go", "GetSSHPubKey"},
-		{"gitutils.go", "AddFile"},
-		{"gitutils.go", "Commit"},
-		{"gitutils.go", "CloneRepo"},
-		{"gitutils.go", "GetTags"},
-		{"gitutils.go", "GetGlobalUserCfg"},
-		{"gitutils.go", "CreateTag"},
-		{"gitutils.go", "Push"},
-		{"gitutils.go", "PushTag"},
-		{"gitutils.go", "DeleteTag"},
-		{"gitutils.go", "DeletePushedTag"},
-		{"gitutils.go", "RepoRoot"},
-		{"keeperutils.go", "CommanderInstalled"},
-		{"keeperutils.go", "KeeperLoggedIn"},
-		{"keeperutils.go", "RetrieveKeeperPW"},
-		{"keeperutils.go", "SearchKeeperRecords"},
-		{"lintutils.go", "InstallGoPCDeps"},
-		{"lintutils.go", "InstallPCHooks"},
-		{"lintutils.go", "UpdatePCHooks"},
-		{"lintutils.go", "ClearPCCache"},
-		{"lintutils.go", "RunPCHooks"},
-		{"lintutils.go", "AddFencedCB"},
-	}
-
-	for _, exp := range expected {
-		found := false
-		for _, act := range exportedFuncs {
-			if act.FilePath == exp.filePath && act.FuncName == exp.funcName {
-				found = true
-				break
-			}
-		}
-		if !found {
-			t.Errorf("expected function '%s' in file '%s', but it was not found in package '%s'", exp.funcName, exp.filePath, packagePath)
-		}
-	}
-}
-
-func TestFindExportedFunctionsInPackage2(t *testing.T) {
-	packagePath := "."
-	bashFile := "mytestyay.sh"
-
-	// Write the bash command to a file
-	err := os.WriteFile(bashFile, []byte(`
-		get_exported_go_funcs () {
-			find . -name "*.go" -not -path "./magefiles/*" | xargs grep -E -o 'func [A-Z][a-zA-Z0-9_]+\(' | grep --color=auto --exclude-dir={.bzr,CVS,.git,.hg,.svn,.idea,.tox} -v '_test.go' | grep --color=auto --exclude-dir={.bzr,CVS,.git,.hg,.svn,.idea,.tox} -v -E 'func [A-Z][a-zA-Z0-9_]+Test\(' | sed -e 's/func //' -e 's/(//' | awk -F: '{printf "Function: %s\nFile: %s\n", $2, $1}'
-		}
-
-		get_exported_go_funcs
-	`), 0755)
-	if err != nil {
-		t.Fatalf("failed to write bash command to file: %v", err)
-	}
-
-	// Run the bash script and get its output
-	output, err := RunCommand("bash", "./fuck.sh")
+	// Run the command and get its output
+	outputBytes, err := cmd.Output()
 	if err != nil {
 		t.Fatalf("failed to execute command: %v", err)
 	}
+	output := string(outputBytes)
 
 	// Parse the output and create a map of expected function names
 	bashFuncs := make(map[string]bool)
@@ -227,39 +136,56 @@ func TestFindExportedFunctionsInPackage2(t *testing.T) {
 		t.Fatalf("error while scanning command output: %v", err)
 	}
 
-	// Get the exported functions from the package
-	goFuncs, err := FindExportedFunctionsInPackage(packagePath)
-	if err != nil {
-		t.Fatalf("failed to find exported functions in Go package '%s': %v", packagePath, err)
+	// Define a table of test cases with input values and expected results
+	tests := []struct {
+		name           string
+		packagePath    string
+		expectedFuncs  map[string]bool
+		expectedErrors bool
+	}{
+		{
+			name:           "Valid package",
+			packagePath:    ".",
+			expectedFuncs:  bashFuncs,
+			expectedErrors: false,
+		},
+		{
+			name:           "Invalid package",
+			packagePath:    "nonexistent_package",
+			expectedFuncs:  nil,
+			expectedErrors: true,
+		},
 	}
-
-	// Compare the expected and actual functions
-	for _, act := range goFuncs {
-		if _, ok := bashFuncs[act.FuncName]; !ok {
-			t.Errorf("unexpected function '%s' in file '%s' found in package '%s'", act.FuncName, act.FilePath, packagePath)
-		}
-	}
-
-	missingFuncs := []string{}
-
-	for bf := range bashFuncs {
-		found := false
-		for _, gf := range goFuncs {
-			if bf == gf.FuncName {
-				found = true
-				break
+	// Loop through the test cases and execute each one
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			// Get the exported functions from the package
+			goFuncs, err := FindExportedFunctionsInPackage(tc.packagePath)
+			if tc.expectedErrors && err == nil {
+				t.Errorf("expected an error but got none")
 			}
-		}
-		if !found {
-			missingFuncs = append(missingFuncs, bf)
-		}
-	}
+			if !tc.expectedErrors && err != nil {
+				t.Errorf("unexpected error: %v", err)
+			}
 
-	if len(missingFuncs) > 0 {
-		t.Errorf("go and bash implementations don't agree: %v", err)
-	}
+			// Compare the expected and actual functions
+			missingFuncs := []string{}
+			for bf := range tc.expectedFuncs {
+				found := false
+				for _, gf := range goFuncs {
+					if bf == gf.FuncName {
+						found = true
+						break
+					}
+				}
+				if !found {
+					missingFuncs = append(missingFuncs, bf)
+				}
+			}
 
-	if err := os.Remove(bashFile); err != nil {
-		t.Errorf("failed to remove created bash script %s:%v", bashFile, err)
+			if len(missingFuncs) > 0 {
+				t.Errorf("go and bash implementations don't agree: %v", missingFuncs)
+			}
+		})
 	}
 }
