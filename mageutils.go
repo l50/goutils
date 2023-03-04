@@ -3,6 +3,11 @@ package utils
 import (
 	"errors"
 	"fmt"
+	"go/ast"
+	"go/parser"
+	"go/token"
+	"os"
+	"strings"
 
 	"github.com/bitfield/script"
 	"github.com/fatih/color"
@@ -178,4 +183,59 @@ func InstallGoDeps(deps []string) error {
 	}
 
 	return nil
+}
+
+// FuncInfo contains information about an exported function, including the file path and function name.
+type FuncInfo struct {
+	// FilePath is the file path of the source file containing the function declaration.
+	FilePath string
+	// FuncName is the name of the exported function.
+	FuncName string
+}
+
+// FindExportedFunctionsInPackage finds all exported functions in a given Go package by recursively parsing all non-test
+// Go files in the package directory and returning a slice of FuncInfo structs, each containing the file path and the
+// name of an exported function. If no exported functions are found in the package, an error is returned.
+//
+// Args:
+//
+//	pkgPath (string): the path to the directory containing the package to search for exported functions
+//
+// Returns:
+//
+//	([]FuncInfo, error): a slice of FuncInfo structs, each containing the file path and the name of an exported
+//	function found in the package, along with an error if no exported functions are found.
+func FindExportedFunctionsInPackage(pkgPath string) ([]FuncInfo, error) {
+	var funcs []FuncInfo
+
+	fset := token.NewFileSet()
+	pkgs, err := parser.ParseDir(fset, pkgPath, func(info os.FileInfo) bool {
+		return !strings.HasSuffix(info.Name(), "_test.go")
+	}, parser.AllErrors)
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse directory %s: %w", pkgPath, err)
+	}
+
+	for _, pkg := range pkgs {
+		for _, file := range pkg.Files {
+			for _, decl := range file.Decls {
+				funcDecl, ok := decl.(*ast.FuncDecl)
+				if !ok || funcDecl.Recv != nil || !funcDecl.Name.IsExported() {
+					continue
+				}
+				info := FuncInfo{
+					FilePath: fset.Position(file.Package).Filename,
+					FuncName: funcDecl.Name.Name,
+				}
+				funcs = append(funcs, info)
+			}
+		}
+	}
+
+	if len(funcs) == 0 {
+		return nil, errors.New("no exported functions found in package")
+	}
+
+	return funcs, nil
 }
