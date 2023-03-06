@@ -4,6 +4,9 @@ import (
 	"bufio"
 	"encoding/csv"
 	"fmt"
+	"go/ast"
+	"go/parser"
+	"go/token"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -267,4 +270,64 @@ func RmRf(path string) error {
 	}
 
 	return nil
+}
+
+// FindExportedFuncsWithoutTests finds all exported functions in a given package path that do not have
+// corresponding tests. It returns a slice of function names or an error if there is a problem parsing
+// the package or finding the tests.
+func FindExportedFuncsWithoutTests(pkgPath string) ([]string, error) {
+	// Find all exported functions in the package
+	funcs, err := FindExportedFunctionsInPackage(pkgPath)
+	if err != nil {
+		return nil, err
+	}
+
+	// Find all exported functions with corresponding tests
+	testFuncs, err := findTestFunctions(pkgPath)
+	if err != nil {
+		return nil, err
+	}
+	testableFuncs := make(map[string]bool)
+	for _, tf := range testFuncs {
+		if strings.HasPrefix(tf, "Test") {
+			testableFuncs[tf[4:]] = true
+		}
+	}
+
+	// Find all exported functions without tests
+	exportedFuncsNoTest := make([]string, 0)
+	for _, f := range funcs {
+		if !testableFuncs[f.FuncName] {
+			exportedFuncsNoTest = append(exportedFuncsNoTest, f.FuncName)
+		}
+	}
+
+	return exportedFuncsNoTest, nil
+}
+
+func findTestFunctions(pkgPath string) ([]string, error) {
+	var testFuncs []string
+
+	fset := token.NewFileSet()
+	pkgs, err := parser.ParseDir(fset, pkgPath, func(info os.FileInfo) bool {
+		return strings.HasSuffix(info.Name(), "_test.go")
+	}, parser.AllErrors)
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse directory %s: %w", pkgPath, err)
+	}
+
+	for _, pkg := range pkgs {
+		for _, file := range pkg.Files {
+			for _, decl := range file.Decls {
+				funcDecl, ok := decl.(*ast.FuncDecl)
+				if !ok {
+					continue
+				}
+				testFuncs = append(testFuncs, funcDecl.Name.Name)
+			}
+		}
+	}
+
+	return testFuncs, nil
 }
