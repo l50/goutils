@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/fatih/color"
@@ -358,6 +359,66 @@ func DeletePushedTag(repo *git.Repository, tag string, auth transport.AuthMethod
 			"error deleting pushed tag %s: %v", tag, err))
 	}
 
+	return nil
+}
+
+// PullRepos updates all git repositories found in the given directories by pulling changes from the upstream branch.
+// It looks for repositories by finding directories with a ".git" subdirectory.
+// If a repository is not on the default branch, it will switch to the default branch before pulling changes.
+// Returns an error if any step of the process fails.
+func PullRepos(dirs ...string) error {
+	// Save the current working directory
+	wd, err := os.Getwd()
+	if err != nil {
+		return fmt.Errorf("failed to get current working directory: %w", err)
+	}
+	defer func() {
+		// Change the working directory back to the original directory
+		if err := Cd(wd); err != nil {
+			fmt.Printf("failed to change directory back to %s: %v\n", wd, err)
+		}
+	}()
+
+	for _, dir := range dirs {
+		fmt.Println(color.YellowString("Updating repos in ", dir))
+		if err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+			if info.IsDir() && info.Name() == ".git" {
+				// Get the path to the parent directory of the .git directory
+				repoDir := filepath.Dir(path)
+
+				// Change to the repository directory
+				if err := Cd(repoDir); err != nil {
+					return fmt.Errorf("failed to change directory to %s: %w", repoDir, err)
+				}
+
+				// Get the current branch
+				refOutput, err := RunCommand("git", "symbolic-ref", "HEAD")
+				if err != nil {
+					// If no branch is checked out, get the default branch
+					defaultBranchOutput, defaultBranchErr := RunCommand("git", "config", "--get", "init.defaultBranch")
+					if defaultBranchErr != nil {
+						return fmt.Errorf("failed to get current or default branch for %s: %v, %v", repoDir, err, defaultBranchErr)
+					}
+					refOutput = defaultBranchOutput
+				}
+
+				// Pull changes in the current branch
+				ref := strings.TrimSpace(strings.TrimPrefix(refOutput, "refs/heads/"))
+				res, err := RunCommand("git", "pull", "origin", ref)
+				if err != nil {
+					fmt.Printf("failed to update %s: %s\n", repoDir, res)
+				} else if strings.TrimSpace(res) != "Already up to date." {
+					fmt.Println(color.GreenString("Now Updating ", repoDir))
+				}
+			}
+			return nil
+		}); err != nil {
+			return fmt.Errorf("failed to find git repositories in %s: %w", dir, err)
+		}
+	}
 	return nil
 }
 

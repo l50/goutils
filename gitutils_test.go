@@ -3,12 +3,15 @@ package utils
 import (
 	"fmt"
 	"log"
+	"os"
 	"path/filepath"
 	"testing"
 
 	"github.com/fatih/color"
+
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var (
@@ -136,6 +139,97 @@ func TestDeletePushedTag(t *testing.T) {
 			"DeletePushedTag() failed")
 	}
 
+}
+
+func TestPullRepos(t *testing.T) {
+	tmpDirRemote, err := createGitRepoWithCommit(t, "test-remote", "file.txt", "test commit")
+	require.NoError(t, err)
+	defer os.RemoveAll(tmpDirRemote)
+
+	tmpDir1, err := cloneGitRepo(t, tmpDirRemote, "test1")
+	require.NoError(t, err)
+	defer os.RemoveAll(tmpDir1)
+
+	tmpDir2, err := cloneGitRepo(t, tmpDirRemote, "test2")
+	require.NoError(t, err)
+	defer os.RemoveAll(tmpDir2)
+
+	err = updateFileInRepo(t, tmpDirRemote, "file.txt", "test2")
+	require.NoError(t, err)
+
+	err = commitChangesInRepo(t, tmpDirRemote, "test2 commit")
+	require.NoError(t, err)
+
+	err = PullRepos(tmpDir1, tmpDir2)
+	require.NoError(t, err)
+
+	for _, dir := range []string{tmpDir1, tmpDir2} {
+		out, err := RunCommand("git", "-C", dir, "status")
+		require.NoError(t, err)
+
+		require.Contains(t, out, "Your branch is up to date", "repo in %s was not updated: %s", dir, out)
+	}
+}
+
+func createGitRepoWithCommit(t *testing.T, dirName string, fileName string, commitMsg string) (string, error) {
+	tmpDir, err := os.MkdirTemp("", dirName)
+	if err != nil {
+		return "", err
+	}
+
+	_, err = RunCommand("git", "-C", tmpDir, "init")
+	require.NoError(t, err)
+
+	filePath := filepath.Join(tmpDir, fileName)
+	err = os.WriteFile(filePath, []byte("test"), 0644)
+	require.NoError(t, err)
+
+	_, err = RunCommand("git", "-C", tmpDir, "add", filePath)
+	require.NoError(t, err)
+
+	_, err = RunCommand("git", "-C", tmpDir, "commit", "-m", commitMsg)
+	require.NoError(t, err)
+
+	return tmpDir, nil
+}
+
+func cloneGitRepo(t *testing.T, sourceDir string, destDirName string) (string, error) {
+	tmpDir, err := os.MkdirTemp("", destDirName)
+	if err != nil {
+		return "", err
+	}
+
+	_, err = RunCommand("git", "clone", sourceDir, tmpDir)
+	if err != nil {
+		os.RemoveAll(tmpDir)
+		return "", err
+	}
+
+	return tmpDir, nil
+}
+
+func updateFileInRepo(t *testing.T, repoDir string, fileName string, content string) error {
+	filePath := filepath.Join(repoDir, fileName)
+	err := os.WriteFile(filePath, []byte(content), 0644)
+	if err != nil {
+		return err
+	}
+
+	_, err = RunCommand("git", "-C", repoDir, "add", filePath)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func commitChangesInRepo(t *testing.T, repoDir string, commitMsg string) error {
+	_, err := RunCommand("git", "-C", repoDir, "commit", "-m", commitMsg)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func TestRepoRoot(t *testing.T) {
