@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"path/filepath"
@@ -14,8 +15,10 @@ import (
 type KeeperRecord struct {
 	UID      string
 	Title    string
+	URL      string
 	Username string
 	Password string
+	TOTP     string
 }
 
 // keeperConfigPath returns the path of the keeper config file.
@@ -70,37 +73,18 @@ func KeeperLoggedIn() bool {
 	return false
 }
 
-// RetrieveKeeperPW returns the password found at
-// the input keeperPath.
-func RetrieveKeeperPW(keeperPath string) (string, error) {
-	// Ensure keeper commander is installed and
-	// there is a valid keeper session.
-	if !CommanderInstalled() || !KeeperLoggedIn() {
-		return "", errors.New("error: ensure keeper commander is installed and a valid keeper session is established")
-	}
-
-	fmt.Printf("Retrieving password from %s in keeper\n", keeperPath)
-
-	// Get password
-	configPath, err := keeperConfigPath()
-	if err != nil {
-		err := errors.New(color.RedString(
-			"failed to retrieve keeper config path"))
-		return "", err
-	}
-	pw, err := RunCommand("keeper", "find-password", keeperPath, "--config", configPath)
-	if err != nil {
-		return "", err
-	}
-
-	// Remove newlines from output
-	return strings.ReplaceAll(string(pw), "\n", ""), nil
+type rawRecord struct {
+	RecordUID string `json:"record_uid"`
+	Title     string `json:"title"`
+	Type      string `json:"type"`
+	Fields    []struct {
+		Type  string   `json:"type"`
+		Value []string `json:"value"`
+	} `json:"fields"`
 }
 
-// SearchKeeperRecords searches the logged-in user's
-// keeper records for the input query. The searchTerm
-// can be a string or regex.
-func SearchKeeperRecords(searchTerm string) (KeeperRecord, error) {
+// RetrieveKeeperRecord returns the record found with the input keeperPath.
+func RetrieveKeeperRecord(keeperUID string) (KeeperRecord, error) {
 	var record KeeperRecord
 
 	// Ensure keeper commander is installed and
@@ -109,9 +93,8 @@ func SearchKeeperRecords(searchTerm string) (KeeperRecord, error) {
 		return record, errors.New("error: ensure keeper commander is installed and a valid keeper session is established")
 	}
 
-	fmt.Printf("Searching keeper for records matching %s, please wait...\n", searchTerm)
+	fmt.Printf("Retrieving record with ID %s from keeper\n", keeperUID)
 
-	// Get password
 	configPath, err := keeperConfigPath()
 	if err != nil {
 		err := errors.New(color.RedString(
@@ -119,19 +102,78 @@ func SearchKeeperRecords(searchTerm string) (KeeperRecord, error) {
 		return record, err
 	}
 
-	output, err := RunCommand("keeper", "search", searchTerm, "--config", configPath)
+	jsonData, err := RunCommand("keeper", "get", keeperUID, "--unmask", "--format", "json", "--config", configPath)
 	if err != nil {
 		return record, err
 	}
 
-	// Regular expressions to extract relevant information from the output.
-	uidRegex := regexp.MustCompile(`UID:\s+(\S+)`)
-	titleRegex := regexp.MustCompile(`Title:\s+(.+)`)
-	usernameRegex := regexp.MustCompile(`\(login\):\s(.*)`)
+	var r rawRecord
+	if err := json.Unmarshal([]byte(jsonData), &r); err != nil {
+		return record, err
+	}
 
-	record.UID = uidRegex.FindStringSubmatch(output)[1]
-	record.Title = titleRegex.FindStringSubmatch(output)[1]
-	record.Username = usernameRegex.FindStringSubmatch(output)[1]
+	record.UID = r.RecordUID
+	record.Title = r.Title
+	for _, field := range r.Fields {
+		if len(field.Value) > 0 {
+			switch field.Type {
+			case "login":
+				record.Username = field.Value[0]
+			case "password":
+				record.Password = field.Value[0]
+			case "url":
+				record.URL = field.Value[0]
+			case "oneTimeCode":
+				record.TOTP = field.Value[0]
+			}
+		}
+	}
 
 	return record, nil
+}
+
+// SearchKeeperRecords searches the logged-in user's
+// keeper records for records matching the input searchTerm.
+//
+// The searchTerm can be a string or regex.
+//
+// Example Inputs:
+//
+// SearchKeeperRecords("TESTING")
+// SearchKeeperRecords("TEST.*RD")
+//
+// If a searchTerm matches a record, the associated UID is returned.
+func SearchKeeperRecords(searchTerm string) (string, error) {
+	recordUID := ""
+
+	// Ensure keeper commander is installed and
+	// there is a valid keeper session.
+	if !CommanderInstalled() || !KeeperLoggedIn() {
+		return recordUID, errors.New("error: ensure keeper commander is installed and a valid keeper session is established")
+	}
+
+	fmt.Printf("Searching keeper for records matching %s, please wait...\n", searchTerm)
+
+	configPath, err := keeperConfigPath()
+	if err != nil {
+		err := errors.New(color.RedString(
+			"failed to retrieve keeper config path"))
+		return recordUID, err
+	}
+
+	searchResults, err := RunCommand("keeper", "search", searchTerm, "--config", configPath)
+	if err != nil {
+		return recordUID, err
+	}
+
+	regex := regexp.MustCompile(`UID:\s+([a-zA-Z0-9-_]+)`)
+	match := regex.FindStringSubmatch(searchResults)
+
+	if len(match) == 2 {
+		recordUID = match[1]
+	} else {
+		fmt.Println("No UID found.")
+	}
+
+	return recordUID, nil
 }
