@@ -48,8 +48,8 @@ func KeeperLoggedIn() bool {
 		return false
 	}
 
-	fmt.Println(color.YellowString(
-		"Checking if we are logged into Keeper vault"))
+	// fmt.Println(color.YellowString(
+	// 	"Checking if we are logged into Keeper vault"))
 
 	configPath, err := keeperConfigPath()
 	if err != nil {
@@ -94,7 +94,7 @@ func RetrieveKeeperRecord(keeperUID string) (KeeperRecord, error) {
 		return record, errors.New("error: ensure keeper commander is installed and a valid keeper session is established")
 	}
 
-	fmt.Printf("Retrieving record with ID %s from keeper\n", keeperUID)
+	// fmt.Printf("Retrieving record with ID %s from keeper\n", keeperUID)
 
 	configPath, err := keeperConfigPath()
 	if err != nil {
