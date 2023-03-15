@@ -8,10 +8,12 @@ import (
 )
 
 var testRecord KeeperRecord
+var note KeeperRecord
 
 func init() {
 	testRecord.UID = "hfLu-IbhTTVhE3DjWsS-Eg"
 	testRecord.Title = "TESTRECORD"
+	note.UID = "d2MxKXQpWWhjEPCDz6JKOQ"
 }
 
 // Added 1 to test name to ensure this test gets run before all others.
@@ -36,7 +38,7 @@ func TestRetrieveKeeperRecord(t *testing.T) {
 	// Test case for existing path
 	record, err := RetrieveKeeperRecord(testRecord.UID)
 	assert.NoError(t, err, "failed to retrieve password")
-	assert.Equal(t, "my test password 123!", record.Password, "retrieved password doesn't match expected")
+	assert.Equal(t, "my test password 123!", record.Password, "retrieved password doesn't match expected value")
 
 	// Test case for non-existent path
 	_, err = RetrieveKeeperRecord("non/existent/path")
@@ -48,6 +50,11 @@ func TestRetrieveKeeperRecord(t *testing.T) {
 	_, err = RetrieveKeeperRecord("my/test/path")
 	assert.Error(t, err, "no error when commander is not installed")
 	os.Setenv("PATH", commanderPath)
+
+	// Retrieve encryptedNote
+	record, err = RetrieveKeeperRecord(note.UID)
+	assert.NoError(t, err, "failed to retrieve note")
+	assert.Equal(t, "SWEETSECRET!", record.Note, "retrieved note doesn't match expected value")
 }
 
 func TestSearchKeeperRecords(t *testing.T) {

@@ -19,6 +19,7 @@ type KeeperRecord struct {
 	Username string
 	Password string
 	TOTP     string
+	Note     string
 }
 
 // keeperConfigPath returns the path of the keeper config file.
@@ -125,6 +126,8 @@ func RetrieveKeeperRecord(keeperUID string) (KeeperRecord, error) {
 				record.URL = field.Value[0]
 			case "oneTimeCode":
 				record.TOTP = field.Value[0]
+			case "note":
+				record.Note = field.Value[0]
 			}
 		}
 	}
