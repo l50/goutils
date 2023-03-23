@@ -161,15 +161,23 @@ func FileExists(fileLoc string) bool {
 	return true
 }
 
-// FileToSlice reads an input file into a slice
-// and returns it.
+// FileToSlice reads an input file into a slice,
+// removes blank strings, and returns it.
 func FileToSlice(fileName string) ([]string, error) {
 	b, err := os.ReadFile(fileName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read %s: %v", fileName, err)
 	}
 
-	return strings.Split(string(b), "\n"), nil
+	lines := strings.Split(string(b), "\n")
+	filteredLines := make([]string, 0, len(lines))
+	for _, line := range lines {
+		if len(strings.TrimSpace(line)) > 0 {
+			filteredLines = append(filteredLines, line)
+		}
+	}
+
+	return filteredLines, nil
 }
 
 // FindFile looks for an input `filename` in the specified
