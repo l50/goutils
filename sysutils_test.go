@@ -108,6 +108,23 @@ func TestGetFutureTime(t *testing.T) {
 	}
 }
 
+func TestGetOSAndArch(t *testing.T) {
+	osName, archName, err := GetOSAndArch()
+	if err != nil {
+		t.Fatalf("failed to run GetOSAndArch(): %v", err)
+	}
+
+	validOS := []string{"linux", "darwin", "windows"}
+	if !StringInSlice(osName, validOS) {
+		t.Errorf("invalid OS: %s", osName)
+	}
+
+	validArch := []string{"amd64", "arm64", "armv"}
+	if !StringInSlice(archName, validArch) {
+		t.Errorf("invalid architecture: %s", archName)
+	}
+}
+
 func TestIsDirEmpty(t *testing.T) {
 	dirEmpty, err := IsDirEmpty("/")
 	if err != nil {

@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"runtime"
 	"strings"
 	"sync"
 	"syscall"
@@ -104,6 +105,41 @@ func GetFutureTime(years int, months int, days int) time.Time {
 	return exp
 }
 
+// GetOSAndArch detects the current system's OS and architecture, and returns them as strings.
+// The function returns an error if the OS or architecture is not supported.
+//
+// Example usage:
+//
+//	osName, archName, err := GetOSAndArch()
+//	if err != nil {
+//		fmt.Printf("Error detecting OS and architecture: %v\n", err)
+//	} else {
+//		fmt.Printf("Detected OS: %s, architecture: %s\n", osName, archName)
+//	}
+//
+// Returns:
+//
+//	string: The detected operating system name (i.e., "linux", "darwin", or "windows").
+//	string: The detected architecture name (i.e., "amd64", "arm64", or "armv").
+//	error: An error if the OS or architecture is not supported or cannot be detected.
+func GetOSAndArch() (string, string, error) {
+	osName := strings.ToLower(runtime.GOOS)
+	archName := runtime.GOARCH
+
+	switch archName {
+	case "x86_64", "amd64":
+		archName = "amd64"
+	case "aarch64", "arm64":
+		archName = "arm64"
+	case "armv6", "armv7", "armv7l", "armv8":
+		archName = "armv"
+	default:
+		return "", "", fmt.Errorf("unsupported architecture: %s", archName)
+	}
+
+	return osName, archName, nil
+}
+
 // IsDirEmpty checks if an input directory (name) is empty
 func IsDirEmpty(name string) (bool, error) {
 	entries, err := os.ReadDir(name)
@@ -125,7 +161,6 @@ func RunCommand(cmd string, args ...string) (string, error) {
 	}
 
 	return string(out), nil
-
 }
 
 // RunCommandWithTimeout runs a command for a specified number of
