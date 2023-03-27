@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"reflect"
 	"runtime"
@@ -132,6 +133,20 @@ func TestIsDirEmpty(t *testing.T) {
 	}
 	if dirEmpty != false {
 		t.Fatal("the / directory has reported back as being empty, which can not be true - IsDirEmpty()")
+	}
+}
+
+func TestKillProcess(t *testing.T) {
+	// Run a process to kill
+	cmd := exec.Command("sleep", "60")
+	if err := cmd.Start(); err != nil {
+		t.Fatalf("failed to start process: %v", err)
+	}
+	pid := cmd.Process.Pid
+
+	// Test killing the process with SignalKill signal
+	if err := KillProcess(pid, SignalKill); err != nil {
+		t.Fatalf("failed to kill process %d with SIGKILL - KillProcess() failed: %v", pid, err)
 	}
 }
 

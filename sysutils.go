@@ -18,6 +18,14 @@ import (
 	"github.com/shirou/gopsutil/v3/process"
 )
 
+// Signal represents a signal that can be sent to a process.
+type Signal int
+
+const (
+	// SignalKill is a signal that causes the process to be killed immediately.
+	SignalKill Signal = iota
+)
+
 // CheckRoot will check to see if the process is being run as root
 func CheckRoot() error {
 	uid := os.Geteuid()
@@ -151,6 +159,52 @@ func IsDirEmpty(name string) (bool, error) {
 
 }
 
+// KillProcess sends a signal to the process with the specified PID.
+//
+// On Windows, it uses the taskkill command to terminate the process.
+// On Unix-like systems, it sends the specified signal to the process using the syscall.Kill function.
+//
+// Parameters:
+// - pid: The process ID of the process to kill.
+// - signal: The signal to send to the process. Currently, only SignalKill is supported, which will terminate the process.
+//
+// Returns:
+// - error: An error if the process could not be killed.
+//
+// Example usage:
+//
+// err := KillProcess(1234, SignalKill)
+// if err != nil {
+// fmt.Printf("Failed to kill process: %v", err)
+// } else {
+// fmt.Println("Process terminated successfully")
+// }
+//
+// Note that SignalKill may not work on all platforms. For more information, see the documentation for the syscall package.
+func KillProcess(pid int, signal Signal) error {
+	if runtime.GOOS == "windows" {
+		cmd := exec.Command("taskkill", "/F", "/T", "/PID", fmt.Sprintf("%d", pid))
+		if err := cmd.Run(); err != nil {
+			return fmt.Errorf("failed to kill process: %v", err)
+		}
+		return nil
+	}
+
+	var sysSignal syscall.Signal
+	switch signal {
+	case SignalKill:
+		sysSignal = syscall.SIGKILL
+	default:
+		return fmt.Errorf("unsupported signal: %v", signal)
+	}
+
+	if err := syscall.Kill(pid, sysSignal); err != nil {
+		return fmt.Errorf("failed to kill process: %v", err)
+	}
+
+	return nil
+}
+
 // RunCommand runs a specified system command
 func RunCommand(cmd string, args ...string) (string, error) {
 	out, err := exec.Command(cmd, args...).CombinedOutput()
@@ -200,7 +254,7 @@ func RunCommandWithTimeout(to time.Duration, command string, args ...string) (st
 			proc, _ := process.NewProcess(pid)
 			cmd, _ := proc.Cmdline()
 			if cmd == command+" "+paramStr {
-				if err := syscall.Kill(int(pid), syscall.SIGKILL); err != nil {
+				if err := KillProcess(int(pid), SignalKill); err != nil {
 					errCh <- err
 				}
 			}
