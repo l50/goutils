@@ -190,16 +190,21 @@ func KillProcess(pid int, signal Signal) error {
 		return nil
 	}
 
-	var sysSignal syscall.Signal
+	var sig os.Signal
 	switch signal {
 	case SignalKill:
-		sysSignal = syscall.SIGKILL
+		sig = syscall.SIGKILL
 	default:
 		return fmt.Errorf("unsupported signal: %v", signal)
 	}
 
-	if err := syscall.Kill(pid, sysSignal); err != nil {
-		return fmt.Errorf("failed to kill process: %v", err)
+	p, err := os.FindProcess(pid)
+	if err != nil {
+		return fmt.Errorf("failed to find process: %v", err)
+	}
+
+	if err := p.Signal(sig); err != nil {
+		return fmt.Errorf("failed to send signal to process: %v", err)
 	}
 
 	return nil
