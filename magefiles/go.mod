@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/fatih/color v1.15.0
-	github.com/l50/goutils v1.2.2
+	github.com/l50/goutils v1.2.5
 	github.com/magefile/mage v1.14.0
 )
 
@@ -20,7 +20,7 @@ require (
 	github.com/glendc/go-external-ip v0.1.0 // indirect
 	github.com/go-git/gcfg v1.5.0 // indirect
 	github.com/go-git/go-billy/v5 v5.4.1 // indirect
-	github.com/go-git/go-git/v5 v5.6.0 // indirect
+	github.com/go-git/go-git/v5 v5.6.1 // indirect
 	github.com/go-ole/go-ole v1.2.6 // indirect
 	github.com/imdario/mergo v0.3.13 // indirect
 	github.com/itchyny/gojq v0.12.12 // indirect
