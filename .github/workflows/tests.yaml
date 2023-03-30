@@ -15,10 +15,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Set up git repository
-        uses: actions/checkout@v3.5.0
+        uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3 # v3.5.0
 
       - name: Set up Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9 # v4
         with:
           go-version: "1.20"
 
@@ -35,7 +35,7 @@ jobs:
           git config --global user.email johndoe@example.com
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@d27e3f3d7c64b4bbf8e4abfb9b63b83e846e0435 # v4
         with:
           python-version: "3.x"
 
@@ -52,12 +52,12 @@ jobs:
           bash .hooks/go-unit-tests.sh coverage
 
       - name: Send the coverage output
-        uses: shogo82148/actions-goveralls@v1
+        uses: shogo82148/actions-goveralls@31ee804b8576ae49f6dc3caa22591bc5080e7920 # v1
         with:
           path-to-profile: coverage-all.out
 
       - name: Report failure
-        uses: nashmaniac/create-issue-action@v1.1
+        uses: nashmaniac/create-issue-action@b0c9250ca328a30c2989c7358bc4833f77953af2 # v1.1
         if: failure() && github.event_name == 'push' && github.ref == 'refs/heads/main'
         with:
           title: 🐛 Coverage report failed for ${{ github.sha }}
