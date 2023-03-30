@@ -1,0 +1,26 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:base",
+    "docker:enableMajor",
+    ":disableRateLimiting",
+    ":dependencyDashboard",
+    ":semanticCommits",
+    ":enablePreCommit",
+    ":automergeDigest",
+    ":automergeBranch",
+    "github>l50/goutils//.github/renovate/autoMerge.json5",
+    "helpers:pinGitHubActionDigests"
+  ],
+  "platform": "github",
+  "onboarding": false,
+  "requireConfig": "optional",
+  "dependencyDashboardTitle": "Renovate Dashboard 🤖",
+  "suppressNotifications": ["prIgnoreNotification"],
+  "rebaseWhen": "conflicted",
+  "commitBodyTable": true,
+  "pre-commit": {
+    "enabled": true
+  },
+  "dependencyDashboardFooter": "\n- [ ] <!-- manual job -->Check this box to trigger a request for Renovate to run again on this repository\n",
+}
