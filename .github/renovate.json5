@@ -22,4 +22,15 @@
   "pre-commit": {
     "enabled": true
   },
+  "regexManagers": [
+    {
+      "fileMatch": [
+        ".sh$"
+      ],
+      "matchStrings": [
+        "go install (?<depName>[^@]+?)@(?<currentValue>[0-9.-a-zA-Z]+)"
+      ],
+      "datasourceTemplate": "go"
+    }
+  ]
 }
