@@ -280,6 +280,43 @@ func RmRf(path string) error {
 	return nil
 }
 
+// ExpandHomeDir expands the tilde character in a path to the user's home directory.
+// The function takes a string representing a path and checks if the first character is a tilde (~).
+// If it is, the function replaces the tilde with the user's home directory. The path is returned
+// unchanged if it does not start with a tilde or if there's an error retrieving the user's home
+// directory.
+//
+// Example usage:
+//
+//	pathWithTilde := "~/Documents/myfile.txt"
+//	expandedPath := ExpandHomeDir(pathWithTilde)
+//
+// Parameters:
+//
+//	path: The string containing a path that may start with a tilde (~) character.
+//
+// Returns:
+//
+//	string: The expanded path with the tilde replaced by the user's home directory, or the
+//	        original path if it does not start with a tilde or there's an error retrieving
+//	        the user's home directory.
+func ExpandHomeDir(path string) string {
+	if len(path) == 0 || path[0] != '~' {
+		return path
+	}
+
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return path
+	}
+
+	if len(path) == 1 || path[1] == '/' {
+		return filepath.Join(homeDir, path[1:])
+	}
+
+	return filepath.Join(homeDir, path[1:])
+}
+
 // FindExportedFuncsWithoutTests finds all exported functions in a given package path that do not have
 // corresponding tests. It returns a slice of function names or an error if there is a problem parsing
 // the package or finding the tests.

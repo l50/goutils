@@ -48,9 +48,6 @@ func KeeperLoggedIn() bool {
 		return false
 	}
 
-	// fmt.Println(color.YellowString(
-	// 	"Checking if we are logged into Keeper vault"))
-
 	configPath, err := keeperConfigPath()
 	if err != nil {
 		err := errors.New(color.RedString(

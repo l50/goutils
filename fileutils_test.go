@@ -291,6 +291,54 @@ func TestRmRf(t *testing.T) {
 	}
 }
 
+func TestExpandHomeDir(t *testing.T) {
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		t.Fatalf("failed to get user home directory: %v", err)
+	}
+
+	testCases := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{
+			name:     "EmptyPath",
+			input:    "",
+			expected: "",
+		},
+		{
+			name:     "NoTilde",
+			input:    "/path/without/tilde",
+			expected: "/path/without/tilde",
+		},
+		{
+			name:     "TildeOnly",
+			input:    "~",
+			expected: homeDir,
+		},
+		{
+			name:     "TildeWithSlash",
+			input:    "~/path/with/slash",
+			expected: filepath.Join(homeDir, "path/with/slash"),
+		},
+		{
+			name:     "TildeWithoutSlash",
+			input:    "~path/without/slash",
+			expected: filepath.Join(homeDir, "path/without/slash"),
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			actual := ExpandHomeDir(tc.input)
+			if actual != tc.expected {
+				t.Errorf("test failed: ExpandHomeDir(%q) = %q; expected %q", tc.input, actual, tc.expected)
+			}
+		})
+	}
+}
+
 func TestFindExportedFuncsWithoutTests(t *testing.T) {
 	pkg := "bla"
 	// Create temporary directory
