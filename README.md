@@ -6,6 +6,7 @@
 [![🚨 CodeQL Analysis](https://github.com/l50/goutils/actions/workflows/codeql-analysis.yaml/badge.svg)](https://github.com/l50/goutils/actions/workflows/codeql-analysis.yaml)
 [![🚨 Semgrep Analysis](https://github.com/l50/goutils/actions/workflows/semgrep.yaml/badge.svg)](https://github.com/l50/goutils/actions/workflows/semgrep.yaml)
 [![Coverage Status](https://coveralls.io/repos/github/l50/goutils/badge.svg?branch=main)](https://coveralls.io/github/l50/goutils?branch=main)
+[![Renovate](https://github.com/l50/goutils/actions/workflows/renovate.yaml/badge.svg)](https://github.com/l50/goutils/actions/workflows/renovate.yaml)
 
 This repo is comprised of utilities that I use across various go projects.
 
