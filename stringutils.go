@@ -47,3 +47,27 @@ func StringToInt64(value string) (int64, error) {
 func StringToSlice(delimStr string, delim string) []string {
 	return strings.Split(delimStr, delim)
 }
+
+// StringSlicesEqual checks if two string slices are equal.
+//
+// It returns true if the slices have the same length and same values, false otherwise.
+//
+// Parameters:
+// a: the first string slice to be compared.
+// b: the second string slice to be compared.
+//
+// Returns:
+// bool: true if the slices are equal, false otherwise.
+func StringSlicesEqual(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+
+	return true
+}
