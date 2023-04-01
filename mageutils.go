@@ -197,14 +197,14 @@ type FuncInfo struct {
 // Go files in the package directory and returning a slice of FuncInfo structs, each containing the file path and the
 // name of an exported function. If no exported functions are found in the package, an error is returned.
 //
-// Args:
+// Parameters:
 //
-//	pkgPath (string): the path to the directory containing the package to search for exported functions
+// pkgPath: A string representing the path to the directory containing the package to search for exported functions.
 //
 // Returns:
 //
-//	([]FuncInfo, error): a slice of FuncInfo structs, each containing the file path and the name of an exported
-//	function found in the package, along with an error if no exported functions are found.
+// []FuncInfo: A slice of FuncInfo structs, each containing the file path and the name of an exported function found in the package.
+// error: An error if no exported functions are found.
 func FindExportedFunctionsInPackage(pkgPath string) ([]FuncInfo, error) {
 	var funcs []FuncInfo
 
