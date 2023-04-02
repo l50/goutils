@@ -1,8 +1,10 @@
 #!/bin/bash
 set -ex
 
-pkg=$(go list .)
-for dir in */; do
+pkgs=$(go list ./...)
+
+for pkg in $pkgs; do
+    dir="$(basename "$pkg")/"
     if [[ "${dir}" != ".hooks/" ]] \
                               && [[ "${dir}" != "bin/" ]] \
                               && [[ "${dir}" != "cmd/" ]] \
