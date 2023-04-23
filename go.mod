@@ -3,7 +3,7 @@ module github.com/l50/goutils
 go 1.20
 
 require (
-	github.com/bitfield/script v0.21.4
+	github.com/bitfield/script v0.22.0
 	github.com/cavaliergopher/grab/v3 v3.0.1
 	github.com/fatih/color v1.15.0
 	github.com/glendc/go-external-ip v0.1.0
@@ -53,4 +53,5 @@ require (
 	golang.org/x/tools v0.7.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
+	mvdan.cc/sh/v3 v3.6.0 // indirect
 )
