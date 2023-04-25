@@ -205,6 +205,19 @@ type FuncInfo struct {
 //
 // []FuncInfo: A slice of FuncInfo structs, each containing the file path and the name of an exported function found in the package.
 // error: An error if no exported functions are found.
+//
+// Example:
+//
+// packagePath := "/path/to/your/go/package"
+// funcs, err := FindExportedFunctionsInPackage(packagePath)
+//
+//	if err != nil {
+//		 log.Fatalf("failed to find exported functions: %v", err)
+//	}
+//
+//	for _, f := range funcs {
+//		 log.Printf("Exported function %s found in file %s\n", f.Name, f.FilePath)
+//	}
 func FindExportedFunctionsInPackage(pkgPath string) ([]FuncInfo, error) {
 	var funcs []FuncInfo
 

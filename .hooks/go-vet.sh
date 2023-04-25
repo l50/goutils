@@ -11,6 +11,7 @@ for pkg in $pkgs; do
                               && [[ "${dir}" != "config/" ]] \
                               && [[ "${dir}" != "deployments/" ]] \
                               && [[ "${dir}" != "files/" ]] \
+                              && [[ "${dir}" != "goutils/" ]] \
                               && [[ "${dir}" != "images/" ]] \
                               && [[ "${dir}" != "logs/" ]] \
                               && [[ "${dir}" != "magefiles/" ]] \
