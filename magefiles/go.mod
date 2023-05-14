@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/fatih/color v1.15.0
 	github.com/l50/goutils v1.2.5
-	github.com/magefile/mage v1.14.0
+	github.com/magefile/mage v1.15.0
 )
 
 require (
@@ -33,7 +33,7 @@ require (
 	github.com/pjbgf/sha1cd v0.3.0 // indirect
 	github.com/power-devops/perfstat v0.0.0-20221212215047-62379fc7944b // indirect
 	github.com/sergi/go-diff v1.3.1 // indirect
-	github.com/shirou/gopsutil/v3 v3.23.3 // indirect
+	github.com/shirou/gopsutil/v3 v3.23.4 // indirect
 	github.com/shoenig/go-m1cpu v0.1.5 // indirect
 	github.com/skeema/knownhosts v1.1.0 // indirect
 	github.com/tidwall/gjson v1.14.4 // indirect
