@@ -1,4 +1,4 @@
-module github.com/l50/goutils/v2
+module github.com/l50/goutils/v2/web
 
 go 1.20
 

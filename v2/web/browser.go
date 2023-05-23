@@ -4,8 +4,6 @@ import (
 	"context"
 	"math/rand"
 	"time"
-
-	"github.com/l50/goutils/v2/web/chrome"
 )
 
 // Driver is an interface that can be implemented for
@@ -13,21 +11,22 @@ import (
 // information such as context and browser options.
 type Driver interface {
 	GetContext() context.Context
+	SetContext(context.Context)
 }
 
 // Browser defines parameters used
 // for driving a web browser.
 type Browser struct {
+	Driver  interface{}
 	Cancels []func()
-	Driver  *chrome.Driver
 }
 
 // Site is used to define parameters
-// for TTPs targeting web applications
-// that require browser automation.
+// for interacting with web applications.
 type Site struct {
 	LoginURL string
-	Session  *Session
+	Session  Session
+	Debug    bool
 }
 
 // FormField contains a form field name and its associated selector.
