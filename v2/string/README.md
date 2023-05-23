@@ -1,6 +1,6 @@
 # goutils/string
 
-The string package is a part of goutils library, which provides
+The `string` package is a part of `goutils` library. It provides
 utility functions for string manipulation in Go.
 
 ---
@@ -56,7 +56,7 @@ It returns false otherwise.
 
 ## Installation
 
-To use the `goutils/string` package, you need to install it via go get:
+To use the `goutils/string` package, you need to install it via `go get`:
 
 ```bash
 go get github.com/l50/goutils/v2/string
@@ -88,12 +88,12 @@ go test -v
 
 ## Contributing
 
-Pull requests are welcome. For major changes, please open an
-issue first to discuss what you would like to change.
+Pull requests are welcome. For major changes, please
+open an issue first to discuss what you would like to change.
 
 ---
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](../../LICENSE)
-file for details.
+This project is licensed under the MIT License - see
+the [LICENSE](../../LICENSE) file for details.
