@@ -1,6 +1,6 @@
 # goutils/string
 
-The string package is a part of goutils library, which provides 
+The string package is a part of goutils library, which provides
 utility functions for string manipulation in Go.
 
 ---
@@ -13,8 +13,8 @@ utility functions for string manipulation in Go.
 func RandomString(length int) (string, error)
 ```
 
-Generates a random string of the specified length. This function 
-takes an integer input representing the length and returns a 
+Generates a random string of the specified length. This function
+takes an integer input representing the length and returns a
 string of hexadecimal characters. If the generation fails, an error is returned.
 
 ### StringInSlice
@@ -23,7 +23,7 @@ string of hexadecimal characters. If the generation fails, an error is returned.
 func StringInSlice(strToFind string, inputSlice []string) bool
 ```
 
-Checks if a specific string exists in a given slice. It returns true 
+Checks if a specific string exists in a given slice. It returns true
 if the string is found and false otherwise.
 
 ### StringToInt64
@@ -48,8 +48,8 @@ Splits a given string into a slice based on the provided delimiter.
 func StringSlicesEqual(a, b []string) bool
 ```
 
-Compares two string slices for equality. It returns true if the slices 
-have the same length and contain the same strings in the same order. 
+Compares two string slices for equality. It returns true if the slices
+have the same length and contain the same strings in the same order.
 It returns false otherwise.
 
 ---
@@ -76,8 +76,8 @@ import "github.com/l50/goutils/v2/string"
 
 ## Tests
 
-To run the tests for the `goutils/string` package, navigate to 
-your `$GOPATH/src/github.com/l50/goutils/v2/string` directory 
+To run the tests for the `goutils/string` package, navigate to
+your `$GOPATH/src/github.com/l50/goutils/v2/string` directory
 and run go test:
 
 ```bash
@@ -88,7 +88,7 @@ go test -v
 
 ## Contributing
 
-Pull requests are welcome. For major changes, please open an 
+Pull requests are welcome. For major changes, please open an
 issue first to discuss what you would like to change.
 
 ---
@@ -97,7 +97,3 @@ issue first to discuss what you would like to change.
 
 This project is licensed under the MIT License - see the [LICENSE](../../LICENSE)
 file for details.
-
-
-
-

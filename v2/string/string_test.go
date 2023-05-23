@@ -1,9 +1,10 @@
 package string_test
 
 import (
-	stringutils "github.com/l50/goutils/v2/string"
 	"reflect"
 	"testing"
+
+	stringutils "github.com/l50/goutils/v2/string"
 )
 
 func TestStringInSlice(t *testing.T) {

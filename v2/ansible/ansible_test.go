@@ -1,9 +1,10 @@
 package ansible_test
 
 import (
-	"github.com/l50/goutils/v2/ansible"
 	"os"
 	"testing"
+
+	"github.com/l50/goutils/v2/ansible"
 )
 
 func TestAnsiblePing(t *testing.T) {
