@@ -7,4 +7,12 @@ area/pre-commit:
   - ".hooks/**/*"
 
 area/go:
+  - "pkg/**/*"
+  - "cmd/**/*"
   - "*.go"
+  - "magefiles/*"
+  - "go.mod"
+  - "go.sum"
+
+area/mage:
+  - "magefiles/*"
