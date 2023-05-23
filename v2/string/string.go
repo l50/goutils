@@ -37,7 +37,7 @@ func RandomString(length int) (string, error) {
 	return fmt.Sprintf("%x", b)[:length], nil
 }
 
-// StringInSlice determines if a specified string exists in a provided slice.
+// InSlice determines if a specified string exists in a provided slice.
 //
 // Parameters:
 //
@@ -56,7 +56,7 @@ func RandomString(length int) (string, error) {
 //	if isFound {
 //	  log.Println("Found the string in the slice.")
 //	}
-func StringInSlice(strToFind string, inputSlice []string) bool {
+func InSlice(strToFind string, inputSlice []string) bool {
 	for _, value := range inputSlice {
 		if strings.Contains(value, strToFind) {
 			return true
@@ -65,7 +65,7 @@ func StringInSlice(strToFind string, inputSlice []string) bool {
 	return false
 }
 
-// StringToInt64 converts a string to an int64.
+// ToInt64 converts a string to an int64.
 //
 // Parameters:
 //
@@ -85,7 +85,7 @@ func StringInSlice(strToFind string, inputSlice []string) bool {
 //	}
 //
 // log.Printf("Converted string to int64: %d\n", num)
-func StringToInt64(value string) (int64, error) {
+func ToInt64(value string) (int64, error) {
 	n, err := strconv.ParseInt(value, 10, 64)
 	if err != nil {
 		return -1, err
@@ -94,7 +94,7 @@ func StringToInt64(value string) (int64, error) {
 	return n, nil
 }
 
-// StringToSlice converts a string to a slice of strings, using the specified delimiter.
+// ToSlice converts a string to a slice of strings, using the specified delimiter.
 //
 // Parameters:
 //
@@ -112,11 +112,11 @@ func StringToInt64(value string) (int64, error) {
 //	for _, str := range slice {
 //	  log.Println(str)
 //	}
-func StringToSlice(delimStr string, delim string) []string {
+func ToSlice(delimStr string, delim string) []string {
 	return strings.Split(delimStr, delim)
 }
 
-// StringSlicesEqual compares two slices of strings for equality.
+// SlicesEqual compares two slices of strings for equality.
 //
 // Parameters:
 //
@@ -139,7 +139,7 @@ func StringToSlice(delimStr string, delim string) []string {
 //
 //	  log.Println("The string slices are not equal.")
 //	}
-func StringSlicesEqual(a, b []string) bool {
+func SlicesEqual(a, b []string) bool {
 	if len(a) != len(b) {
 		return false
 	}
