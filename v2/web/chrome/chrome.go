@@ -2,7 +2,6 @@ package chrome
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -16,6 +15,14 @@ import (
 type Driver struct {
 	Context context.Context
 	Options *[]chromedp.ExecAllocatorOption
+}
+
+// InputAction contains selectors and actions to run
+// with chrome.
+type InputAction struct {
+	Description string
+	Selector    string
+	Action      chromedp.Action
 }
 
 // GetContext returns the context associated with the Driver.
@@ -40,7 +47,7 @@ func setChromeOptions(browser *web.Browser, headless bool, ignoreCertErrors bool
 	}
 }
 
-// Init returns a chrome browser for the TTP Runner to use.
+// Init returns a chrome browser instance for use.
 func Init(headless bool, ignoreCertErrors bool) (web.Browser, error) {
 	var cancels []func()
 
@@ -51,12 +58,7 @@ func Init(headless bool, ignoreCertErrors bool) (web.Browser, error) {
 	options := []chromedp.ExecAllocatorOption{}
 	setChromeOptions(&browser, headless, ignoreCertErrors, &options)
 
-	driver, ok := browser.Driver.(*Driver)
-	if !ok {
-		if err := errors.New("driver is not of type *ChromeDP"); err != nil {
-			return web.Browser{}, err
-		}
-	}
+	driver := browser.Driver
 
 	// Create contexts and their associated cancels.
 	allocatorCtx, cancel := chromedp.NewExecAllocator(
@@ -67,14 +69,6 @@ func Init(headless bool, ignoreCertErrors bool) (web.Browser, error) {
 	browser.Cancels = append([]func(){cancel}, cancels...)
 
 	return browser, nil
-}
-
-// InputAction contains selectors and actions to run
-// with chrome.
-type InputAction struct {
-	Description string
-	Selector    string
-	Action      chromedp.Action
 }
 
 // GetPageSource retrieves the source code of the web page currently loaded in the site session.
@@ -90,34 +84,22 @@ type InputAction struct {
 //
 // (error): an error if the function fails to retrieve the source code or if the driver is not of the correct type.
 func GetPageSource(site web.Site) (string, error) {
-	// Convert the driver to a chrome-specific *Driver instance
-	chromeDriver, ok := site.Session.Driver.(*Driver)
-	if !ok {
-		return "", errors.New("driver is not of type *Driver")
-	}
-
 	// Get the page source code
 	var pageSource string
-	err := chromedp.Run(chromeDriver.Context, chromedp.OuterHTML("html", &pageSource))
+	err := chromedp.Run(site.Session.Driver.Context, chromedp.OuterHTML("html", &pageSource))
 
 	return pageSource, err
 }
 
 // Navigate navigates an input site using the provided InputActions.
 func Navigate(site web.Site, actions []InputAction, waitTime time.Duration) error {
-	// Convert the driver to a chrome-specific *Driver instance
-	chromeDriver, ok := site.Session.Driver.(*Driver)
-	if !ok {
-		return errors.New("driver is not of type *Driver")
-	}
-
 	// Enable network events
-	if err := chromedp.Run(chromeDriver.Context, network.Enable()); err != nil {
+	if err := chromedp.Run(site.Session.Driver.Context, network.Enable()); err != nil {
 		return err
 	}
 
 	// Set up request logging
-	chromedp.ListenTarget(chromeDriver.Context, func(ev interface{}) {
+	chromedp.ListenTarget(site.Session.Driver.Context, func(ev interface{}) {
 		switch msg := ev.(type) {
 		case *network.EventRequestWillBeSent:
 			fmt.Printf("Request: %s %s\n", msg.Request.Method, msg.Request.URL)
@@ -140,7 +122,7 @@ func Navigate(site web.Site, actions []InputAction, waitTime time.Duration) erro
 		}
 		fmt.Printf("Executing action #%d:\n Type: %s", i+1, actionType)
 
-		if err := chromedp.Run(chromeDriver.Context, chromedp.Tasks{
+		if err := chromedp.Run(site.Session.Driver.Context, chromedp.Tasks{
 			inputAction.Action,
 			chromedp.Sleep(waitTime),
 		}); err != nil {
