@@ -25,7 +25,6 @@ import (
 //	if err != nil {
 //	  log.Fatalf("failed to ping hosts: %v", err)
 //	} else {
-//
 //	  log.Printf("Successfully pinged all hosts in %s\n", hostsFile)
 //	}
 func Ping(hostsFile string) error {
