@@ -87,7 +87,7 @@ func TestToInt64(t *testing.T) {
 	}
 }
 
-func TestStringToSlice(t *testing.T) {
+func TestToSlice(t *testing.T) {
 	tests := []struct {
 		name     string
 		delimStr string
@@ -107,6 +107,43 @@ func TestStringToSlice(t *testing.T) {
 			got := stringutils.ToSlice(tc.delimStr, tc.delim)
 			if !reflect.DeepEqual(got, tc.want) {
 				t.Errorf("StringToSlice() = %v, want %v", got, tc.want)
+			}
+		})
+	}
+}
+
+func TestSlicesEqual(t *testing.T) {
+	tests := []struct {
+		name string
+		a    []string
+		b    []string
+		want bool
+	}{
+		{
+			name: "Equal slices",
+			a:    []string{"apple", "banana", "cherry"},
+			b:    []string{"apple", "banana", "cherry"},
+			want: true,
+		},
+		{
+			name: "Unequal slices",
+			a:    []string{"apple", "banana", "cherry"},
+			b:    []string{"apple", "banana", "grape"},
+			want: false,
+		},
+		{
+			name: "Different length slices",
+			a:    []string{"apple", "banana", "cherry"},
+			b:    []string{"apple", "banana"},
+			want: false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			got := stringutils.SlicesEqual(tc.a, tc.b)
+			if got != tc.want {
+				t.Errorf("SlicesEqual() = %v, want %v", got, tc.want)
 			}
 		})
 	}
