@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"math/rand"
 	"time"
+
+	"github.com/chromedp/chromedp"
 )
 
 // Driver is an interface that can be implemented for
@@ -14,6 +16,8 @@ import (
 type Driver interface {
 	GetContext() context.Context
 	SetContext(context.Context)
+	GetOptions() []chromedp.ExecAllocatorOption
+	SetOptions([]chromedp.ExecAllocatorOption)
 }
 
 // Browser defines parameters used

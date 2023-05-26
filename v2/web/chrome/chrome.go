@@ -2,7 +2,6 @@ package chrome
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -16,17 +15,31 @@ import (
 )
 
 // Driver is used to interface with Google Chrome using go.
+//
+// Contains:
+//
+// Context: A context.Context that's associated with this Driver.
+//
+// Options: Options for execution of Google Chrome.
 type Driver struct {
 	Context context.Context
 	Options *[]chromedp.ExecAllocatorOption
 }
 
 // GetContext returns the context associated with the Driver.
+//
+// Returns:
+//
+// context.Context: The context that's associated with this Driver.
 func (d *Driver) GetContext() context.Context {
 	return d.Context
 }
 
 // SetContext sets the context associated with the Driver.
+//
+// Parameters:
+//
+// ctx (context.Context): The new context to be associated with this Driver.
 func (d *Driver) SetContext(ctx context.Context) {
 	d.Context = ctx
 }
@@ -49,6 +62,21 @@ func setChromeOptions(browser *web.Browser, headless bool, ignoreCertErrors bool
 }
 
 // Init returns a chrome browser instance.
+//
+// This function initializes a chrome browser instance with the specified headless mode and SSL certificate error ignoring options.
+// The browser instance is then returned for further operations.
+//
+// Parameters:
+//
+// headless (bool): Whether or not the browser should be in headless mode.
+//
+// ignoreCertErrors (bool): Whether or not SSL certificate errors should be ignored.
+//
+// Returns:
+//
+// web.Browser: A Browser instance which has been initialized.
+//
+// error: Any encountered error during initialization.
 func Init(headless bool, ignoreCertErrors bool) (web.Browser, error) {
 	var cancels []func()
 
@@ -59,25 +87,25 @@ func Init(headless bool, ignoreCertErrors bool) (web.Browser, error) {
 	options := []chromedp.ExecAllocatorOption{}
 	setChromeOptions(&browser, headless, ignoreCertErrors, &options)
 
-	driver, ok := browser.Driver.(*Driver)
-	if !ok {
-		err := errors.New("driver is not of type *ChromeDP")
-		return web.Browser{}, err
-	}
-
 	// Create contexts and their associated cancels.
 	allocatorCtx, cancel := chromedp.NewExecAllocator(
-		context.Background(), *driver.Options...)
+		context.Background(), *browser.Driver.GetOptions())
 	browser.Cancels = append([]func(){cancel}, cancels...)
-	driver.Context, cancel = chromedp.NewContext(allocatorCtx,
-		chromedp.WithLogf(log.Printf))
-	browser.Cancels = append([]func(){cancel}, cancels...)
+	browser.Driver.SetContext(chromedp.NewContext(allocatorCtx,
+		chromedp.WithLogf(log.Printf)))
 
 	return browser, nil
 }
 
-// InputAction contains selectors and actions to run
-// with chrome.
+// InputAction contains selectors and actions to run with chrome.
+//
+// Contains:
+//
+// Description: A description of this action.
+//
+// Selector: A selector to find an element on the page.
+//
+// Action: An chromedp.Action which defines the action to perform on the selected element.
 type InputAction struct {
 	Description string
 	Selector    string
@@ -85,38 +113,44 @@ type InputAction struct {
 }
 
 // GetPageSource retrieves the source code of the web page currently loaded in the site session.
-// It returns the page source code as a string or an error if the function fails to obtain the source code.
 //
-// Args:
+// This function will return the HTML source code of the currently loaded page in the provided Site's session.
 //
-// site (web.Site): a web.Site instance containing the session information for the website to retrieve the source code from.
+// Parameters:
+//
+// site (web.Site): The site whose source code is to be retrieved.
 //
 // Returns:
 //
-// (string): the source code of the web page loaded in the site session.
+// string: The source code of the currently loaded page.
 //
-// (error): an error if the function fails to retrieve the source code or if the driver is not of the correct type.
+// error: An error if any occurred during source code retrieval.
 func GetPageSource(site web.Site) (string, error) {
-	// Convert the driver to a chrome-specific *Driver instance
-	chromeDriver, ok := site.Session.Driver.(*Driver)
-	if !ok {
-		return "", errors.New("driver is not of type *Driver")
-	}
-
+	chromeDriver := site.Session.Driver
 	// Get the page source code
 	var pageSource string
-	err := chromedp.Run(chromeDriver.Context, chromedp.OuterHTML("html", &pageSource))
+	err := chromedp.Run(chromeDriver.GetContext(), chromedp.OuterHTML("html", &pageSource))
 
 	return pageSource, err
 }
 
 // Navigate navigates an input site using the provided InputActions.
+//
+// This function will perform the provided actions sequentially on the provided Site's session. It enables network events and sets up request logging.
+//
+// Parameters:
+//
+// site (web.Site): The site on which the actions should be performed.
+//
+// actions ([]InputAction): A slice of InputAction objects which define the actions to be performed.
+//
+// waitTime (time.Duration): The time to wait between actions.
+//
+// Returns:
+//
+// error: An error if any occurred during navigation.
 func Navigate(site web.Site, actions []InputAction, waitTime time.Duration) error {
-	// Convert the driver to a chrome-specific *Driver instance
-	chromeDriver, ok := site.Session.Driver.(*Driver)
-	if !ok {
-		return errors.New("driver is not of type *Driver")
-	}
+	chromeDriver := site.Session.Driver
 
 	// Enable network events
 	if err := chromedp.Run(chromeDriver.Context, network.Enable()); err != nil {
@@ -170,15 +204,22 @@ func Navigate(site web.Site, actions []InputAction, waitTime time.Duration) erro
 	return nil
 }
 
-// ScreenShot takes a screenshot of the input `targetURL`
-// and saves it to `imgPath`.
+// ScreenShot takes a screenshot of the input `targetURL` and saves it to `imgPath`.
+//
+// This function captures a screenshot of the currently loaded page in the provided Site's session and writes the image data to the provided file path.
+//
+// Parameters:
+//
+// site (web.Site): The site whose page a screenshot should be taken of.
+//
+// imgPath (string): The path to which the screenshot should be saved.
+//
+// Returns:
+//
+// error: An error if any occurred during screenshot capturing or saving.
 func ScreenShot(site web.Site, imgPath string) error {
 	var screenshot []byte
-	// Convert the driver to a chrome-specific *Driver instance
-	chromeDriver, ok := site.Session.Driver.(*Driver)
-	if !ok {
-		return errors.New("driver is not of type *Driver")
-	}
+	chromeDriver := site.Session.Driver
 
 	if err := chromedp.Run(chromeDriver.Context, takeSS(100, &screenshot)); err != nil {
 		fmt.Errorf("failed to take screenshot: %v", err)
