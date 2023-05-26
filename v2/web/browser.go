@@ -2,6 +2,8 @@ package web
 
 import (
 	"context"
+	"encoding/binary"
+	"fmt"
 	"math/rand"
 	"time"
 )
@@ -42,6 +44,23 @@ func CancelAll(cancels []func()) {
 	}
 }
 
+// cryptoRandIntn generates a random int in the range [0, n) using crypto/rand.
+func cryptoRandIntn(n int) (int, error) {
+	if n <= 0 {
+		return 0, fmt.Errorf("invalid argument to cryptoRandIntn: %d <= 0", n)
+	}
+
+	b := make([]byte, 8)
+	if _, err := rand.Read(b); err != nil {
+		return 0, err
+	}
+
+	val := binary.BigEndian.Uint64(b) // Convert bytes to uint64.
+
+	// Return a value in the range [0, n).
+	return int(val % uint64(n)), nil
+}
+
 // Wait is used to wait for a random period of time
 // that is anchored to the input near value.
 //
@@ -55,10 +74,14 @@ func CancelAll(cancels []func()) {
 // chromedp.SendKeys(userXPath, caldera.Creds.User),
 // chromedp.Sleep(Wait(1000)),
 // ...
-func Wait(near float64) time.Duration {
+func Wait(near float64) (time.Duration, error) {
 	zoom := int(near / 10)
-	x := rand.Intn(zoom) + int(0.95*near)
-	return time.Duration(x) * time.Millisecond
+	x, err := cryptoRandIntn(zoom)
+	if err != nil {
+		return 0, err
+	}
+	x += int(0.95 * near)
+	return time.Duration(x) * time.Millisecond, nil
 }
 
 // GetRandomWait returns a random duration between the specified minWait and maxWait durations.
