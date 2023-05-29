@@ -35,8 +35,7 @@ func createTestRepo(name string) string {
 	)
 
 	testRepoURL := "https://github.com/l50/helloworld.git"
-	_, err := goutils.CloneRepo(testRepoURL, targetPath, nil)
-	if err != nil {
+	if _, err := goutils.CloneRepo(testRepoURL, targetPath, nil); err != nil {
 		fmt.Errorf(
 			"failed to clone to %s - CloneRepo() failed: %v",
 			targetPath,
