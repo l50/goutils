@@ -10,15 +10,9 @@ import (
 	"testing"
 )
 
-var (
-	mageCleanupDirs []string
-)
-
 func init() {
-	// Create test repo and queue it for cleanup
 	randStr, _ := RandomString(8)
 	clonePath = createTestRepo(fmt.Sprintf("mageutils-%s", randStr))
-	mageCleanupDirs = append(mageCleanupDirs, clonePath)
 }
 
 func TestGHRelease(t *testing.T) {
@@ -29,18 +23,27 @@ func TestGHRelease(t *testing.T) {
 	}
 }
 
-func cleanupMageUtils(t *testing.T) {
-	for _, dir := range mageCleanupDirs {
-		if err := RmRf(dir); err != nil {
-			fmt.Println("failed to clean up mageUtils: ", err.Error())
-		}
-	}
-}
-
 func TestGoReleaser(t *testing.T) {
-	t.Cleanup(func() {
-		cleanupMageUtils(t)
-	})
+	repoRoot, err := RepoRoot()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Create temporary directory
+	tempDir, err := os.MkdirTemp("", "goutils-test-*")
+	if err != nil {
+		t.Fatalf("failed to create temp directory: %v", err)
+	}
+	defer os.RemoveAll(tempDir)
+
+	if err := os.Chdir(tempDir); err != nil {
+		t.Fatalf("failed to change directory to temp directory: %v", err)
+	}
+
+	// Copy the repo to temporary directory
+	if err := Cp(repoRoot, tempDir); err != nil {
+		t.Fatalf("failed to copy repo to temp directory: %v", err)
+	}
 
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -48,7 +51,10 @@ func TestGoReleaser(t *testing.T) {
 	}
 
 	releaserDir := filepath.Join(cwd, "dist")
-	mageCleanupDirs = append(mageCleanupDirs, releaserDir)
+
+	if err := os.Mkdir(releaserDir, 0755); err != nil {
+		t.Fatal(err)
+	}
 
 	if err := GoReleaser(); err != nil {
 		t.Fatal(err)

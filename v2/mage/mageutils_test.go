@@ -3,6 +3,7 @@ package mage_test
 import (
 	"bufio"
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -36,7 +37,7 @@ func createTestRepo(name string) string {
 
 	testRepoURL := "https://github.com/l50/helloworld.git"
 	if _, err := goutils.CloneRepo(testRepoURL, targetPath, nil); err != nil {
-		fmt.Errorf(
+		log.Fatalf(
 			"failed to clone to %s - CloneRepo() failed: %v",
 			targetPath,
 			err,
@@ -67,12 +68,19 @@ func TestGoReleaser(t *testing.T) {
 		cleanupMageUtils(t)
 	})
 
-	cwd, err := os.Getwd()
+	// Get repo root
+	repoRoot, err := goutils.RepoRoot()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	releaserDir := filepath.Join(cwd, "dist")
+	// Change into repo root
+	if err := os.Chdir(repoRoot); err != nil {
+		t.Fatalf("failed to change directory to repo root: %v", err)
+	}
+
+	releaserDir := filepath.Join(repoRoot, "dist")
+
 	mageCleanupDirs = append(mageCleanupDirs, releaserDir)
 
 	if err := mage.GoReleaser(); err != nil {
@@ -109,6 +117,13 @@ func TestTidy(t *testing.T) {
 }
 
 func TestUpdateMageDeps(t *testing.T) {
+	repoRoot, err := goutils.RepoRoot()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	os.Chdir(repoRoot)
+
 	if err := mage.UpdateMageDeps("magefiles"); err != nil {
 		t.Fatal(err)
 	}
@@ -128,7 +143,7 @@ func TestInstallGoDeps(t *testing.T) {
 func TestFindExportedFunctionsInPackage(t *testing.T) {
 	// Define the bash command as a string
 	bashCmd := `
-find . -name "*.go" -not -path "./magefiles/*" |
+find . -name "*.go" -not -path "./magefiles/*" -not -path "./v2/*" |
 xargs grep -E -o 'func [A-Z][a-zA-Z0-9_]+\(' |
 grep --color=auto --exclude-dir={.bzr,CVS,.git,.hg,.svn,.idea,.tox} -v '_test.go' |
 grep --color=auto --exclude-dir={.bzr,CVS,.git,.hg,.svn,.idea,.tox} -v -E 'func [A-Z][a-zA-Z0-9_]+Test\(' |

@@ -156,58 +156,19 @@ func TestLintUtils(t *testing.T) {
 				}
 			},
 		},
+		// {
+		// 	name: "TestRunPCHooks",
+		// 	test: func(t *testing.T) {
+		// 		if err := lint.RunPCHooks(); err != nil {
+		// 			t.Fatal(err)
+		// 		}
+		// 	},
+		// },
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			// Run the test
 			tc.test(t)
 		})
 	}
 }
-
-// func TestRunPCHooks(t *testing.T) {
-// 	repoRoot, err := goutils.RepoRoot()
-// 	if err != nil {
-// 		t.Fatalf("failed to get repo root: %v", err)
-// 	}
-
-// 	// Create temporary directory
-// 	tempDir, err := os.MkdirTemp("", "goutils-test-*")
-// 	if err != nil {
-// 		t.Fatalf("failed to create temp directory: %v", err)
-// 	}
-// 	defer os.RemoveAll(tempDir)
-
-// 	if err := os.Chdir(tempDir); err != nil {
-// 		t.Fatalf("failed to change directory to temp directory: %v", err)
-// 	}
-
-// 	// Copy the repo to temporary directory
-// 	if err := goutils.Cp(repoRoot, tempDir); err != nil {
-// 		t.Fatalf("failed to copy repo to temp directory: %v", err)
-// 	}
-
-// 	seconds := 120
-// 	timeout := time.After(time.Duration(seconds) * time.Second)
-// 	errors := make(chan error)
-// 	done := make(chan bool)
-// 	go func() {
-// 		if err := lint.RunPCHooks(); err != nil {
-// 			errors <- fmt.Errorf(
-// 				"received error from RunPCHooks(): %v", err)
-// 		}
-// 		done <- true
-// 	}()
-
-// 	select {
-// 	case <-timeout:
-// 		fmt.Printf("timed out TestRunPCHooks() after %ds to "+
-// 			"stop the test from infinitely calling itself",
-// 			seconds)
-// 	case <-done:
-// 	case err := <-errors:
-// 		t.Fatalf("test fail - TestRunPCHooks() "+
-// 			"in precommitutils_test.go: %v", err)
-// 	}
-// }
