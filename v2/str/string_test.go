@@ -1,10 +1,10 @@
-package string_test
+package str_test
 
 import (
 	"reflect"
 	"testing"
 
-	stringutils "github.com/l50/goutils/v2/string"
+	str "github.com/l50/goutils/v2/string"
 )
 
 func TestRandomString(t *testing.T) {
@@ -22,7 +22,7 @@ func TestRandomString(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := stringutils.RandomString(tc.length)
+			got, err := str.RandomString(tc.length)
 			if (err != nil) != tc.wantErr {
 				t.Errorf("RandomString() error = %v, wantErr %v", err, tc.wantErr)
 			}
@@ -51,7 +51,7 @@ func TestInSlice(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			result := stringutils.InSlice(tc.strToFind, tc.inputSlice)
+			result := str.InSlice(tc.strToFind, tc.inputSlice)
 			if result != tc.expected {
 				t.Errorf("StringInSlice() = %v, want %v", result, tc.expected)
 			}
@@ -79,7 +79,7 @@ func TestToInt64(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			_, err := stringutils.ToInt64(tc.input)
+			_, err := str.ToInt64(tc.input)
 			if (err != nil) != tc.wantErr {
 				t.Errorf("StringToInt64() error = %v, wantErr %v", err, tc.wantErr)
 			}
@@ -104,7 +104,7 @@ func TestToSlice(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			got := stringutils.ToSlice(tc.delimStr, tc.delim)
+			got := str.ToSlice(tc.delimStr, tc.delim)
 			if !reflect.DeepEqual(got, tc.want) {
 				t.Errorf("StringToSlice() = %v, want %v", got, tc.want)
 			}
@@ -141,7 +141,7 @@ func TestSlicesEqual(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			got := stringutils.SlicesEqual(tc.a, tc.b)
+			got := str.SlicesEqual(tc.a, tc.b)
 			if got != tc.want {
 				t.Errorf("SlicesEqual() = %v, want %v", got, tc.want)
 			}
