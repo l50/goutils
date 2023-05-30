@@ -24,9 +24,30 @@ type ConfigUserInfo struct {
 	Email string
 }
 
-// GetSSHPubKey returns the public SSH key for the input
-// keyName and uses the input password (if provided)
-// to decrypt the associated private key.
+// GetSSHPubKey retrieves the public SSH key for the given key name, decrypting the associated private key if a password
+// is provided. It returns a pointer to the public key object, or an error if one occurs.
+//
+// Parameters:
+//
+// keyName: A string representing the name of the key to retrieve.
+// password: A string representing the password used to decrypt the private key.
+//
+// Returns:
+//
+// *ssh.PublicKeys: A pointer to a PublicKeys object representing the retrieved public key.
+// error: An error if one occurs during key retrieval or decryption.
+//
+// Example:
+//
+// keyName := "id_rsa"
+// password := "mypassword"
+// publicKey, err := GetSSHPubKey(keyName, password)
+//
+//	if err != nil {
+//	  log.Fatalf("failed to get SSH public key: %v", err)
+//	}
+//
+// log.Printf("Retrieved public key: %v", publicKey)
 func GetSSHPubKey(keyName string, password string) (*ssh.PublicKeys, error) {
 	var publicKey *ssh.PublicKeys
 
@@ -42,8 +63,26 @@ func GetSSHPubKey(keyName string, password string) (*ssh.PublicKeys, error) {
 	return publicKey, nil
 }
 
-// AddFile adds the file at the input filePath to
-// the staging area for its associated repo.
+// AddFile stages the file at the given file path in its associated Git repository. Returns an error if one occurs.
+//
+// Parameters:
+//
+// filePath: A string representing the path to the file to be staged.
+//
+// Returns:
+//
+// error: An error if one occurs during the staging process.
+//
+// Example:
+//
+// filePath := "/path/to/your/file"
+// err := AddFile(filePath)
+//
+//	if err != nil {
+//	  log.Fatalf("failed to stage file: %v", err)
+//	}
+//
+// log.Printf("Staged file: %s", filePath)
 func AddFile(filePath string) error {
 	repo, err := git.PlainOpen(filepath.Dir(filePath))
 	if err != nil {
@@ -78,8 +117,32 @@ func AddFile(filePath string) error {
 	return nil
 }
 
-// Commit commits the current staging area
-// for the input repo.
+// Commit creates a new commit in the given repository with the provided message. The author of the commit is retrieved from the global Git user settings.
+//
+// Parameters:
+//
+// repo: A pointer to the Repository struct representing the repository where the commit should be created.
+//
+// msg: A string representing the commit message.
+//
+// Returns:
+//
+// error: An error if the commit cannot be created.
+//
+// Example:
+//
+// repo, err := git.PlainOpen("/path/to/repo")
+//
+//	if err != nil {
+//	  log.Fatalf("failed to open repository: %v", err)
+//	}
+//
+// msg := "Commit message"
+// err = Commit(repo, msg)
+//
+//	if err != nil {
+//	  log.Fatalf("failed to create commit: %v", err)
+//	}
 func Commit(repo *git.Repository, msg string) error {
 	cfg, err := GetGlobalUserCfg()
 	if err != nil {
@@ -339,8 +402,41 @@ func DeleteTag(repo *git.Repository, tag string) error {
 	return nil
 }
 
-// DeletePushedTag deletes an input `tag` that has been pushed
-// to remote.
+// DeletePushedTag deletes a tag from a given repository that has been pushed remote.
+// The tag is deleted from both the local repository and the remote repository.
+//
+// Parameters:
+//
+// repo: A pointer to the Repository struct representing the repository where the tag should be deleted.
+//
+// tag: A string representing the tag that should be deleted.
+//
+// auth: An AuthMethod representing the method used to authenticate with the remote repository.
+//
+// Returns:
+//
+// error: An error if the tag cannot be deleted.
+//
+// Example:
+//
+// repo, err := git.PlainOpen("/path/to/repo")
+//
+//	if err != nil {
+//	  log.Fatalf("failed to open repository: %v", err)
+//	}
+//
+// tag := "v1.0.0"
+// auth, err := ssh.NewSSHAgentAuth("git")
+//
+//	if err != nil {
+//	  log.Fatalf("failed to create authentication method: %v", err)
+//	}
+//
+// err = DeletePushedTag(repo, tag, auth)
+//
+//	if err != nil {
+//	  log.Fatalf("failed to delete pushed tag: %v", err)
+//	}
 func DeletePushedTag(repo *git.Repository, tag string, auth transport.AuthMethod) error {
 	err := repo.Push(&git.PushOptions{
 		RemoteName: "origin",
