@@ -14,6 +14,7 @@ import (
 
 	"github.com/bitfield/script"
 	"github.com/l50/goutils/v2/file"
+	fileutils "github.com/l50/goutils/v2/file"
 	"github.com/l50/goutils/v2/net"
 	"github.com/l50/goutils/v2/str"
 	"github.com/l50/goutils/v2/sys"
@@ -24,20 +25,41 @@ var (
 )
 
 func TestCd(t *testing.T) {
-	dst := "magefiles"
+	// Setup a temporary directory for testing
+	tmpDir, err := os.MkdirTemp("", "magefiles")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(tmpDir)
 
-	src := sys.Gwd()
-	if !strings.Contains(src, "goutils") {
-		t.Fatal("unable to get the current working directory - Gwd() failed")
+	originalDir, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.Chdir(originalDir) // ensure we return to the original directory after test
+
+	// Now test the Cd function
+	if err := sys.Cd(tmpDir); err != nil {
+		t.Fatalf("error running Cd(): expected to change directory to %s but got error: %v", tmpDir, err)
 	}
 
-	if err := sys.Cd(dst); err != nil {
-		t.Fatalf("failed to change directory to %s: %v - Cd() failed", dst, err)
+	currentDir, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
 	}
 
-	cwd := sys.Gwd()
-	if !strings.Contains(cwd, dst) {
-		t.Fatalf("failed to change directory to %s - Cd() failed", dst)
+	// Ensure both paths are evaluated to their real paths (resolving any symlinks)
+	realCurrentDir, err := filepath.EvalSymlinks(currentDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	realTmpDir, err := filepath.EvalSymlinks(tmpDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if realCurrentDir != realTmpDir {
+		t.Fatalf("error running Cd(): expected current directory to be %s but got %s", realTmpDir, realCurrentDir)
 	}
 }
 
@@ -55,15 +77,15 @@ func TestCmdExists(t *testing.T) {
 func TestCp(t *testing.T) {
 	file := "test.txt"
 	copyLoc := "testing.txt"
-	created := file.CreateEmpty(file)
+	created := fileutils.CreateEmpty(file)
 	if created {
 		if err := sys.Cp(file, copyLoc); err != nil {
 			t.Fatalf("failed to copy %s to %s - Cp() failed", file, copyLoc)
 		}
-		if file.Exists(copyLoc) {
+		if fileutils.Exists(copyLoc) {
 			remove := []string{file, copyLoc}
 			for _, f := range remove {
-				if err := file.Delete(f); err != nil {
+				if err := fileutils.Delete(f); err != nil {
 					t.Errorf("unable to delete %s, DeleteFile() failed", f)
 				}
 			}
