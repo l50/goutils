@@ -7,12 +7,13 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
 
-	goutils "github.com/l50/goutils"
 	"github.com/l50/goutils/v2/mage"
+	"github.com/l50/goutils/v2/str"
 )
 
 var (
@@ -21,7 +22,7 @@ var (
 
 func init() {
 	// Create test repo and queue it for cleanup
-	randStr, _ := goutils.RandomString(8)
+	randStr, _ := str.GenRandom(8)
 	clonePath := createTestRepo(fmt.Sprintf("mageutils-%s", randStr))
 	mageCleanupDirs = append(mageCleanupDirs, clonePath)
 }
@@ -57,7 +58,7 @@ func TestGHRelease(t *testing.T) {
 
 func cleanupMageUtils(t *testing.T) {
 	for _, dir := range mageCleanupDirs {
-		if err := goutils.RmRf(dir); err != nil {
+		if err := fileutils.RmRf(dir); err != nil {
 			fmt.Println("failed to clean up mageUtils: ", err.Error())
 		}
 	}
@@ -227,5 +228,76 @@ awk -F: '{printf "Function: %s\nFile: %s\n", $2, $1}'`
 				t.Errorf("go and bash implementations don't agree: %v", missingFuncs)
 			}
 		})
+	}
+}
+
+func TestFindExportedFuncsWithoutTests(t *testing.T) {
+	pkg := "bla"
+	// Create temporary directory
+	tempDir, err := os.MkdirTemp("/tmp", "test")
+	if err != nil {
+		t.Fatalf("failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tempDir)
+
+	// Create a file with exported function
+	file1 := filepath.Join(tempDir, "file1.go")
+	content1 := fmt.Sprintf(`package %s
+func ExportedFunc1() {}
+`, pkg)
+	if err := os.WriteFile(file1, []byte(content1), 0666); err != nil {
+		t.Fatalf("failed to create file1: %v", err)
+	}
+
+	// Create example with exported function and test function
+	file2 := filepath.Join(tempDir, "file2.go")
+	content2 := fmt.Sprintf(`package %s
+func ExportedFunc2() {}
+`, pkg)
+	if err := os.WriteFile(file2, []byte(content2), 0666); err != nil {
+		t.Fatalf("failed to create file1: %v", err)
+	}
+
+	file2Test := filepath.Join(tempDir, "file2_test.go")
+	content2Test := fmt.Sprintf(`package %s
+import "testing"
+func TestExportedFunc2(t *testing.T) {}
+`, pkg)
+	if err := os.WriteFile(file2Test, []byte(content2Test), 0666); err != nil {
+		t.Fatalf("failed to create file2: %v", err)
+	}
+
+	// Create a file with exported function and no test function
+	file3 := filepath.Join(tempDir, "pkg", "bla", "file3.go")
+	content3 := fmt.Sprintf(`package %s
+func ExportedFunc3() {}
+`, pkg)
+	if err := os.MkdirAll(filepath.Dir(file3), os.ModePerm); err != nil {
+		t.Fatalf("failed to create file3 dir: %v", err)
+	}
+	if err := os.WriteFile(file3, []byte(content3), 0666); err != nil {
+		t.Fatalf("failed to create file3: %v", err)
+	}
+
+	// Create a file with exported function and test function
+	file4 := filepath.Join(tempDir, "pkg", "bla", "file3_test.go")
+	content4 := fmt.Sprintf(`package %s
+import "testing"
+func TestExportedFunc3(t *testing.T) {}
+`, pkg)
+	if err := os.WriteFile(file4, []byte(content4), 0666); err != nil {
+		t.Fatalf("failed to create file4: %v", err)
+	}
+
+	// Call FindExportedFuncsWithoutTests
+	exportedFuncs, err := fileutils.FindExportedFuncsWithoutTests(tempDir)
+	if err != nil {
+		t.Fatalf("failed to find exported funcs: %v", err)
+	}
+
+	// Assert the result
+	expectedFuncs := []string{"ExportedFunc1"}
+	if !reflect.DeepEqual(exportedFuncs, expectedFuncs) {
+		t.Errorf("expected funcs: %v, got: %v", expectedFuncs, exportedFuncs)
 	}
 }

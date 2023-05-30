@@ -26,7 +26,7 @@ fails, an error is returned.
 To use the `goutils/net` package, you need to install it via `go get`:
 
 ```bash
-go get github.com/l50/goutils/v2/string
+go get github.com/l50/goutils/v2/str
 ```
 
 ---

@@ -13,14 +13,15 @@ import (
 	"github.com/fatih/color"
 	"github.com/magefile/mage/sh"
 
-	goutils "github.com/l50/goutils"
+	fileutils "github.com/l50/goutils/v2/file"
+	"github.com/l50/goutils/v2/sys"
 )
 
 // GHRelease creates a new release with the input newVer using the gh cli tool.
 // Example newVer: v1.0.1
 func GHRelease(newVer string) error {
 	cmd := "gh"
-	if !goutils.CmdExists("gh") {
+	if !sys.CmdExists("gh") {
 		return errors.New(color.RedString(
 			"required cmd %s not found in $PATH", cmd))
 	}
@@ -39,7 +40,7 @@ func GHRelease(newVer string) error {
 	}
 
 	// Remove created CHANGELOG file
-	if err := goutils.DeleteFile(cl); err != nil {
+	if err := fileutils.Delete(cl); err != nil {
 		return fmt.Errorf(color.RedString(
 			"failed to delete generated CHANGELOG: %v", err))
 	}
@@ -50,8 +51,8 @@ func GHRelease(newVer string) error {
 // GoReleaser Runs goreleaser to generate all of the supported binaries
 // specified in `.goreleaser`.
 func GoReleaser() error {
-	if goutils.FileExists(".goreleaser.yaml") || goutils.FileExists(".goreleaser.yml") {
-		if goutils.CmdExists("goreleaser") {
+	if fileutils.Exists(".goreleaser.yaml") || fileutils.Exists(".goreleaser.yml") {
+		if sys.CmdExists("goreleaser") {
 			if _, err := script.Exec("goreleaser --snapshot --rm-dist").Stdout(); err != nil {
 				return fmt.Errorf(color.RedString(
 					"failed to run goreleaser: %v", err))
@@ -137,11 +138,11 @@ func UpdateMageDeps(magedir string) error {
 		magedir = "magefiles"
 	}
 
-	cwd := goutils.Gwd()
+	cwd := sys.Gwd()
 	recursive := false
 	verbose := false
 
-	if err := goutils.Cd(magedir); err != nil {
+	if err := sys.Cd(magedir); err != nil {
 		return fmt.Errorf(
 			color.RedString(
 				"failed to cd from %s to %s: %v", cwd, magedir, err))
@@ -159,7 +160,7 @@ func UpdateMageDeps(magedir string) error {
 				"failed to update mage dependencies in %s: %v", magedir, err))
 	}
 
-	if err := goutils.Cd(cwd); err != nil {
+	if err := sys.Cd(cwd); err != nil {
 		return fmt.Errorf(
 			color.RedString(
 				"failed to cd from %s to %s: %v", magedir, cwd, err))
@@ -253,4 +254,64 @@ func FindExportedFunctionsInPackage(pkgPath string) ([]FuncInfo, error) {
 	}
 
 	return funcs, nil
+}
+
+// FindExportedFuncsWithoutTests finds all exported functions in a given package path that do not have
+// corresponding tests. It returns a slice of function names or an error if there is a problem parsing
+// the package or finding the tests.
+func FindExportedFuncsWithoutTests(pkgPath string) ([]string, error) {
+	// Find all exported functions in the package
+	funcs, err := mage.FindExportedFunctionsInPackage(pkgPath)
+	if err != nil {
+		return nil, err
+	}
+
+	// Find all exported functions with corresponding tests
+	testFuncs, err := findTestFunctions(pkgPath)
+	if err != nil {
+		return nil, err
+	}
+	testableFuncs := make(map[string]bool)
+	for _, tf := range testFuncs {
+		if strings.HasPrefix(tf, "Test") {
+			testableFuncs[tf[4:]] = true
+		}
+	}
+
+	// Find all exported functions without tests
+	exportedFuncsNoTest := make([]string, 0)
+	for _, f := range funcs {
+		if !testableFuncs[f.FuncName] {
+			exportedFuncsNoTest = append(exportedFuncsNoTest, f.FuncName)
+		}
+	}
+
+	return exportedFuncsNoTest, nil
+}
+
+func findTestFunctions(pkgPath string) ([]string, error) {
+	var testFuncs []string
+
+	fset := token.NewFileSet()
+	pkgs, err := parser.ParseDir(fset, pkgPath, func(info os.FileInfo) bool {
+		return strings.HasSuffix(info.Name(), "_test.go")
+	}, parser.AllErrors)
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse directory %s: %w", pkgPath, err)
+	}
+
+	for _, pkg := range pkgs {
+		for _, file := range pkg.Files {
+			for _, decl := range file.Decls {
+				funcDecl, ok := decl.(*ast.FuncDecl)
+				if !ok {
+					continue
+				}
+				testFuncs = append(testFuncs, funcDecl.Name.Name)
+			}
+		}
+	}
+
+	return testFuncs, nil
 }

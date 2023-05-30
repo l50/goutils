@@ -4,9 +4,6 @@ import (
 	"bufio"
 	"encoding/csv"
 	"fmt"
-	"go/ast"
-	"go/parser"
-	"go/token"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -14,7 +11,6 @@ import (
 
 	"github.com/bitfield/script"
 	"github.com/fatih/color"
-	"github.com/l50/goutils/v2/mage"
 	"github.com/l50/goutils/v2/str"
 )
 
@@ -256,125 +252,4 @@ func FindStr(path string, searchStr string) (bool, error) {
 	}
 
 	return false, nil
-}
-
-// RmRf removes an input path and everything in it.
-// If the input path doesn't exist, an error is returned.
-func RmRf(path string) error {
-	if _, err := os.Stat(path); err == nil {
-		if info, err := os.Stat(path); err == nil {
-			if info.IsDir() {
-				if err := os.RemoveAll(path); err != nil {
-					return fmt.Errorf("failed to run RmRf on %s: %v", path, err)
-				}
-			} else {
-				if err := os.Remove(path); err != nil {
-					return fmt.Errorf("failed to run RmRf on %s: %v", path, err)
-				}
-			}
-		} else {
-			return fmt.Errorf("failed to os.Stat on %s: %v", path, err)
-		}
-	} else {
-		return fmt.Errorf("failed to os.Stat on %s: %v", path, err)
-	}
-
-	return nil
-}
-
-// ExpandHomeDir expands the tilde character in a path to the user's home directory.
-// The function takes a string representing a path and checks if the first character is a tilde (~).
-// If it is, the function replaces the tilde with the user's home directory. The path is returned
-// unchanged if it does not start with a tilde or if there's an error retrieving the user's home
-// directory.
-//
-// Example usage:
-//
-//	pathWithTilde := "~/Documents/myfileutils.txt"
-//	expandedPath := ExpandHomeDir(pathWithTilde)
-//
-// Parameters:
-//
-//	path: The string containing a path that may start with a tilde (~) character.
-//
-// Returns:
-//
-//	string: The expanded path with the tilde replaced by the user's home directory, or the
-//	        original path if it does not start with a tilde or there's an error retrieving
-//	        the user's home directory.
-func ExpandHomeDir(path string) string {
-	if len(path) == 0 || path[0] != '~' {
-		return path
-	}
-
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		return path
-	}
-
-	if len(path) == 1 || path[1] == '/' {
-		return filepath.Join(homeDir, path[1:])
-	}
-
-	return filepath.Join(homeDir, path[1:])
-}
-
-// FindExportedFuncsWithoutTests finds all exported functions in a given package path that do not have
-// corresponding tests. It returns a slice of function names or an error if there is a problem parsing
-// the package or finding the tests.
-func FindExportedFuncsWithoutTests(pkgPath string) ([]string, error) {
-	// Find all exported functions in the package
-	funcs, err := mage.FindExportedFunctionsInPackage(pkgPath)
-	if err != nil {
-		return nil, err
-	}
-
-	// Find all exported functions with corresponding tests
-	testFuncs, err := findTestFunctions(pkgPath)
-	if err != nil {
-		return nil, err
-	}
-	testableFuncs := make(map[string]bool)
-	for _, tf := range testFuncs {
-		if strings.HasPrefix(tf, "Test") {
-			testableFuncs[tf[4:]] = true
-		}
-	}
-
-	// Find all exported functions without tests
-	exportedFuncsNoTest := make([]string, 0)
-	for _, f := range funcs {
-		if !testableFuncs[f.FuncName] {
-			exportedFuncsNoTest = append(exportedFuncsNoTest, f.FuncName)
-		}
-	}
-
-	return exportedFuncsNoTest, nil
-}
-
-func findTestFunctions(pkgPath string) ([]string, error) {
-	var testFuncs []string
-
-	fset := token.NewFileSet()
-	pkgs, err := parser.ParseDir(fset, pkgPath, func(info os.FileInfo) bool {
-		return strings.HasSuffix(info.Name(), "_test.go")
-	}, parser.AllErrors)
-
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse directory %s: %w", pkgPath, err)
-	}
-
-	for _, pkg := range pkgs {
-		for _, file := range pkg.Files {
-			for _, decl := range file.Decls {
-				funcDecl, ok := decl.(*ast.FuncDecl)
-				if !ok {
-					continue
-				}
-				testFuncs = append(testFuncs, funcDecl.Name.Name)
-			}
-		}
-	}
-
-	return testFuncs, nil
 }

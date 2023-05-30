@@ -9,9 +9,9 @@ import (
 	"strings"
 
 	"github.com/fatih/color"
-	goutils "github.com/l50/goutils"
 	"github.com/l50/goutils/v2/file"
 	"github.com/l50/goutils/v2/mage"
+	"github.com/l50/goutils/v2/sys"
 	"github.com/magefile/mage/sh"
 )
 
@@ -32,7 +32,7 @@ var pc = sh.RunCmd("pre-commit")
 //	  log.Fatalf("Error checking project: %v", err)
 //	}
 func checkPCProject() error {
-	cwd := goutils.Gwd()
+	cwd := sys.Gwd()
 	pcFile := ".pre-commit-config.yaml"
 
 	if strings.Contains(cwd, "magefiles") {
