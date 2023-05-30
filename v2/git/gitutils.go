@@ -413,7 +413,7 @@ func PullRepos(dirs ...string) error {
 				if err != nil {
 					fmt.Printf("failed to update %s: %s\n", repoDir, res)
 				} else if strings.TrimSpace(res) != "Already up to date." {
-					fmt.Println(color.GreenString("Now Updating ", repoDir))
+					fmt.Printf("Now Updating %s", repoDir)
 				}
 			}
 			return nil
