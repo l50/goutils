@@ -6,8 +6,9 @@ import (
 	"strings"
 	"testing"
 
-	goutils "github.com/l50/goutils"
+	"github.com/l50/goutils/v2/git"
 	"github.com/l50/goutils/v2/lint"
+	"github.com/l50/goutils/v2/sys"
 )
 
 func TestAddFencedCB(t *testing.T) {
@@ -63,7 +64,7 @@ while(profileData.hasNext()) {
 		},
 	}
 
-	repoRoot, err := goutils.RepoRoot()
+	repoRoot, err := git.RepoRoot()
 	if err != nil {
 		t.Fatalf("failed to get repo root: %v", err)
 	}
@@ -78,7 +79,7 @@ while(profileData.hasNext()) {
 			defer os.RemoveAll(tempDir) // cleanup
 
 			// Copy the repo to temporary directory
-			if err := goutils.Cp(repoRoot, tempDir); err != nil {
+			if err := sys.Cp(repoRoot, tempDir); err != nil {
 				t.Fatalf("failed to copy repo to temp directory: %v", err)
 			}
 
@@ -107,7 +108,7 @@ while(profileData.hasNext()) {
 }
 
 func TestLintUtils(t *testing.T) {
-	repoRoot, err := goutils.RepoRoot()
+	repoRoot, err := git.RepoRoot()
 	if err != nil {
 		t.Fatalf("failed to get repo root: %v", err)
 	}
@@ -124,7 +125,7 @@ func TestLintUtils(t *testing.T) {
 	}
 
 	// Copy the repo to temporary directory
-	if err := goutils.Cp(repoRoot, tempDir); err != nil {
+	if err := sys.Cp(repoRoot, tempDir); err != nil {
 		t.Fatalf("failed to copy repo to temp directory: %v", err)
 	}
 

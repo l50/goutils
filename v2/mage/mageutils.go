@@ -261,7 +261,7 @@ func FindExportedFunctionsInPackage(pkgPath string) ([]FuncInfo, error) {
 // the package or finding the tests.
 func FindExportedFuncsWithoutTests(pkgPath string) ([]string, error) {
 	// Find all exported functions in the package
-	funcs, err := mage.FindExportedFunctionsInPackage(pkgPath)
+	funcs, err := FindExportedFunctionsInPackage(pkgPath)
 	if err != nil {
 		return nil, err
 	}
@@ -271,6 +271,7 @@ func FindExportedFuncsWithoutTests(pkgPath string) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	testableFuncs := make(map[string]bool)
 	for _, tf := range testFuncs {
 		if strings.HasPrefix(tf, "Test") {

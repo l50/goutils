@@ -14,7 +14,6 @@ import (
 
 	"github.com/bitfield/script"
 	"github.com/l50/goutils/v2/file"
-	fileutils "github.com/l50/goutils/v2/file"
 	"github.com/l50/goutils/v2/net"
 	"github.com/l50/goutils/v2/str"
 	"github.com/l50/goutils/v2/sys"
@@ -56,15 +55,15 @@ func TestCmdExists(t *testing.T) {
 func TestCp(t *testing.T) {
 	file := "test.txt"
 	copyLoc := "testing.txt"
-	created := fileutils.CreateEmpty(file)
+	created := file.CreateEmpty(file)
 	if created {
 		if err := sys.Cp(file, copyLoc); err != nil {
 			t.Fatalf("failed to copy %s to %s - Cp() failed", file, copyLoc)
 		}
-		if fileutils.Exists(copyLoc) {
+		if file.Exists(copyLoc) {
 			remove := []string{file, copyLoc}
 			for _, f := range remove {
-				if err := fileutils.Delete(f); err != nil {
+				if err := file.Delete(f); err != nil {
 					t.Errorf("unable to delete %s, DeleteFile() failed", f)
 				}
 			}
@@ -148,8 +147,8 @@ func TestKillProcess(t *testing.T) {
 	}
 	pid := cmd.Process.Pid
 
-	// Test killing the process with SignalKill signal
-	if err := sys.KillProcess(pid, SignalKill); err != nil {
+	// Test killing the process with sys.SignalKill signal
+	if err := sys.KillProcess(pid, sys.SignalKill); err != nil {
 		t.Fatalf("failed to kill process %d with SIGKILL - KillProcess() failed: %v", pid, err)
 	}
 }

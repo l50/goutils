@@ -12,6 +12,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/l50/goutils/v2/git"
 	"github.com/l50/goutils/v2/mage"
 	"github.com/l50/goutils/v2/str"
 )
@@ -37,7 +38,7 @@ func createTestRepo(name string) string {
 	)
 
 	testRepoURL := "https://github.com/l50/helloworld.git"
-	if _, err := goutils.CloneRepo(testRepoURL, targetPath, nil); err != nil {
+	if _, err := git.CloneRepo(testRepoURL, targetPath, nil); err != nil {
 		log.Fatalf(
 			"failed to clone to %s - CloneRepo() failed: %v",
 			targetPath,

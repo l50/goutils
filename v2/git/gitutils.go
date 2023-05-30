@@ -25,7 +25,7 @@ type ConfigUserInfo struct {
 }
 
 // GetSSHPubKey returns the public SSH key for the input
-// `keyName` and uses the input `password` (if provided)
+// keyName and uses the input password (if provided)
 // to decrypt the associated private key.
 func GetSSHPubKey(keyName string, password string) (*ssh.PublicKeys, error) {
 	var publicKey *ssh.PublicKeys
@@ -42,7 +42,7 @@ func GetSSHPubKey(keyName string, password string) (*ssh.PublicKeys, error) {
 	return publicKey, nil
 }
 
-// AddFile adds the `file` at the input `filePath` to
+// AddFile adds the file at the input filePath to
 // the staging area for its associated repo.
 func AddFile(filePath string) error {
 	repo, err := git.PlainOpen(filepath.Dir(filePath))
@@ -79,7 +79,7 @@ func AddFile(filePath string) error {
 }
 
 // Commit commits the current staging area
-// for the input `repo`.
+// for the input repo.
 func Commit(repo *git.Repository, msg string) error {
 	cfg, err := GetGlobalUserCfg()
 	if err != nil {
@@ -123,7 +123,7 @@ func Commit(repo *git.Repository, msg string) error {
 }
 
 // CloneRepo clones the repo specified with the input `url` to
-// `clonePath`.
+// clonePath.
 func CloneRepo(url string, clonePath string, auth transport.AuthMethod) (
 	*git.Repository, error) {
 	var err error
@@ -156,11 +156,12 @@ func CloneRepo(url string, clonePath string, auth transport.AuthMethod) (
 	return repo, nil
 }
 
-// GetTags returns the tags for an input `repo`.
+// GetTags returns the tags for an input repo.
 func GetTags(repo *git.Repository) ([]string, error) {
+	var tags []string
 	tagObjects, err := repo.TagObjects()
 	if err != nil {
-		return tags, fmt.Errorf(color.RedString(
+		return []string{}, fmt.Errorf(color.RedString(
 			"failed to retrieve repo tags: %v", err))
 	}
 
@@ -194,8 +195,8 @@ func tagExists(repo *git.Repository, tag string) (bool, error) {
 
 // GetGlobalUserCfg returns the username and email from
 // the global git user settings.
-func GetGlobalUserCfg() (GitConfigUserInfo, error) {
-	userInfo := GitConfigUserInfo{}
+func GetGlobalUserCfg() (ConfigUserInfo, error) {
+	userInfo := ConfigUserInfo{}
 	var err error
 
 	userInfo.User, err = sh.Output("git", "config", "user.name")
