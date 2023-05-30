@@ -157,14 +157,14 @@ func TestLintUtils(t *testing.T) {
 				}
 			},
 		},
-		// {
-		// 	name: "TestRunPCHooks",
-		// 	test: func(t *testing.T) {
-		// 		if err := lint.RunPCHooks(); err != nil {
-		// 			t.Fatal(err)
-		// 		}
-		// 	},
-		// },
+		{
+			name: "TestRunPCHooks",
+			test: func(t *testing.T) {
+				if err := lint.RunPCHooks(); err != nil {
+					t.Fatal(err)
+				}
+			},
+		},
 	}
 
 	for _, tc := range testCases {
