@@ -382,7 +382,6 @@ func PullRepos(dirs ...string) error {
 	}()
 
 	for _, dir := range dirs {
-		fmt.Printf("Updating repos in %s", dir)
 		if err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 			if err != nil {
 				return err
@@ -413,7 +412,7 @@ func PullRepos(dirs ...string) error {
 				if err != nil {
 					fmt.Printf("failed to update %s: %s\n", repoDir, res)
 				} else if strings.TrimSpace(res) != "Already up to date." {
-					fmt.Printf("Now Updating %s", repoDir)
+					fmt.Printf("Now pulling the latest from upstream for %s\n", repoDir)
 				}
 			}
 			return nil
