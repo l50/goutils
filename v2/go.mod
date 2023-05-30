@@ -7,7 +7,6 @@ require (
 	github.com/cavaliergopher/grab/v3 v3.0.1
 	github.com/fatih/color v1.15.0
 	github.com/glendc/go-external-ip v0.1.0
-	github.com/l50/goutils v1.3.0
 	github.com/magefile/mage v1.15.0
 	github.com/stretchr/testify v1.8.3
 	github.com/tidwall/gjson v1.14.4

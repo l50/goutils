@@ -10,8 +10,8 @@ import (
 	"runtime"
 	"testing"
 
-	goutils "github.com/l50/goutils"
-	"github.com/l50/goutils/v2/file"
+	fileutils "github.com/l50/goutils/v2/file"
+	"github.com/l50/goutils/v2/str"
 )
 
 // Helper function that returns a test file based on the OS of the system
@@ -29,28 +29,28 @@ func getTestFile(t *testing.T) string {
 	return testFile
 }
 
-func TestAppendToFile(t *testing.T) {
+func TestAppend(t *testing.T) {
 	testFile := "test.txt"
-	created := file.CreateEmptyFile(testFile)
-	exists := goutils.FileExists(testFile)
+	created := fileutils.CreateEmpty(testFile)
+	exists := fileutils.Exists(testFile)
 	change := "I am a change!!"
 
 	if !exists {
-		t.Fatalf("unable to locate %s - FileExists() failed", testFile)
+		t.Fatalf("unable to locate %s - xists() failed", testFile)
 	}
 
-	if err := file.AppendToFile(testFile, change); err != nil {
-		t.Fatalf("failed to append %s to %s - AppendToFile() failed: %v",
+	if err := fileutils.Append(testFile, change); err != nil {
+		t.Fatalf("failed to append %s to %s - Append() failed: %v",
 			change, testFile, err)
 	}
 
-	stringFoundInFile, err := goutils.StringInFile(testFile, change)
+	stringFoundInFile, err := fileutils.FindStr(testFile, change)
 	if err != nil || !stringFoundInFile {
 		t.Fatalf("failed to find %s in %s - StringInFile() failed: %v", change, testFile, err)
 	}
 
 	if created && exists {
-		if err := file.DeleteFile(testFile); err != nil {
+		if err := fileutils.Delete(testFile); err != nil {
 			t.Fatalf("unable to delete %s, DeleteFile() failed", testFile)
 		}
 	} else {
@@ -60,15 +60,15 @@ func TestAppendToFile(t *testing.T) {
 
 func TestCreateEmptyFile(t *testing.T) {
 	testFile := "test.txt"
-	created := goutils.CreateEmptyFile(testFile)
-	exists := goutils.FileExists(testFile)
+	created := fileutils.CreateEmpty(testFile)
+	exists := fileutils.Exists(testFile)
 
 	if !exists {
 		t.Fatalf("unable to locate %s, FileExists() failed", testFile)
 	}
 
 	if created && exists {
-		if err := file.DeleteFile(testFile); err != nil {
+		if err := fileutils.Delete(testFile); err != nil {
 			t.Fatalf("unable to delete %s, DeleteFile() failed", testFile)
 		}
 	} else {
@@ -80,24 +80,24 @@ func TestCreateFile(t *testing.T) {
 	testFile := "test.txt"
 	testFileContent := "stuff"
 
-	if err := file.CreateFile(testFile, []byte(testFileContent)); err != nil {
+	if err := fileutils.Create(testFile, []byte(testFileContent)); err != nil {
 		t.Fatalf("failed to create %s with %s using CreateFile(): %v", testFile, testFileContent, err)
 	}
 
-	exists := goutils.FileExists(testFile)
+	exists := fileutils.Exists(testFile)
 
 	if !exists {
 		t.Fatalf("unable to locate %s, FileExists() failed", testFile)
 	}
 
-	stringFoundInFile, err := goutils.StringInFile(testFile, testFileContent)
+	stringFoundInFile, err := fileutils.FindStr(testFile, testFileContent)
 	if err != nil || !stringFoundInFile {
 		t.Fatalf("failed to find %s in %s - StringInFile() failed: %v",
 			testFileContent, testFile, err)
 	}
 
 	if exists {
-		if err := file.DeleteFile(testFile); err != nil {
+		if err := fileutils.Delete(testFile); err != nil {
 			t.Fatalf("unable to delete %s, DeleteFile() failed", testFile)
 		}
 	} else {
@@ -106,33 +106,33 @@ func TestCreateFile(t *testing.T) {
 }
 
 func TestCreateDirectory(t *testing.T) {
-	rs, err := goutils.RandomString(5)
+	rs, err := str.GenRandom(5)
 	if err != nil {
-		t.Fatal("failed to get random string for directory name with RandomString()")
+		t.Fatal("failed to get random string for directory name with GenRandom()")
 
 	}
 	newDir := filepath.Join("/tmp", "bla", rs)
-	if err := file.CreateDirectory(newDir); err != nil {
+	if err := fileutils.CreateDirectory(newDir); err != nil {
 		t.Fatalf("unable to create %s, CreateDirectory() failed: %v", newDir, err)
 	}
 
 	sameDir := newDir
-	if err := file.CreateDirectory(sameDir); err == nil {
+	if err := fileutils.CreateDirectory(sameDir); err == nil {
 		t.Fatalf("error: CreateDirectory() should not overwrite an existing directory")
 	}
 }
 
 func TestDeleteFile(t *testing.T) {
 	testFile := "test.txt"
-	created := file.CreateEmptyFile(testFile)
-	exists := file.Exists(testFile)
+	created := fileutils.CreateEmpty(testFile)
+	exists := fileutils.Exists(testFile)
 
 	if !exists {
 		t.Fatalf("unable to locate %s, FileExists() failed", testFile)
 	}
 
 	if created && exists {
-		if err := file.DeleteFile(testFile); err != nil {
+		if err := fileutils.Delete(testFile); err != nil {
 			t.Fatalf("unable to delete %s, DeleteFile() failed", testFile)
 		}
 	}
@@ -160,7 +160,7 @@ func TestCSVToLines(t *testing.T) {
 	writer.Flush()
 
 	// call function under test
-	got, err := goutils.CSVToLines(testFile)
+	got, err := fileutils.CSVToLines(testFile)
 	if err != nil {
 		t.Fatalf("CSVToLines failed: %v", err)
 	}
@@ -182,7 +182,7 @@ func TestCSVToLines(t *testing.T) {
 	}
 
 	// Clean up
-	if err := goutils.DeleteFile(testFile); err != nil {
+	if err := fileutils.Delete(testFile); err != nil {
 		t.Fatalf("unable to delete %s, DeleteFile() failed", testFile)
 	}
 }
@@ -201,7 +201,7 @@ func equal(a, b []string) bool {
 
 func TestExists(t *testing.T) {
 	testFile := getTestFile(t)
-	exists := file.Exists(testFile)
+	exists := fileutils.Exists(testFile)
 
 	if !exists {
 		t.Fatalf("unable to locate %s, Exists() failed", testFile)
@@ -210,21 +210,21 @@ func TestExists(t *testing.T) {
 
 func TestToSlice(t *testing.T) {
 	testFile := getTestFile(t)
-	exists := file.Exists(testFile)
+	exists := fileutils.Exists(testFile)
 
 	if !exists {
 		t.Fatalf("unable to locate %s - FileExists() failed", testFile)
 	}
 
-	if _, err := goutils.FileToSlice(testFile); err != nil {
-		t.Fatalf("unable to convert %s to a slice - FileToSlice() failed: %v",
+	if _, err := fileutils.ToSlice(testFile); err != nil {
+		t.Fatalf("unable to convert %s to a slice - ToSlice() failed: %v",
 			testFile, err)
 	}
 }
 
 func TestFindFile(t *testing.T) {
 	testFile := ".bashrc"
-	if _, err := file.FindFile(testFile, []string{"."}); err != nil {
+	if _, err := fileutils.Find(testFile, []string{"."}); err != nil {
 		t.Fatalf("unable to find %s - FindFile() failed", testFile)
 	}
 }
@@ -236,25 +236,25 @@ func randInt(min int, max int) int {
 func TestListFilesR(t *testing.T) {
 	targetPath := "."
 	var results []string
-	_, err := file.ListFilesR(targetPath)
+	_, err := fileutils.ListR(targetPath)
 
 	if err != nil {
 		t.Fatalf("unable to list files in %s - ListFilesR() failed: %v",
 			targetPath, err)
 	}
 
-	targetPath, err = goutils.RandomString(randInt(8, 15))
+	targetPath, err = str.GenRandom(randInt(8, 15))
 	if err != nil {
 		t.Fatalf("failed to generate RandomString - TestListFilesR() failed: %v",
 			err)
 	}
 
-	if _, err = file.ListFilesR(targetPath); err == nil {
+	if _, err = fileutils.ListR(targetPath); err == nil {
 		t.Fatalf("%s should not exist - TestListFiles() failed", targetPath)
 	}
 
 	targetPath = "."
-	results, err = file.ListFilesR(targetPath)
+	results, err = fileutils.ListR(targetPath)
 	if err != nil {
 		t.Fatalf("unable to list files in %s - ListFiles() failed: %v",
 			targetPath, err)
@@ -271,25 +271,25 @@ func TestListFilesR(t *testing.T) {
 func TestStringInFile(t *testing.T) {
 	testFile := getTestFile(t)
 	stringToFind := "root"
-	stringFoundInFile, err := goutils.StringInFile(testFile, stringToFind)
+	stringFoundInFile, err := fileutils.FindStr(testFile, stringToFind)
 	if err != nil || !stringFoundInFile {
 		t.Fatalf("failed to find %s in %s - StringInFile() failed: %v", stringToFind, testFile, err)
 	}
 }
 
 func TestRmRf(t *testing.T) {
-	rs, err := goutils.RandomString(5)
+	rs, err := str.GenRandom(5)
 	if err != nil {
 		t.Fatal("failed to get random string for directory name with RandomString()")
 
 	}
 	newDir := filepath.Join("/tmp", "bla", rs)
-	if err := file.CreateDirectory(newDir); err != nil {
+	if err := fileutils.CreateDirectory(newDir); err != nil {
 		t.Fatalf("unable to create %s, CreateDirectory() failed: %v", newDir, err)
 
 	}
 
-	if err := file.RmRf(newDir); err != nil {
+	if err := fileutils.RmRf(newDir); err != nil {
 		t.Fatalf("unable to delete %s, RmRf() failed: %v", newDir, err)
 	}
 }
@@ -334,7 +334,7 @@ func TestExpandHomeDir(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			actual := goutils.ExpandHomeDir(tc.input)
+			actual := fileutils.ExpandHomeDir(tc.input)
 			if actual != tc.expected {
 				t.Errorf("test failed: ExpandHomeDir(%q) = %q; expected %q", tc.input, actual, tc.expected)
 			}
@@ -401,7 +401,7 @@ func TestExportedFunc3(t *testing.T) {}
 	}
 
 	// Call FindExportedFuncsWithoutTests
-	exportedFuncs, err := file.FindExportedFuncsWithoutTests(tempDir)
+	exportedFuncs, err := fileutils.FindExportedFuncsWithoutTests(tempDir)
 	if err != nil {
 		t.Fatalf("failed to find exported funcs: %v", err)
 	}

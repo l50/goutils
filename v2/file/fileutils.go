@@ -14,13 +14,13 @@ import (
 
 	"github.com/bitfield/script"
 	"github.com/fatih/color"
-	goutils "github.com/l50/goutils"
 	"github.com/l50/goutils/v2/mage"
+	"github.com/l50/goutils/v2/str"
 )
 
-// AppendToFile appends an input text string to
-// the end of the input file.
-func AppendToFile(file string, text string) error {
+// Append appends an input text string to
+// the end of the input fileutils.
+func Append(file string, text string) error {
 	f, err := os.OpenFile(file,
 		os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
@@ -50,9 +50,9 @@ func AppendToFile(file string, text string) error {
 	return nil
 }
 
-// CreateEmptyFile creates an file based on the name input.
+// CreateEmpty creates an file based on the name input.
 // It returns true if the file was created, otherwise it returns false.
-func CreateEmptyFile(name string) bool {
+func CreateEmpty(name string) bool {
 	file, err := os.Create(name)
 	if err != nil {
 		return false
@@ -63,9 +63,9 @@ func CreateEmptyFile(name string) bool {
 	return true
 }
 
-// CreateFile creates a file at the input filePath
+// Create creates a file at the input filePath
 // with the specified fileContents.
-func CreateFile(filePath string, fileContents []byte) error {
+func Create(filePath string, fileContents []byte) error {
 	if err := os.MkdirAll(filepath.Dir(filePath), os.ModePerm); err != nil {
 		return fmt.Errorf("cannot create dir portion"+
 			"of filepath %s: %v", filePath, err)
@@ -138,8 +138,8 @@ func CSVToLines(filename string) ([][]string, error) {
 	return records, nil
 }
 
-// DeleteFile deletes the input file
-func DeleteFile(file string) error {
+// Delete deletes the input file
+func Delete(file string) error {
 	if err := os.Remove(file); err != nil {
 		return err
 	}
@@ -182,11 +182,11 @@ func ToSlice(fileName string) ([]string, error) {
 	return filteredLines, nil
 }
 
-// FindFile looks for an input `filename` in the specified
+// Find looks for an input `filename` in the specified
 // set of `dirs`. The filepath is returned if the `filename` is found.
-func FindFile(fileName string, dirs []string) (string, error) {
+func Find(fileName string, dirs []string) (string, error) {
 	for _, d := range dirs {
-		files, err := ListFilesR(d)
+		files, err := ListR(d)
 		if err != nil {
 			return "", err
 		}
@@ -204,22 +204,22 @@ func FindFile(fileName string, dirs []string) (string, error) {
 	return "", nil
 }
 
-// ListFilesR lists the files found recursively
+// ListR lists the files found recursively
 // from the input `path`.
-func ListFilesR(path string) ([]string, error) {
+func ListR(path string) ([]string, error) {
 	result, err := script.FindFiles(path).String()
 	if err != nil {
 		return []string{}, err
 	}
 
-	fileList := goutils.StringToSlice(result, "\n")
+	fileList := str.ToSlice(result, "\n")
 
 	return fileList, nil
 }
 
-// StringInFile searches for input searchStr in
+// FindStr searches for input searchStr in
 // input the input filepath.
-func StringInFile(path string, searchStr string) (bool, error) {
+func FindStr(path string, searchStr string) (bool, error) {
 	f, err := os.Open(path)
 	if err != nil {
 		return false, err
@@ -290,7 +290,7 @@ func RmRf(path string) error {
 //
 // Example usage:
 //
-//	pathWithTilde := "~/Documents/myfile.txt"
+//	pathWithTilde := "~/Documents/myfileutils.txt"
 //	expandedPath := ExpandHomeDir(pathWithTilde)
 //
 // Parameters:
