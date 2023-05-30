@@ -6,40 +6,48 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/fatih/color"
 	"github.com/l50/goutils/v2/file"
-	"github.com/l50/goutils/v2/git"
+	gitutils "github.com/l50/goutils/v2/git"
 	"github.com/l50/goutils/v2/str"
 	"github.com/l50/goutils/v2/sys"
 
+	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 var (
-	clonePath      string
-	gitCleanupDirs []string
-	tag            string
+	clonePath       string
+	gitCleanupDirs  []string
+	tag             string
+	currentTime     time.Time
+	cloneDir        = "/tmp"
+	repo            *git.Repository
+	tags            []string
+	testFile        string
+	testFileContent string
+	testRepoURL     = "https://github.com/l50/helloworld.git"
 )
 
 func init() {
 	tag = "v6.6.6"
 	// Create test repo and queue it for cleanup
 	randStr, _ := str.GenRandom(8)
-	clonePath = createTestRepo(fmt.Sprintf("gitutils-%s", randStr))
+	repo, clonePath = createTestRepo(fmt.Sprintf("gitutils-%s", randStr))
 	gitCleanupDirs = append(gitCleanupDirs, clonePath)
 }
 
-func createTestRepo(name string) string {
+func createTestRepo(name string) (*git.Repository, string) {
 	targetPath := filepath.Join(
 		cloneDir, fmt.Sprintf(
 			"%s-%s", name, currentTime.Format("2006-01-02-15-04-05"),
-		),
-	)
+		))
 
-	repo, err = CloneRepo(testRepoURL, targetPath, nil)
+	repo, err := gitutils.CloneRepo(testRepoURL, targetPath, nil)
 	if err != nil {
 		log.Fatalf(
 			"failed to clone to %s - CloneRepo() failed: %v",
@@ -48,7 +56,7 @@ func createTestRepo(name string) string {
 		)
 	}
 
-	return targetPath
+	return repo, targetPath
 }
 
 func TestPush(t *testing.T) {
@@ -59,12 +67,12 @@ func TestPush(t *testing.T) {
 		t.Errorf("failed to create %s with %s using CreateFile(): %v", testFile, testFileContent, err)
 	}
 
-	if err := git.AddFile(testFile); err != nil {
+	if err := gitutils.AddFile(testFile); err != nil {
 		t.Fatalf("failed to add %s: %v - AddFile() failed",
 			testFile, err)
 	}
 
-	if err := git.Commit(repo, testFile); err != nil {
+	if err := gitutils.Commit(repo, testFile); err != nil {
 		t.Fatalf("failed to commit staged files in %s: %v",
 			testFile, err)
 	}
@@ -77,14 +85,14 @@ func TestPush(t *testing.T) {
 		Password: token,
 	}
 
-	if err := git.Push(repo, auth); err == nil {
+	if err := gitutils.Push(repo, auth); err == nil {
 		t.Fatalf("push should not be possible with "+
 			"bogus credentials - Push() failed: %v", err)
 	}
 }
 
 func TestGetTags(t *testing.T) {
-	if _, err := git.GetTags(repo); err != nil {
+	if _, err := gitutils.GetTags(repo); err != nil {
 		t.Fatalf("failed to get tags: %v - GetTags() failed", err)
 	}
 }
@@ -98,7 +106,7 @@ func TestPushTag(t *testing.T) {
 		Password: token,
 	}
 
-	if err := git.PushTag(repo, tag, auth); err == nil {
+	if err := gitutils.PushTag(repo, tag, auth); err == nil {
 		t.Fatal("pushing any tag should not be possible "+
 			"because no auth mechanism is configured - "+
 			"PushTag() failed",
@@ -107,7 +115,7 @@ func TestPushTag(t *testing.T) {
 }
 
 func TestGetGlobalUserCfg(t *testing.T) {
-	cfg, err := git.GetGlobalUserCfg()
+	cfg, err := gitutils.GetGlobalUserCfg()
 	if err != nil || cfg.User == "" {
 		t.Fatalf("failed get global git user config: %v", err)
 	}
@@ -118,25 +126,25 @@ func TestDeletePushedTag(t *testing.T) {
 		cleanupGitUtils(t)
 	})
 
-	if err := git.CreateTag(repo, tag); err != nil {
+	if err := gitutils.CreateTag(repo, tag); err != nil {
 		t.Fatalf("failed to create %s tag: %v", tag, err)
 	}
 
 	keyName := "github_rsa"
 
-	if err := git.DeleteTag(repo, tag); err != nil {
+	if err := gitutils.DeleteTag(repo, tag); err != nil {
 		t.Fatalf("failed to delete %s tag: %v - DeleteTag() failed",
 			tag, err)
 	}
 
-	pubKey, err := git.GetSSHPubKey(keyName, "")
+	pubKey, err := gitutils.GetSSHPubKey(keyName, "")
 	if err == nil {
 		fmt.Print(color.RedString(
 			"security concern: %s is not encrypted at rest",
 			keyName))
 	}
 
-	if err := git.DeletePushedTag(repo, tag, pubKey); err == nil {
+	if err := gitutils.DeletePushedTag(repo, tag, pubKey); err == nil {
 		t.Fatal("deleting any tag should not be possible " +
 			"in this test. There are not sufficient permissions " +
 			"from the previous steps to do so - " +
@@ -164,7 +172,7 @@ func TestPullRepos(t *testing.T) {
 	err = commitChangesInRepo(t, tmpDirRemote, "test2 commit")
 	require.NoError(t, err)
 
-	err = git.PullRepos(tmpDir1, tmpDir2)
+	err = gitutils.PullRepos(tmpDir1, tmpDir2)
 	require.NoError(t, err)
 
 	for _, dir := range []string{tmpDir1, tmpDir2} {
@@ -235,7 +243,7 @@ func commitChangesInRepo(t *testing.T, repoDir string, commitMsg string) error {
 }
 
 func TestRepoRoot(t *testing.T) {
-	root, err := git.RepoRoot()
+	root, err := gitutils.RepoRoot()
 	if err != nil {
 		t.Fatalf("failed to retrieve root - RepoRoot() failed: %v", err)
 	}
