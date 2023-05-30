@@ -21,16 +21,13 @@ import (
 )
 
 var (
-	clonePath       string
-	gitCleanupDirs  []string
-	tag             string
-	currentTime     time.Time
-	cloneDir        = "/tmp"
-	repo            *git.Repository
-	tags            []string
-	testFile        string
-	testFileContent string
-	testRepoURL     = "https://github.com/l50/helloworld.git"
+	clonePath      string
+	gitCleanupDirs []string
+	tag            string
+	currentTime    time.Time
+	cloneDir       = "/tmp"
+	repo           *git.Repository
+	testRepoURL    = "https://github.com/l50/helloworld.git"
 )
 
 func init() {

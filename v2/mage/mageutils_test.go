@@ -15,6 +15,7 @@ import (
 	"github.com/l50/goutils/v2/git"
 	"github.com/l50/goutils/v2/mage"
 	"github.com/l50/goutils/v2/str"
+	"github.com/l50/goutils/v2/sys"
 )
 
 var (
@@ -59,7 +60,7 @@ func TestGHRelease(t *testing.T) {
 
 func cleanupMageUtils(t *testing.T) {
 	for _, dir := range mageCleanupDirs {
-		if err := fileutils.RmRf(dir); err != nil {
+		if err := sys.RmRf(dir); err != nil {
 			fmt.Println("failed to clean up mageUtils: ", err.Error())
 		}
 	}
@@ -71,7 +72,7 @@ func TestGoReleaser(t *testing.T) {
 	})
 
 	// Get repo root
-	repoRoot, err := goutils.RepoRoot()
+	repoRoot, err := git.RepoRoot()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -119,7 +120,7 @@ func TestTidy(t *testing.T) {
 }
 
 func TestUpdateMageDeps(t *testing.T) {
-	repoRoot, err := goutils.RepoRoot()
+	repoRoot, err := git.RepoRoot()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -202,7 +203,7 @@ awk -F: '{printf "Function: %s\nFile: %s\n", $2, $1}'`
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			// Get the exported functions from the package
-			goFuncs, err := goutils.FindExportedFunctionsInPackage(tc.packagePath)
+			goFuncs, err := mage.FindExportedFunctionsInPackage(tc.packagePath)
 			if tc.expectedErrors && err == nil {
 				t.Errorf("expected an error but got none")
 			}
@@ -291,7 +292,7 @@ func TestExportedFunc3(t *testing.T) {}
 	}
 
 	// Call FindExportedFuncsWithoutTests
-	exportedFuncs, err := fileutils.FindExportedFuncsWithoutTests(tempDir)
+	exportedFuncs, err := mage.FindExportedFuncsWithoutTests(tempDir)
 	if err != nil {
 		t.Fatalf("failed to find exported funcs: %v", err)
 	}

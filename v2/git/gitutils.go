@@ -382,7 +382,7 @@ func PullRepos(dirs ...string) error {
 	}()
 
 	for _, dir := range dirs {
-		fmt.Println(color.YellowString("Updating repos in ", dir))
+		fmt.Printf("Updating repos in %s", dir)
 		if err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 			if err != nil {
 				return err
