@@ -1,51 +1,51 @@
-# goutils/string
+# goutils/str
 
-The `string` package is a part of `goutils` library. It provides
+The `str` package is a part of `goutils` library. It provides
 utility functions for string manipulation in Go.
 
 ---
 
 ## Functions
 
-### RandomString
+### GenRandom
 
 ```go
-func RandomString(length int) (string, error)
+func GenRandom(length int) (string, error)
 ```
 
 Generates a random string of the specified length. This function
 takes an integer input representing the length and returns a
 string of hexadecimal characters. If the generation fails, an error is returned.
 
-### StringInSlice
+### InSlice
 
 ```go
-func StringInSlice(strToFind string, inputSlice []string) bool
+func InSlice(strToFind string, inputSlice []string) bool
 ```
 
 Checks if a specific string exists in a given slice. It returns true
 if the string is found and false otherwise.
 
-### StringToInt64
+### ToInt64
 
 ```go
-func StringToInt64(value string) (int64, error)
+func ToInt64(value string) (int64, error)
 ```
 
 Converts a string to an int64 value. If the conversion fails, an error is returned.
 
-### StringToSlice
+### ToSlice
 
 ```go
-func StringToSlice(delimStr string, delim string) []string
+func ToSlice(delimStr string, delim string) []string
 ```
 
 Splits a given string into a slice based on the provided delimiter.
 
-### StringSlicesEqual
+### SlicesEqual
 
 ```go
-func StringSlicesEqual(a, b []string) bool
+func SlicesEqual(a, b []string) bool
 ```
 
 Compares two string slices for equality. It returns true if the slices
@@ -56,10 +56,10 @@ It returns false otherwise.
 
 ## Installation
 
-To use the `goutils/string` package, you need to install it via `go get`:
+To use the `goutils/str` package, you need to install it via `go get`:
 
 ```bash
-go get github.com/l50/goutils/v2/string
+go get github.com/l50/goutils/v2/str
 ```
 
 ---
@@ -69,15 +69,15 @@ go get github.com/l50/goutils/v2/string
 After installation, you can import it in your project:
 
 ```go
-import "github.com/l50/goutils/v2/string"
+import "github.com/l50/goutils/v2/str"
 ```
 
 ---
 
 ## Tests
 
-To run the tests for the `goutils/string` package, navigate to
-your `$GOPATH/src/github.com/l50/goutils/v2/string` directory
+To run the tests for the `goutils/str` package, navigate to
+your `$GOPATH/src/github.com/l50/goutils/v2/str` directory
 and run go test:
 
 ```bash

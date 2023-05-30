@@ -4,10 +4,10 @@ import (
 	"reflect"
 	"testing"
 
-	str "github.com/l50/goutils/v2/string"
+	str "github.com/l50/goutils/v2/str"
 )
 
-func TestRandomString(t *testing.T) {
+func TestGenRandom(t *testing.T) {
 	tests := []struct {
 		name    string
 		length  int
@@ -22,13 +22,13 @@ func TestRandomString(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := str.RandomString(tc.length)
+			got, err := str.GenRandom(tc.length)
 			if (err != nil) != tc.wantErr {
-				t.Errorf("RandomString() error = %v, wantErr %v", err, tc.wantErr)
+				t.Errorf("GenRandom() error = %v, wantErr %v", err, tc.wantErr)
 			}
 
 			if len(got) != tc.length {
-				t.Errorf("RandomString() length = %v, want %v", len(got), tc.length)
+				t.Errorf("GenRandom() length = %v, want %v", len(got), tc.length)
 			}
 		})
 	}
@@ -81,7 +81,7 @@ func TestToInt64(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			_, err := str.ToInt64(tc.input)
 			if (err != nil) != tc.wantErr {
-				t.Errorf("StringToInt64() error = %v, wantErr %v", err, tc.wantErr)
+				t.Errorf("ToInt64() error = %v, wantErr %v", err, tc.wantErr)
 			}
 		})
 	}
@@ -106,7 +106,7 @@ func TestToSlice(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			got := str.ToSlice(tc.delimStr, tc.delim)
 			if !reflect.DeepEqual(got, tc.want) {
-				t.Errorf("StringToSlice() = %v, want %v", got, tc.want)
+				t.Errorf("ToStrSlice() = %v, want %v", got, tc.want)
 			}
 		})
 	}

@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-// RandomString generates a random string of the specified length.
+// GenRandom generates a random string of the specified length.
 //
 // Parameters:
 //
@@ -20,14 +20,14 @@ import (
 //
 // Example:
 //
-// str, err := RandomString(10)
+// str, err := GenRandom(10)
 //
 //	if err != nil {
 //	  log.Fatalf("failed to generate random string: %v", err)
 //	}
 //
 // log.Printf("Generated random string: %s\n", str)
-func RandomString(length int) (string, error) {
+func GenRandom(length int) (string, error) {
 	b := make([]byte, length)
 
 	if _, err := rand.Read(b); err != nil {
@@ -51,7 +51,7 @@ func RandomString(length int) (string, error) {
 // Example:
 //
 // slice := []string{"apple", "banana", "cherry"}
-// isFound := StringInSlice("banana", slice)
+// isFound := InSlice("banana", slice)
 //
 //	if isFound {
 //	  log.Println("Found the string in the slice.")
@@ -78,7 +78,7 @@ func InSlice(strToFind string, inputSlice []string) bool {
 //
 // Example:
 //
-// num, err := StringToInt64("1234567890")
+// num, err := ToInt64("1234567890")
 //
 //	if err != nil {
 //	  log.Fatalf("failed to convert string to int64: %v", err)
@@ -107,7 +107,7 @@ func ToInt64(value string) (int64, error) {
 //
 // Example:
 //
-// slice := StringToSlice("apple,banana,cherry", ",")
+// slice := ToSlice("apple,banana,cherry", ",")
 //
 //	for _, str := range slice {
 //	  log.Println(str)
@@ -131,7 +131,7 @@ func ToSlice(delimStr string, delim string) []string {
 //
 // a := []string{"apple", "banana", "cherry"}
 // b := []string{"apple", "banana", "cherry"}
-// isEqual := StringSlicesEqual(a, b)
+// isEqual := SlicesEqual(a, b)
 //
 //	if isEqual {
 //	  log.Println("The string slices are equal.")
