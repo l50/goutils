@@ -53,7 +53,7 @@ import (
 // err := GetDNSRecords(cf)
 //
 //	if err != nil {
-//	    log.Fatalf("Failed to get DNS records: %v", err)
+//	    log.Fatalf("failed to get DNS records: %v", err)
 //	}
 type HTTPClient interface {
 	Do(req *http.Request) (*http.Response, error)
@@ -85,7 +85,7 @@ type HTTPClient interface {
 // err := GetDNSRecords(cf)
 //
 //	if err != nil {
-//	  log.Fatalf("Failed to get DNS records: %v", err)
+//	  log.Fatalf("failed to get DNS records: %v", err)
 //	}
 type Cloudflare struct {
 	CFApiKey string
@@ -96,7 +96,31 @@ type Cloudflare struct {
 	Client   HTTPClient
 }
 
-// GetDNSRecords retrieves the DNS records from cloudflare.
+// GetDNSRecords retrieves the DNS records from Cloudflare for a specified zone ID using the provided Cloudflare credentials.
+// It makes a GET request to the Cloudflare API, reads the response, and prints the 'name' and 'content' fields of each DNS record.
+//
+// Parameters:
+//
+// cf: A Cloudflare struct containing the necessary credentials (email, API key) and the zone ID for which the DNS records should be retrieved.
+//
+// Returns:
+//
+// error: An error if any issue occurs while trying to get the DNS records.
+//
+// Example:
+//
+//	cf := Cloudflare{
+//	  CFEmail: "your-email@example.com",
+//	  CFApiKey: "your-api-key",
+//	  CFZoneID: "your-zone-id",
+//	  Client: &http.Client{},
+//	}
+//
+// err := GetDNSRecords(cf)
+//
+//	if err != nil {
+//	  log.Fatalf("failed to get DNS records: %v", err)
+//	}
 func GetDNSRecords(cf Cloudflare) error {
 	cf.Endpoint = fmt.Sprintf("https://api.cloudflare.com/client/v4/zones/%s/dns_records", cf.CFZoneID)
 

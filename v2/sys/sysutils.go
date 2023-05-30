@@ -27,7 +27,19 @@ const (
 	SignalKill Signal = iota
 )
 
-// CheckRoot will check to see if the process is being run as root
+// CheckRoot checks if the current process is being run with root permissions.
+//
+// Returns:
+//
+// error: An error if the process is not being run as root.
+//
+// Example:
+//
+// err := CheckRoot()
+//
+//	if err != nil {
+//	    fmt.Println("The process must be run as root.")
+//	}
 func CheckRoot() error {
 	uid := os.Geteuid()
 	if uid != 0 {
@@ -37,8 +49,23 @@ func CheckRoot() error {
 	return nil
 }
 
-// Cd is used to change the current working directory
-// to the specified destination.
+// Cd changes the current working directory to the specified path.
+//
+// Parameters:
+//
+// dst: A string specifying the path to the directory to switch to.
+//
+// Returns:
+//
+// error: An error if the current directory cannot be changed.
+//
+// Example:
+//
+// err := Cd("/path/to/dir")
+//
+//	if err != nil {
+//	    fmt.Println("Failed to change directory.")
+//	}
 func Cd(dst string) error {
 	err := os.Chdir(dst)
 	if err != nil {
@@ -49,10 +76,21 @@ func Cd(dst string) error {
 	return nil
 }
 
-// CmdExists checks $PATH for
-// for the input cmd.
-// It returns true if the command is found,
-// otherwise it returns false.
+// CmdExists checks if a given command is available in the $PATH.
+//
+// Parameters:
+//
+// cmd: A string specifying the name of the command to look for.
+//
+// Returns:
+//
+// bool: True if the command exists in the $PATH, otherwise False.
+//
+// Example:
+//
+//	if !CmdExists("ls") {
+//	    fmt.Println("The 'ls' command is not available.")
+//	}
 func CmdExists(cmd string) bool {
 	if _, err := exec.LookPath(cmd); err != nil {
 		return false
@@ -60,7 +98,24 @@ func CmdExists(cmd string) bool {
 	return true
 }
 
-// Cp is used to copy a file from `src` to `dst`.
+// Cp copies a file from the source path to the destination path.
+//
+// Parameters:
+//
+// src: A string specifying the path of the file to be copied.
+// dst: A string specifying the path to where the file should be copied.
+//
+// Returns:
+//
+// error: An error if the file cannot be copied.
+//
+// Example:
+//
+// err := Cp("/path/to/src", "/path/to/dst")
+//
+//	if err != nil {
+//	    fmt.Println("Failed to copy the file.")
+//	}
 func Cp(src string, dst string) error {
 	if err := cp.Copy(src, dst); err != nil {
 		fmt.Print(color.RedString("failed to copy %s to %s: %v", src, dst, err))
@@ -70,10 +125,23 @@ func Cp(src string, dst string) error {
 	return nil
 }
 
-// EnvVarSet checks if an input environment variable
-// is set by checking the input key for
-// an associated value.
-// If an env var is not set, an error is returned.
+// EnvVarSet checks if a given environment variable is set.
+//
+// Parameters:
+//
+// key: A string specifying the name of the environment variable to check.
+//
+// Returns:
+//
+// error: An error if the environment variable is not set.
+//
+// Example:
+//
+// err := EnvVarSet("HOME")
+//
+//	if err != nil {
+//	    fmt.Println("The HOME environment variable is not set.")
+//	}
 func EnvVarSet(key string) error {
 	_, ok := os.LookupEnv(key)
 	if !ok {
@@ -84,7 +152,22 @@ func EnvVarSet(key string) error {
 	return nil
 }
 
-// GetHomeDir returns the path to current user's home directory
+// GetHomeDir returns the current user's home directory.
+//
+// Returns:
+//
+// string: The home directory of the current user.
+// error: An error if any issue occurs while trying to get the home directory.
+//
+// Example:
+//
+// homeDir, err := GetHomeDir()
+//
+//	if err != nil {
+//	  log.Fatalf("failed to get user's home directory: %v", err)
+//	}
+//
+// fmt.Println("Home Directory:", homeDir)
 func GetHomeDir() (string, error) {
 	out, err := os.UserHomeDir()
 
@@ -95,7 +178,21 @@ func GetHomeDir() (string, error) {
 	return out, nil
 }
 
-// Gwd will return the current working directory
+// Gwd returns the current working directory (cwd). If it fails to get the cwd, it prints the error and returns an empty string.
+//
+// Returns:
+//
+// string: The current working directory or an empty string if an error occurs.
+//
+// Example:
+//
+// cwd := Gwd()
+//
+//	if cwd == "" {
+//	  log.Fatalf("failed to get cwd")
+//	}
+//
+// fmt.Println("Current Working Directory:", cwd)
 func Gwd() string {
 	dir, err := os.Getwd()
 	if err != nil {
@@ -108,6 +205,21 @@ func Gwd() string {
 
 // GetFutureTime returns the date and time of the input
 // years, months, and days parameters from the current time.
+//
+// Parameters:
+//
+// years: An integer representing the number of years to add.
+// months: An integer representing the number of months to add.
+// days: An integer representing the number of days to add.
+//
+// Returns:
+//
+// time.Time: The future date and time calculated from the current time.
+//
+// Example:
+//
+// futureTime := GetFutureTime(1, 2, 3)
+// fmt.Println("Future date and time:", futureTime)
 func GetFutureTime(years int, months int, days int) time.Time {
 	t := time.Now()
 	exp := t.AddDate(years, months, days)
@@ -150,6 +262,25 @@ func GetOSAndArch() (string, string, error) {
 }
 
 // IsDirEmpty checks if an input directory (name) is empty
+//
+// Parameters:
+//
+// name: A string representing the path to the directory to check.
+//
+// Returns:
+//
+// bool: A boolean indicating whether the directory is empty or not.
+// error: An error if there was any problem reading the directory.
+//
+// Example:
+//
+// isEmpty, err := IsDirEmpty("/path/to/directory")
+//
+//	if err != nil {
+//	  log.Fatalf("Error checking directory: %v", err)
+//	}
+//
+// fmt.Println("Is directory empty:", isEmpty)
 func IsDirEmpty(name string) (bool, error) {
 	entries, err := os.ReadDir(name)
 	if err != nil {
@@ -176,7 +307,7 @@ func IsDirEmpty(name string) (bool, error) {
 //
 // err := KillProcess(1234, SignalKill)
 // if err != nil {
-// fmt.Printf("Failed to kill process: %v", err)
+// fmt.Printf("failed to kill process: %v", err)
 // } else {
 // fmt.Println("Process terminated successfully")
 // }
@@ -212,6 +343,26 @@ func KillProcess(pid int, signal Signal) error {
 }
 
 // RunCommand runs a specified system command
+//
+// Parameters:
+//
+// cmd: A string representing the command to run.
+// args: A variadic parameter representing any command line arguments to the command.
+//
+// Returns:
+//
+// string: The output from the command.
+// error: An error if there was any problem running the command.
+//
+// Example:
+//
+// output, err := RunCommand("ls", "-l")
+//
+//	if err != nil {
+//	  log.Fatalf("Error running command: %v", err)
+//	}
+//
+// fmt.Println("Command output:", output)
 func RunCommand(cmd string, args ...string) (string, error) {
 	out, err := exec.Command(cmd, args...).CombinedOutput()
 
@@ -225,6 +376,27 @@ func RunCommand(cmd string, args ...string) (string, error) {
 
 // RunCommandWithTimeout runs a command for a specified number of
 // seconds before timing out and returning the output.
+//
+// Parameters:
+//
+// to: A time.Duration representing the number of seconds to allow the command to run before timing out.
+// command: A string representing the command to run.
+// args: A variadic parameter representing any command line arguments to the command.
+//
+// Returns:
+//
+// string: The output from the command.
+// error: An error if there was any problem running the command.
+//
+// Example:
+//
+// output, err := RunCommandWithTimeout(time.Second*5, "sleep", "10")
+//
+//	if err != nil {
+//	  log.Fatalf("Error running command: %v", err)
+//	}
+//
+// fmt.Println("Command output:", output)
 func RunCommandWithTimeout(to time.Duration, command string, args ...string) (string, error) {
 	cmd := exec.Command(command, args...)
 	stdout, err := cmd.StdoutPipe()
@@ -303,6 +475,24 @@ func RunCommandWithTimeout(to time.Duration, command string, args ...string) (st
 
 // RmRf removes an input path and everything in it.
 // If the input path doesn't exist, an error is returned.
+//
+// Parameters:
+//
+// path: A string representing the path to remove.
+//
+// Returns:
+//
+// error: An error if there was any problem removing the path.
+//
+// Example:
+//
+// err := RmRf("/path/to/remove")
+//
+//	if err != nil {
+//	  log.Fatalf("Error removing path: %v", err)
+//	}
+//
+// fmt.Println("Path successfully removed!")
 func RmRf(path string) error {
 	if _, err := os.Stat(path); err == nil {
 		if info, err := os.Stat(path); err == nil {
@@ -325,26 +515,22 @@ func RmRf(path string) error {
 	return nil
 }
 
-// ExpandHomeDir expands the tilde character in a path to the user's home directory.
-// The function takes a string representing a path and checks if the first character is a tilde (~).
-// If it is, the function replaces the tilde with the user's home directory. The path is returned
-// unchanged if it does not start with a tilde or if there's an error retrieving the user's home
-// directory.
-//
-// Example usage:
-//
-//	pathWithTilde := "~/Documents/myfileutils.txt"
-//	expandedPath := ExpandHomeDir(pathWithTilde)
+// ExpandHomeDir expands the tilde (~) in a given path to the current user's home directory.
 //
 // Parameters:
 //
-//	path: The string containing a path that may start with a tilde (~) character.
+// path: A string representing the path to be expanded.
 //
 // Returns:
 //
-//	string: The expanded path with the tilde replaced by the user's home directory, or the
-//	        original path if it does not start with a tilde or there's an error retrieving
-//	        the user's home directory.
+// string: The expanded path.
+//
+// Example:
+//
+// path := "~/Documents/project"
+// expandedPath := ExpandHomeDir(path)
+//
+// fmt.Println("Expanded Path:", expandedPath)
 func ExpandHomeDir(path string) string {
 	if len(path) == 0 || path[0] != '~' {
 		return path
