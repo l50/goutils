@@ -47,11 +47,11 @@ run_tests()
 }
 
 if [[ "${VERSION}" == 'v1' || "${VERSION}" == 'all' ]]; then
-    run_tests '.' 'coverage-v1.out'
+    run_tests '.' 'coverage-all.out'
 fi
 
 if [[ "${VERSION}" == 'v2' || "${VERSION}" == 'all' ]]; then
-    run_tests 'v2' 'coverage-v2.out'
+    run_tests 'v2' 'coverage-all.out'
 fi
 
 if [[ "${RETURN_CODE}" -ne 0 ]]; then
