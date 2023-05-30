@@ -10,7 +10,7 @@ if [[ -z "${TESTS_TO_RUN}" ]]; then
     echo "No tests input"
     echo "Example - Run all tests for a specific version: bash go-unit-tests.sh all v1"
     echo "Example - Run all tests for both versions: bash go-unit-tests.sh all all"
-    echo "Example - Run coverage for a specific version: bash go-unit-tests.sh coverage v1"
+    echo "Example - Run coverage for a specific version: bash go-unit-tests.sh coverage v2"
     echo "Example - Run all tests for v1 (default if version is not specified): bash go-unit-tests.sh all"
     exit 1
 fi
