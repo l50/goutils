@@ -3,7 +3,6 @@
 set -x
 
 TESTS_TO_RUN=$1
-VERSION=${2:-"v1"}
 RETURN_CODE=0
 
 if [[ -z "${TESTS_TO_RUN}" ]]; then
@@ -17,15 +16,10 @@ fi
 
 run_tests()
            {
-    local version_dir=$1
-    local coverage_file=$2
+    local coverage_file=$1
 
     repo_root=$(git rev-parse --show-toplevel 2> /dev/null) || exit
     pushd "${repo_root}" || exit
-
-    if [[ $version_dir == 'v2' ]]; then
-        pushd v2 || exit
-    fi
 
     if [[ "${TESTS_TO_RUN}" == 'coverage' ]]; then
         go test -v -race -failfast -tags=integration -coverprofile="${coverage_file}" ./...
@@ -40,18 +34,10 @@ run_tests()
     fi
 
     RETURN_CODE=$?
-
-    if [[ $version_dir == 'v2' ]]; then
-        popd || exit
-    fi
 }
 
-if [[ "${VERSION}" == 'v1' || "${VERSION}" == 'all' ]]; then
+if [[ "${TESTS_TO_RUN}" == 'all' ]]; then
     run_tests '.' 'coverage-all.out'
-fi
-
-if [[ "${VERSION}" == 'v2' || "${VERSION}" == 'all' ]]; then
-    run_tests 'v2' 'coverage-all.out'
 fi
 
 if [[ "${RETURN_CODE}" -ne 0 ]]; then
