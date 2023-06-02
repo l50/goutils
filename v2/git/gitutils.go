@@ -12,7 +12,6 @@ import (
 	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/go-git/go-git/v5/plumbing/transport"
-	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
 	"github.com/l50/goutils/v2/sys"
 	"github.com/magefile/mage/sh"
 )
@@ -22,45 +21,6 @@ import (
 type ConfigUserInfo struct {
 	User  string
 	Email string
-}
-
-// GetSSHPubKey retrieves the public SSH key for the given key name, decrypting the associated private key if a password
-// is provided. It returns a pointer to the public key object, or an error if one occurs.
-//
-// Parameters:
-//
-// keyName: A string representing the name of the key to retrieve.
-// password: A string representing the password used to decrypt the private key.
-//
-// Returns:
-//
-// *ssh.PublicKeys: A pointer to a PublicKeys object representing the retrieved public key.
-// error: An error if one occurs during key retrieval or decryption.
-//
-// Example:
-//
-// keyName := "id_rsa"
-// password := "mypassword"
-// publicKey, err := GetSSHPubKey(keyName, password)
-//
-//	if err != nil {
-//	  log.Fatalf("failed to get SSH public key: %v", err)
-//	}
-//
-// log.Printf("Retrieved public key: %v", publicKey)
-func GetSSHPubKey(keyName string, password string) (*ssh.PublicKeys, error) {
-	var publicKey *ssh.PublicKeys
-
-	sshPath := filepath.Join(os.Getenv("HOME"), ".ssh", keyName)
-	publicKey, err := ssh.NewPublicKeysFromFile("git", sshPath, password)
-	if err != nil {
-		return nil,
-			fmt.Errorf(color.RedString(
-				"failed to retrieve public SSH key %s: %v",
-				keyName, err))
-	}
-
-	return publicKey, nil
 }
 
 // AddFile stages the file at the given file path in its associated Git repository. Returns an error if one occurs.
@@ -322,7 +282,7 @@ func CreateTag(repo *git.Repository, tag string) error {
 }
 
 // Push pushes the contents of the input
-// `repo` to the default remote (origin).
+// repo to the default remote (origin).
 func Push(repo *git.Repository, auth transport.AuthMethod) error {
 	var pushOptions *git.PushOptions
 
@@ -393,6 +353,40 @@ func PushTag(repo *git.Repository, tag string, auth transport.AuthMethod) error 
 
 // DeleteTag deletes the local input `tag` from the
 // specified repo.
+// DeletePushedTag deletes a tag from a given repository that has been pushed to a remote. The tag is deleted from both the local repository and the remote repository.
+//
+// Parameters:
+//
+// repo: A pointer to the Repository struct representing the repository where the tag should be deleted.
+//
+// tag: A string representing the tag that should be deleted.
+//
+// auth: An AuthMethod representing the method used to authenticate with the remote repository.
+//
+// Returns:
+//
+// error: An error if the tag cannot be deleted.
+//
+// Example:
+//
+// repo, err := git.PlainOpen("/path/to/repo")
+//
+//	if err != nil {
+//	  log.Fatalf("failed to open repository: %v", err)
+//	}
+//
+// tag := "v1.0.0"
+// auth, err := ssh.NewSSHAgentAuth("git")
+//
+//	if err != nil {
+//	  log.Fatalf("failed to create authentication method: %v", err)
+//	}
+//
+// err = DeletePushedTag(repo, tag, auth)
+//
+//	if err != nil {
+//	  log.Fatalf("failed to delete pushed tag: %v", err)
+//	}
 func DeleteTag(repo *git.Repository, tag string) error {
 	if err := repo.DeleteTag(tag); err != nil {
 		return fmt.Errorf(color.RedString(

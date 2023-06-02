@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/fatih/color"
+	"github.com/go-git/go-git/plumbing/transport/ssh"
 	cp "github.com/otiai10/copy"
 	"github.com/shirou/gopsutil/v3/process"
 )
@@ -259,6 +260,45 @@ func GetOSAndArch() (string, string, error) {
 	}
 
 	return osName, archName, nil
+}
+
+// GetSSHPubKey retrieves the public SSH key for the given key name, decrypting the associated private key if a password
+// is provided. It returns a pointer to the public key object, or an error if one occurs.
+//
+// Parameters:
+//
+// keyName: A string representing the name of the key to retrieve.
+// password: A string representing the password used to decrypt the private key.
+//
+// Returns:
+//
+// *ssh.PublicKeys: A pointer to a PublicKeys object representing the retrieved public key.
+// error: An error if one occurs during key retrieval or decryption.
+//
+// Example:
+//
+// keyName := "id_rsa"
+// password := "mypassword"
+// publicKey, err := GetSSHPubKey(keyName, password)
+//
+//	if err != nil {
+//	  log.Fatalf("failed to get SSH public key: %v", err)
+//	}
+//
+// log.Printf("Retrieved public key: %v", publicKey)
+func GetSSHPubKey(keyName string, password string) (*ssh.PublicKeys, error) {
+	var publicKey *ssh.PublicKeys
+
+	sshPath := filepath.Join(os.Getenv("HOME"), ".ssh", keyName)
+	publicKey, err := ssh.NewPublicKeysFromFile("git", sshPath, password)
+	if err != nil {
+		return nil,
+			fmt.Errorf(color.RedString(
+				"failed to retrieve public SSH key %s: %v",
+				keyName, err))
+	}
+
+	return publicKey, nil
 }
 
 // IsDirEmpty checks if an input directory (name) is empty
