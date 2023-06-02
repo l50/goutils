@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	"github.com/bitfield/script"
-	"github.com/fatih/color"
 	"github.com/l50/goutils/str"
 )
 
@@ -84,21 +83,21 @@ func CreateDirectory(path string) error {
 		// If the input path is relative, attempt to convert it to an absolute path.
 		absDir, err := filepath.Abs(path)
 		if err != nil {
-			return fmt.Errorf(color.RedString("failed to convert input "+
-				"relative path to an absolute path: %v", err))
+			return fmt.Errorf("failed to convert input "+
+				"relative path to an absolute path: %v", err)
 		}
 		path = absDir
 	}
 
 	// Check if the directory already exists
 	if _, err := os.Stat(path); err == nil {
-		return fmt.Errorf(color.RedString("%s already exists", path))
+		return fmt.Errorf("%s already exists", path)
 	}
 
 	// Create the input directory if we've gotten here successfully
 	if err := os.MkdirAll(path, 0755); err != nil {
-		return fmt.Errorf(color.RedString(
-			"failed to create new directory at %s: %v", path, err))
+		return fmt.Errorf(
+			"failed to create new directory at %s: %v", path, err)
 	}
 
 	return nil
@@ -190,8 +189,7 @@ func Find(fileName string, dirs []string) (string, error) {
 			fileReg := `/` + fileName + `$`
 			m, err := regexp.MatchString(fileReg, f)
 			if err != nil {
-				return "", fmt.Errorf(
-					color.RedString("error - failed to locate %f: %v", fileReg, err))
+				return "", fmt.Errorf("error - failed to locate %s: %v", fileReg, err)
 			} else if m {
 				return f, nil
 			}

@@ -3,7 +3,6 @@ package macos
 import (
 	"fmt"
 
-	"github.com/fatih/color"
 	"github.com/magefile/mage/sh"
 )
 
@@ -30,8 +29,7 @@ func InstallBrewDeps(brewPackages []string) error {
 	for _, pkg := range brewPackages {
 		err := sh.RunV("brew", "install", pkg)
 		if err != nil {
-			return fmt.Errorf(color.RedString(
-				"failed to install dependencies: %v", err))
+			return fmt.Errorf("failed to install dependencies: %v", err)
 		}
 	}
 

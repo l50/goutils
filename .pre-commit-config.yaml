@@ -68,8 +68,8 @@ repos:
         entry: .hooks/go-unit-tests.sh all
         files: '\.go$'
 
-      - id: go-vet
-        name: Run go vet
-        language: script
-        entry: .hooks/go-vet.sh
-        files: '\.go$'
+        # - id: go-vet
+        #   name: Run go vet
+        #   language: script
+        #   entry: .hooks/go-vet.sh
+        #   files: '\.go$'

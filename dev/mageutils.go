@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	"github.com/bitfield/script"
-	"github.com/fatih/color"
 	"github.com/magefile/mage/sh"
 
 	fileutils "github.com/l50/goutils/file"
@@ -39,27 +38,23 @@ import (
 func GHRelease(newVer string) error {
 	cmd := "gh"
 	if !sys.CmdExists("gh") {
-		return errors.New(color.RedString(
-			"required cmd %s not found in $PATH", cmd))
+		return fmt.Errorf("required cmd %s not found in $PATH", cmd)
 	}
 
 	cl := "CHANGELOG.md"
 	// Generate CHANGELOG
 	if err := sh.RunV("gh", "changelog", "new", "--next-version", newVer); err != nil {
-		return fmt.Errorf(color.RedString(
-			"failed to create changelog for new release %s: %v", newVer, err))
+		return fmt.Errorf("failed to create changelog for new release %s: %v", newVer, err)
 	}
 
 	// Create release using CHANGELOG
 	if err := sh.RunV("gh", "release", "create", newVer, "-F", cl); err != nil {
-		return fmt.Errorf(color.RedString(
-			"failed to create new release %s: %v", newVer, err))
+		return fmt.Errorf("failed to create new release %s: %v", newVer, err)
 	}
 
 	// Remove created CHANGELOG file
 	if err := fileutils.Delete(cl); err != nil {
-		return fmt.Errorf(color.RedString(
-			"failed to delete generated CHANGELOG: %v", err))
+		return fmt.Errorf("failed to delete generated CHANGELOG: %v", err)
 	}
 
 	return nil
@@ -82,16 +77,13 @@ func GoReleaser() error {
 	if fileutils.Exists(".goreleaser.yaml") || fileutils.Exists(".goreleaser.yml") {
 		if sys.CmdExists("goreleaser") {
 			if _, err := script.Exec("goreleaser --snapshot --rm-dist").Stdout(); err != nil {
-				return fmt.Errorf(color.RedString(
-					"failed to run goreleaser: %v", err))
+				return fmt.Errorf("failed to run goreleaser: %v", err)
 			}
 		} else {
-			return errors.New(color.RedString(
-				"goreleaser not found in $PATH"))
+			return errors.New("goreleaser not found in $PATH")
 		}
 	} else {
-		return errors.New(color.RedString(
-			"no .goreleaser file found"))
+		return errors.New("no .goreleaser file found")
 	}
 
 	return nil
@@ -111,7 +103,7 @@ func GoReleaser() error {
 //	  log.Fatalf("failed to install VS Code modules: %v", err)
 //	}
 func InstallVSCodeModules() error {
-	fmt.Println(color.YellowString("Installing vscode-go dependencies."))
+	fmt.Println("Installing vscode-go dependencies.")
 	vscodeDeps := []string{
 		"github.com/uudashr/gopkgs/v2/cmd/gopkgs",
 		"github.com/ramya-rao-a/go-outline",
@@ -126,8 +118,7 @@ func InstallVSCodeModules() error {
 	}
 
 	if err := InstallGoDeps(vscodeDeps); err != nil {
-		return fmt.Errorf(
-			color.RedString("failed to install vscode-go dependencies: %v", err))
+		return fmt.Errorf("failed to install vscode-go dependencies: %v", err)
 	}
 
 	return nil
@@ -162,14 +153,12 @@ func ModUpdate(recursive bool, v bool) error {
 
 	if recursive {
 		if err := sh.Run("go", "get", "-u", verbose, "./..."); err != nil {
-			return fmt.Errorf(
-				color.RedString("failed to run `go get -u %v ./...`: %v", verbose, err))
+			return fmt.Errorf("failed to run `go get -u %v ./...`: %v", verbose, err)
 		}
 	}
 
 	if err := sh.Run("go", "get", "-u", verbose); err != nil {
-		return fmt.Errorf(
-			color.RedString("failed to run `go get -u %v`", err))
+		return fmt.Errorf("failed to run `go get -u %v`", err)
 	}
 
 	return nil
@@ -190,8 +179,7 @@ func ModUpdate(recursive bool, v bool) error {
 //	}
 func Tidy() error {
 	if err := sh.Run("go", "mod", "tidy"); err != nil {
-		return fmt.Errorf(
-			color.RedString("failed to run `go mod tidy`: %v", err))
+		return fmt.Errorf("failed to run `go mod tidy`: %v", err)
 	}
 
 	return nil
@@ -226,27 +214,19 @@ func UpdateMageDeps(magedir string) error {
 	verbose := false
 
 	if err := sys.Cd(magedir); err != nil {
-		return fmt.Errorf(
-			color.RedString(
-				"failed to cd from %s to %s: %v", cwd, magedir, err))
+		return fmt.Errorf("failed to cd from %s to %s: %v", cwd, magedir, err)
 	}
 
 	if err := ModUpdate(recursive, verbose); err != nil {
-		return fmt.Errorf(
-			color.RedString(
-				"failed to update mage dependencies in %s: %v", magedir, err))
+		return fmt.Errorf("failed to update mage dependencies in %s: %v", magedir, err)
 	}
 
 	if err := Tidy(); err != nil {
-		return fmt.Errorf(
-			color.RedString(
-				"failed to update mage dependencies in %s: %v", magedir, err))
+		return fmt.Errorf("failed to update mage dependencies in %s: %v", magedir, err)
 	}
 
 	if err := sys.Cd(cwd); err != nil {
-		return fmt.Errorf(
-			color.RedString(
-				"failed to cd from %s to %s: %v", magedir, cwd, err))
+		return fmt.Errorf("failed to cd from %s to %s: %v", magedir, cwd, err)
 	}
 
 	return nil
@@ -281,8 +261,7 @@ func InstallGoDeps(deps []string) error {
 	}
 
 	if failed {
-		return fmt.Errorf(
-			color.RedString("failed to install input go dependencies: %w", err))
+		return fmt.Errorf("failed to install input go dependencies: %w", err)
 	}
 
 	return nil

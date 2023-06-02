@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/fatih/color"
 	"github.com/l50/goutils/dev"
 	"github.com/l50/goutils/file"
 	"github.com/l50/goutils/sys"
@@ -40,8 +39,7 @@ func checkPCProject() error {
 	}
 
 	if !file.Exists(pcFile) {
-		return errors.New(color.RedString(
-			"pre-commit is not configured for the current project"))
+		return errors.New("pre-commit is not configured for the current project")
 	}
 
 	return nil
@@ -75,8 +73,7 @@ func InstallGoPCDeps() error {
 	}
 
 	if err := dev.InstallGoDeps(deps); err != nil {
-		return fmt.Errorf(color.RedString(
-			"failed to install pre-commit golang dependencies: %v", err))
+		return fmt.Errorf("failed to install pre-commit golang dependencies: %v", err)
 	}
 
 	return nil
@@ -101,8 +98,7 @@ func InstallPCHooks() error {
 	}
 
 	if err := pc("install"); err != nil {
-		return fmt.Errorf(color.RedString(
-			"failed to install pre-commit hooks: %v", err))
+		return fmt.Errorf("failed to install pre-commit hooks: %v", err)
 	}
 
 	return nil
@@ -127,7 +123,7 @@ func UpdatePCHooks() error {
 	}
 
 	if err := pc("autoupdate"); err != nil {
-		return fmt.Errorf(color.RedString("failed to update the pre-commit hooks: %v", err))
+		return fmt.Errorf("failed to update the pre-commit hooks: %v", err)
 	}
 
 	return nil
@@ -152,7 +148,7 @@ func ClearPCCache() error {
 	}
 
 	if err := pc("clean"); err != nil {
-		return fmt.Errorf(color.RedString("failed to clear the pre-commit cache: %v", err))
+		return fmt.Errorf("failed to clear the pre-commit cache: %v", err)
 	}
 
 	return nil
@@ -177,7 +173,7 @@ func RunPCHooks() error {
 	}
 
 	if err := pc("run", "--all-files", "--show-diff-on-failure"); err != nil {
-		return fmt.Errorf(color.RedString("failed to run pre-commit hooks: %v", err))
+		return fmt.Errorf("failed to run pre-commit hooks: %v", err)
 	}
 
 	return nil

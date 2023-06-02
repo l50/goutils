@@ -36,7 +36,12 @@ func TestCd(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer os.Chdir(originalDir) // ensure we return to the original directory after test
+
+	defer func() {
+		if err := os.Chdir(originalDir); err != nil {
+			t.Fatal(err)
+		}
+	}()
 
 	// Now test the Cd function
 	if err := sys.Cd(tmpDir); err != nil {

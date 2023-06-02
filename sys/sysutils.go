@@ -14,8 +14,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/fatih/color"
-	"github.com/go-git/go-git/plumbing/transport/ssh"
+	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
 	cp "github.com/otiai10/copy"
 	"github.com/shirou/gopsutil/v3/process"
 )
@@ -44,7 +43,7 @@ const (
 func CheckRoot() error {
 	uid := os.Geteuid()
 	if uid != 0 {
-		return fmt.Errorf(color.RedString("this script must be run as root - current euid: %v", uid))
+		return fmt.Errorf("this script must be run as root - current euid: %v", uid)
 	}
 
 	return nil
@@ -70,7 +69,7 @@ func CheckRoot() error {
 func Cd(dst string) error {
 	err := os.Chdir(dst)
 	if err != nil {
-		fmt.Print(color.RedString("failed to change directory to %s: %v", dst, err))
+		fmt.Printf("failed to change directory to %s: %v", dst, err)
 		return err
 	}
 
@@ -119,7 +118,7 @@ func CmdExists(cmd string) bool {
 //	}
 func Cp(src string, dst string) error {
 	if err := cp.Copy(src, dst); err != nil {
-		fmt.Print(color.RedString("failed to copy %s to %s: %v", src, dst, err))
+		fmt.Printf("failed to copy %s to %s: %v", src, dst, err)
 		return err
 	}
 
@@ -173,10 +172,48 @@ func GetHomeDir() (string, error) {
 	out, err := os.UserHomeDir()
 
 	if err != nil {
-		return "", fmt.Errorf(color.RedString("failed to get user's home directory: %v", err))
+		return "", fmt.Errorf("failed to get user's home directory: %v", err)
 	}
 
 	return out, nil
+}
+
+// GetSSHPubKey retrieves the public SSH key for the given key name, decrypting the associated private key if a password
+// is provided. It returns a pointer to the public key object, or an error if one occurs.
+//
+// Parameters:
+//
+// keyName: A string representing the name of the key to retrieve.
+// password: A string representing the password used to decrypt the private key.
+//
+// Returns:
+//
+// *ssh.PublicKeys: A pointer to a PublicKeys object representing the retrieved public key.
+// error: An error if one occurs during key retrieval or decryption.
+//
+// Example:
+//
+// keyName := "id_rsa"
+// password := "mypassword"
+// publicKey, err := GetSSHPubKey(keyName, password)
+//
+//	if err != nil {
+//	  log.Fatalf("failed to get SSH public key: %v", err)
+//	}
+//
+// log.Printf("Retrieved public key: %v", publicKey)
+func GetSSHPubKey(keyName string, password string) (*ssh.PublicKeys, error) {
+	var publicKey *ssh.PublicKeys
+
+	sshPath := filepath.Join(os.Getenv("HOME"), ".ssh", keyName)
+	publicKey, err := ssh.NewPublicKeysFromFile("git", sshPath, password)
+	if err != nil {
+		return nil,
+			fmt.Errorf("failed to retrieve public SSH key %s: %v",
+				keyName, err)
+	}
+
+	return publicKey, nil
 }
 
 // Gwd returns the current working directory (cwd). If it fails to get the cwd, it prints the error and returns an empty string.
@@ -197,7 +234,7 @@ func GetHomeDir() (string, error) {
 func Gwd() string {
 	dir, err := os.Getwd()
 	if err != nil {
-		fmt.Print(color.RedString("failed to get cwd: %v", err))
+		fmt.Printf("failed to get cwd: %v", err)
 		return ""
 	}
 
@@ -285,7 +322,7 @@ func GetOSAndArch() (string, string, error) {
 func IsDirEmpty(name string) (bool, error) {
 	entries, err := os.ReadDir(name)
 	if err != nil {
-		return false, fmt.Errorf(color.RedString("failed to determine if %s is empty: %v", name, err))
+		return false, fmt.Errorf("failed to determine if %s is empty: %v", name, err)
 	}
 
 	return len(entries) == 0, nil
@@ -368,8 +405,7 @@ func RunCommand(cmd string, args ...string) (string, error) {
 	out, err := exec.Command(cmd, args...).CombinedOutput()
 
 	if err != nil {
-		return "", fmt.Errorf(color.RedString(
-			"failed to run %s: args: %s, stdout: %s, err: %v", cmd, args, out, err))
+		return "", fmt.Errorf("failed to run %s: args: %s, stdout: %s, err: %v", cmd, args, out, err)
 	}
 
 	return string(out), nil

@@ -8,7 +8,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/fatih/color"
 	"github.com/l50/goutils/file"
 	gitutils "github.com/l50/goutils/git"
 	"github.com/l50/goutils/str"
@@ -136,9 +135,7 @@ func TestDeletePushedTag(t *testing.T) {
 
 	pubKey, err := sys.GetSSHPubKey(keyName, "")
 	if err == nil {
-		fmt.Print(color.RedString(
-			"security concern: %s is not encrypted at rest",
-			keyName))
+		fmt.Printf("security concern: %s is not encrypted at rest", keyName)
 	}
 
 	if err := gitutils.DeletePushedTag(repo, tag, pubKey); err == nil {

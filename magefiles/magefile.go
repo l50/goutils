@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/fatih/color"
-	dev "github.com/l50/goutils/dev"
+	goutils "github.com/l50/goutils"
 
 	// mage utility functions
 	"github.com/magefile/mage/mg"
@@ -23,19 +23,16 @@ func init() {
 func InstallDeps() error {
 	fmt.Println(color.YellowString("Installing dependencies."))
 
-	if err := dev.Tidy(); err != nil {
-		return fmt.Errorf(color.RedString(
-			"failed to install dependencies: %v", err))
+	if err := goutils.Tidy(); err != nil {
+		return fmt.Errorf("failed to install dependencies: %v", err)
 	}
 
-	if err := dev.InstallGoPCDeps(); err != nil {
-		return fmt.Errorf(color.RedString(
-			"failed to install pre-commit dependencies: %v", err))
+	if err := goutils.InstallGoPCDeps(); err != nil {
+		return fmt.Errorf("failed to install pre-commit dependencies: %v", err)
 	}
 
-	if err := dev.InstallVSCodeModules(); err != nil {
-		return fmt.Errorf(color.RedString(
-			"failed to install vscode-go modules: %v", err))
+	if err := goutils.InstallVSCodeModules(); err != nil {
+		return fmt.Errorf("failed to install vscode-go modules: %v", err)
 	}
 
 	return nil
@@ -45,8 +42,8 @@ func InstallDeps() error {
 func InstallPreCommitHooks() error {
 	mg.Deps(InstallDeps)
 
-	fmt.Println(color.YellowString("Installing pre-commit hooks."))
-	if err := dev.InstallPCHooks(); err != nil {
+	fmt.Println("Installing pre-commit hooks.")
+	if err := goutils.InstallPCHooks(); err != nil {
 		return err
 	}
 
@@ -57,19 +54,18 @@ func InstallPreCommitHooks() error {
 func RunPreCommit() error {
 	mg.Deps(InstallDeps)
 
-	fmt.Println(color.YellowString("Updating pre-commit hooks."))
-	if err := dev.UpdatePCHooks(); err != nil {
+	fmt.Println("Updating pre-commit hooks.")
+	if err := goutils.UpdatePCHooks(); err != nil {
 		return err
 	}
 
-	fmt.Println(color.YellowString(
-		"Clearing the pre-commit cache to ensure we have a fresh start."))
-	if err := dev.ClearPCCache(); err != nil {
+	fmt.Println("Clearing the pre-commit cache to ensure we have a fresh start.")
+	if err := goutils.ClearPCCache(); err != nil {
 		return err
 	}
 
-	fmt.Println(color.YellowString("Running all pre-commit hooks locally."))
-	if err := dev.RunPCHooks(); err != nil {
+	fmt.Println("Running all pre-commit hooks locally.")
+	if err := goutils.RunPCHooks(); err != nil {
 		return err
 	}
 
@@ -80,31 +76,31 @@ func RunPreCommit() error {
 func RunTests() error {
 	mg.Deps(InstallDeps)
 
-	fmt.Println(color.YellowString("Running unit tests."))
+	fmt.Println("Running unit tests.")
 	if err := sh.RunV(filepath.Join(".hooks", "go-unit-tests.sh"), "all"); err != nil {
-		return fmt.Errorf(color.RedString("failed to run unit tests: %v", err))
+		return fmt.Errorf("failed to run unit tests: %v", err)
 	}
 
 	return nil
 }
 
-// UpdateMirror updates pkg.go.dev with the release associated with the input tag
+// UpdateMirror updates pkg.go.goutils with the release associated with the input tag
 func UpdateMirror(tag string) error {
 	var err error
-	fmt.Println(color.YellowString("Updating pkg.go.dev with the new tag %s.", tag))
+	fmt.Println("Updating pkg.go.goutils with the new tag %s.", tag)
 
 	err = sh.RunV("curl", "--silent", fmt.Sprintf(
 		"https://sum.golang.org/lookup/github.com/l50/goutils@%s",
 		tag))
 	if err != nil {
-		return fmt.Errorf(color.RedString("failed to update proxy.golang.org: %w", err))
+		return fmt.Errorf("failed to update proxy.golang.org: %w", err)
 	}
 
 	err = sh.RunV("curl", "--silent", fmt.Sprintf(
 		"https://proxy.golang.org/github.com/l50/goutils/@v/%s.info",
 		tag))
 	if err != nil {
-		return fmt.Errorf(color.RedString("failed to update pkg.go.dev: %w", err))
+		return fmt.Errorf("failed to update pkg.go.goutils: %w", err)
 	}
 
 	return nil

@@ -12,7 +12,7 @@ import (
 	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/go-git/go-git/v5/plumbing/transport"
-	
+
 	"github.com/l50/goutils/sys"
 	"github.com/magefile/mage/sh"
 )
@@ -23,7 +23,6 @@ type ConfigUserInfo struct {
 	User  string
 	Email string
 }
-
 
 // AddFile stages the file at the given file path in its associated Git repository. Returns an error if one occurs.
 //
@@ -48,32 +47,32 @@ type ConfigUserInfo struct {
 func AddFile(filePath string) error {
 	repo, err := git.PlainOpen(filepath.Dir(filePath))
 	if err != nil {
-		return fmt.Errorf(color.RedString(
-			"failed to open %s repo: %v", repo, err))
+		return fmt.Errorf(
+			"failed to open %s repo: %v", repo, err)
 	}
 
 	w, err := repo.Worktree()
 	if err != nil {
-		return fmt.Errorf(color.RedString(
-			"failed to retrieve worktree: %v", err))
+		return fmt.Errorf(
+			"failed to retrieve worktree: %v", err)
 	}
 
 	_, err = w.Add(filepath.Base(filePath))
 	if err != nil {
-		return fmt.Errorf(color.RedString(
-			"failed to run `git add` on %s: %v", filePath, err))
+		return fmt.Errorf(
+			"failed to run `git add` on %s: %v", filePath, err)
 	}
 
 	status, err := w.Status()
 	if err != nil {
-		return fmt.Errorf(color.RedString(
-			"failed to run `git status` on %s: %v", filePath, err))
+		return fmt.Errorf(
+			"failed to run `git status` on %s: %v", filePath, err)
 	}
 
 	if status.IsClean() {
-		return fmt.Errorf(color.RedString(
+		return fmt.Errorf(
 			"status is clean - failed to run `git add` "+
-				"on %s: %v", filePath, err))
+				"on %s: %v", filePath, err)
 	}
 
 	return nil
@@ -108,14 +107,14 @@ func AddFile(filePath string) error {
 func Commit(repo *git.Repository, msg string) error {
 	cfg, err := GetGlobalUserCfg()
 	if err != nil {
-		return fmt.Errorf(color.RedString(
-			"failed get repo config: %v", err))
+		return fmt.Errorf(
+			"failed get repo config: %v", err)
 	}
 
 	w, err := repo.Worktree()
 	if err != nil {
-		return fmt.Errorf(color.RedString(
-			"failed to retrieve worktree: %v", err))
+		return fmt.Errorf(
+			"failed to retrieve worktree: %v", err)
 	}
 
 	commit, err := w.Commit(msg, &git.CommitOptions{
@@ -126,22 +125,22 @@ func Commit(repo *git.Repository, msg string) error {
 		},
 	})
 	if err != nil {
-		return fmt.Errorf(color.RedString(
+		return fmt.Errorf(
 			"failed to commit current staging area`: %v",
-			err))
+			err)
 	}
 
 	obj, err := repo.CommitObject(commit)
 	if err != nil {
-		return fmt.Errorf(color.RedString(
-			"failed to run `git show`: %v", err))
+		return fmt.Errorf(
+			"failed to run `git show`: %v", err)
 	}
 
 	if obj.Author.Email != cfg.Email {
-		return fmt.Errorf(color.RedString(
+		return fmt.Errorf(
 			"author email in commit doesn't match "+
 				"global git config email - Commit() failed: %v",
-			err))
+			err)
 	}
 
 	return nil
@@ -171,53 +170,14 @@ func CloneRepo(url string, clonePath string, auth transport.AuthMethod) (
 	repo, err = git.PlainClone(clonePath, false, cloneOptions)
 	if err != nil {
 		if err == git.ErrRepositoryAlreadyExists {
-			return nil, fmt.Errorf(color.RedString(
-				"%s was already cloned to %s", url, clonePath))
+			return nil, fmt.Errorf(
+				"%s was already cloned to %s", url, clonePath)
 		}
-		return nil, fmt.Errorf(color.RedString(
-			"failed to clone %s to %s: %v", url, clonePath, err))
+		return nil, fmt.Errorf(
+			"failed to clone %s to %s: %v", url, clonePath, err)
 	}
 
 	return repo, nil
-}
-
-// GetSSHPubKey retrieves the public SSH key for the given key name, decrypting the associated private key if a password
-// is provided. It returns a pointer to the public key object, or an error if one occurs.
-//
-// Parameters:
-//
-// keyName: A string representing the name of the key to retrieve.
-// password: A string representing the password used to decrypt the private key.
-//
-// Returns:
-//
-// *ssh.PublicKeys: A pointer to a PublicKeys object representing the retrieved public key.
-// error: An error if one occurs during key retrieval or decryption.
-//
-// Example:
-//
-// keyName := "id_rsa"
-// password := "mypassword"
-// publicKey, err := GetSSHPubKey(keyName, password)
-//
-//	if err != nil {
-//	  log.Fatalf("failed to get SSH public key: %v", err)
-//	}
-//
-// log.Printf("Retrieved public key: %v", publicKey)
-func GetSSHPubKey(keyName string, password string) (*ssh.PublicKeys, error) {
-	var publicKey *ssh.PublicKeys
-
-	sshPath := filepath.Join(os.Getenv("HOME"), ".ssh", keyName)
-	publicKey, err := ssh.NewPublicKeysFromFile("git", sshPath, password)
-	if err != nil {
-		return nil,
-			fmt.Errorf(color.RedString(
-				"failed to retrieve public SSH key %s: %v",
-				keyName, err))
-	}
-
-	return publicKey, nil
 }
 
 // GetTags returns the tags for an input repo.
@@ -225,8 +185,8 @@ func GetTags(repo *git.Repository) ([]string, error) {
 	var tags []string
 	tagObjects, err := repo.TagObjects()
 	if err != nil {
-		return []string{}, fmt.Errorf(color.RedString(
-			"failed to retrieve repo tags: %v", err))
+		return []string{}, fmt.Errorf(
+			"failed to retrieve repo tags: %v", err)
 	}
 
 	err = tagObjects.ForEach(func(t *object.Tag) error {
@@ -235,8 +195,8 @@ func GetTags(repo *git.Repository) ([]string, error) {
 	})
 
 	if err != nil {
-		return tags, fmt.Errorf(color.RedString(
-			"failed to retrieve repo tags: %v", err))
+		return tags, fmt.Errorf(
+			"failed to retrieve repo tags: %v", err)
 	}
 
 	return tags, err
@@ -265,14 +225,14 @@ func GetGlobalUserCfg() (ConfigUserInfo, error) {
 
 	userInfo.User, err = sh.Output("git", "config", "user.name")
 	if err != nil {
-		return userInfo, fmt.Errorf(color.RedString(
-			"failed to retrieve global git username: %v", err))
+		return userInfo, fmt.Errorf(
+			"failed to retrieve global git username: %v", err)
 	}
 
 	userInfo.Email, err = sh.Output("git", "config", "user.email")
 	if err != nil {
-		return userInfo, fmt.Errorf(color.RedString(
-			"failed to retrieve global git email: %v", err))
+		return userInfo, fmt.Errorf(
+			"failed to retrieve global git email: %v", err)
 	}
 
 	return userInfo, nil
@@ -284,25 +244,25 @@ func GetGlobalUserCfg() (ConfigUserInfo, error) {
 func CreateTag(repo *git.Repository, tag string) error {
 	exists, err := tagExists(repo, tag)
 	if err != nil {
-		return fmt.Errorf(color.RedString(
-			"failed to retrieve repo tags: %v", err))
+		return fmt.Errorf(
+			"failed to retrieve repo tags: %v", err)
 	}
 
 	if exists {
-		return fmt.Errorf(color.RedString(
-			"error creating input tag %s: it already exists", tag))
+		return fmt.Errorf(
+			"error creating input tag %s: it already exists", tag)
 	}
 
 	cfg, err := GetGlobalUserCfg()
 	if err != nil {
-		return fmt.Errorf(color.RedString(
-			"failed get repo config: %v", err))
+		return fmt.Errorf(
+			"failed get repo config: %v", err)
 	}
 
 	h, err := repo.Head()
 	if err != nil {
-		return fmt.Errorf(color.RedString(
-			"failed to get repo head: %v", err))
+		return fmt.Errorf(
+			"failed to get repo head: %v", err)
 	}
 
 	_, err = repo.CreateTag(tag, h.Hash(), &git.CreateTagOptions{
@@ -315,8 +275,8 @@ func CreateTag(repo *git.Repository, tag string) error {
 	})
 
 	if err != nil {
-		return fmt.Errorf(color.RedString(
-			"error creating input tag %s: %v", tag, err))
+		return fmt.Errorf(
+			"error creating input tag %s: %v", tag, err)
 	}
 
 	return nil
@@ -348,8 +308,8 @@ func Push(repo *git.Repository, auth transport.AuthMethod) error {
 				"origin remote is up-to-date, no push was executed."))
 			return nil
 		}
-		return fmt.Errorf(color.RedString(
-			"error pushing to remote origin: %v", err))
+		return fmt.Errorf(
+			"error pushing to remote origin: %v", err)
 	}
 
 	return nil
@@ -385,8 +345,8 @@ func PushTag(repo *git.Repository, tag string, auth transport.AuthMethod) error 
 			return nil
 		}
 
-		return fmt.Errorf(color.RedString(
-			"error pushing %s tag to remote origin: %v", tag, err))
+		return fmt.Errorf(
+			"error pushing %s tag to remote origin: %v", tag, err)
 	}
 
 	return nil
@@ -430,8 +390,8 @@ func PushTag(repo *git.Repository, tag string, auth transport.AuthMethod) error 
 //	}
 func DeleteTag(repo *git.Repository, tag string) error {
 	if err := repo.DeleteTag(tag); err != nil {
-		return fmt.Errorf(color.RedString(
-			"error deleting local %s tag: %v", tag, err))
+		return fmt.Errorf(
+			"error deleting local %s tag: %v", tag, err)
 	}
 
 	return nil
@@ -483,13 +443,11 @@ func DeletePushedTag(repo *git.Repository, tag string, auth transport.AuthMethod
 
 	if err != nil {
 		if err == git.NoErrAlreadyUpToDate {
-			fmt.Print(color.YellowString(
-				"origin remote is up-to-date, no delete was executed."))
+			fmt.Print("origin remote is up-to-date, no delete was executed.")
 			return nil
 		}
 
-		return fmt.Errorf(color.RedString(
-			"error deleting pushed tag %s: %v", tag, err))
+		return fmt.Errorf("error deleting pushed tag %s: %v", tag, err)
 	}
 
 	return nil

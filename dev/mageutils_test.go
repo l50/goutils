@@ -125,7 +125,9 @@ func TestUpdateMageDeps(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	os.Chdir(repoRoot)
+	if err := os.Chdir(repoRoot); err != nil {
+		t.Fatal(err)
+	}
 
 	if err := dev.UpdateMageDeps("magefiles"); err != nil {
 		t.Fatal(err)
