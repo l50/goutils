@@ -65,7 +65,7 @@ repos:
       - id: go-unit-tests
         name: Go unit tests
         language: script
-        entry: .hooks/go-unit-tests.sh v2
+        entry: .hooks/go-unit-tests.sh all
         files: '\.go$'
 
       - id: go-vet
