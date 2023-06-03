@@ -9,6 +9,12 @@ type Credential struct {
 	TwoFacCode string
 }
 
+// FormField contains a form field name and its associated selector.
+type FormField struct {
+	Name     string `json:"-"`
+	Selector string `json:"-"`
+}
+
 // Session contains parameters associated
 // with maintaining a session.
 type Session struct {

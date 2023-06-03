@@ -2,9 +2,9 @@ package web
 
 import (
 	"context"
-	"encoding/binary"
+	"crypto/rand"
 	"fmt"
-	"math/rand"
+	"math/big"
 	"time"
 
 	"github.com/chromedp/chromedp"
@@ -35,57 +35,78 @@ type Site struct {
 	Debug    bool
 }
 
-// FormField contains a form field name and its associated selector.
-type FormField struct {
-	Name     string `json:"-"`
-	Selector string `json:"-"`
-}
-
-// CancelAll cancels all input cancels.
-func CancelAll(cancels []func()) {
+// CancelAll executes all provided cancel functions. It is typically used for cleaning up or aborting operations
+// that were started earlier and can be cancelled.
+//
+// Parameters:
+//
+// cancels: A slice of cancel functions, each of type func(). These are typically functions returned by context.WithCancel,
+// or similar functions that provide a way to cancel an operation.
+//
+// Example:
+//
+// var cancels []func()
+//
+// ctx, cancel := context.WithCancel(context.Background())
+// cancels = append(cancels, cancel)
+//
+// // Later, when all operations need to be cancelled:
+// CancelAll(cancels)
+//
+// Note: The caller is responsible for handling any errors that may occur during the execution of the cancel functions.
+func CancelAll(cancels ...func()) {
 	for _, cancel := range cancels {
 		cancel()
 	}
 }
 
-// cryptoRandIntn generates a random int in the range [0, n) using crypto/rand.
-func cryptoRandIntn(n int) (int, error) {
+// cryptoRandIntn generates a random int64 in the range [0, n) using crypto/rand.
+func cryptoRandIntn(n int64) (int64, error) {
 	if n <= 0 {
 		return 0, fmt.Errorf("invalid argument to cryptoRandIntn: %d <= 0", n)
 	}
 
-	b := make([]byte, 8)
-	if _, err := rand.Read(b); err != nil {
+	val, err := rand.Int(rand.Reader, big.NewInt(n))
+	if err != nil {
 		return 0, err
 	}
 
-	val := binary.BigEndian.Uint64(b) // Convert bytes to uint64.
-
-	// Return a value in the range [0, n).
-	return int(val % uint64(n)), nil
+	return val.Int64(), nil
 }
 
-// Wait is used to wait for a random period of time
-// that is anchored to the input near value.
+// Wait generates a random period of time anchored to a given input value.
 //
-// It's useful to simulate a more human interaction
-// while interfacing with a web application.
+// Parameters:
+//
+// near: A float64 value that serves as the base value for generating the random wait time.
+//
+// Returns:
+//
+// time.Duration: The calculated random wait time in milliseconds.
+// error: An error if the generation of the random wait time fails.
+//
+// The function is useful for simulating more human-like interaction in the context of a web application.
+// It first calculates a 'zoom' value by dividing the input 'near' by 10. Then, a random number is generated in the
+// range of [0, zoom), and added to 95% of 'near'. This sum is then converted to a time duration in milliseconds and returned.
 //
 // Example:
-// err = chromedp.Run(caldera.Driver.Context,
-// chromedp.Navigate(caldera.URL),
-// chromedp.Sleep(Wait(1000)),
-// chromedp.SendKeys(userXPath, caldera.Creds.User),
-// chromedp.Sleep(Wait(1000)),
-// ...
+//
+// waitTime, err := Wait(1000.0)
+//
+//	if err != nil {
+//	  log.Fatalf("failed to generate random wait time: %v", err)
+//	}
+//
+// log.Printf("Generated random wait time: %v\n", waitTime)
 func Wait(near float64) (time.Duration, error) {
-	zoom := int(near / 10)
+	zoom := int64(near / 10)
 	x, err := cryptoRandIntn(zoom)
 	if err != nil {
 		return 0, err
 	}
-	x += int(0.95 * near)
-	return time.Duration(x) * time.Millisecond, nil
+	additionalWait := int64(0.95 * near)
+	totalWait := x + additionalWait
+	return time.Duration(totalWait) * time.Millisecond, nil
 }
 
 // GetRandomWait returns a random duration between the specified minWait and maxWait durations.
@@ -107,9 +128,12 @@ func Wait(near float64) (time.Duration, error) {
 // Returns:
 //
 //	time.Duration: A random duration between minWait and maxWait.
-func GetRandomWait(minWait, maxWait time.Duration) time.Duration {
-	// Create rng based on current time
-	rng := rand.New(rand.NewSource(time.Now().UnixNano()))
-	randomWaitTime := time.Duration(rng.Int63n(int64(maxWait-minWait))) + minWait
-	return randomWaitTime
+func GetRandomWait(minWait, maxWait time.Duration) (time.Duration, error) {
+	diff := maxWait - minWait
+	randomValue, err := cryptoRandIntn(int64(diff))
+	if err != nil {
+		return 0, err
+	}
+	randomWaitTime := time.Duration(randomValue) + minWait
+	return randomWaitTime, nil
 }

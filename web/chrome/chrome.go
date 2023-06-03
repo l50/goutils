@@ -2,6 +2,7 @@ package chrome
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -14,32 +15,59 @@ import (
 	"github.com/l50/goutils/web"
 )
 
-// Driver is used to interface with Google Chrome using go.
+// Driver represents an interface to Google Chrome using go.
 //
-// Contains:
+// It contains a context.Context associated with this Driver and Options for the execution of Google Chrome.
 //
-// Context: A context.Context that's associated with this Driver.
+// Example:
 //
-// Options: Options for execution of Google Chrome.
+// browser, err := chrome.Init(true, true)
+//
+//	if err != nil {
+//	  log.Fatalf("failed to initialize a chrome browser: %v", err)
+//	}
+//
+// driver := browser.Driver
 type Driver struct {
 	Context context.Context
 	Options *[]chromedp.ExecAllocatorOption
 }
 
-// GetContext returns the context associated with the Driver.
+// GetContext returns the context associated with the Driver instance.
+//
+// This function retrieves the context that's linked with the current Driver.
 //
 // Returns:
 //
 // context.Context: The context that's associated with this Driver.
+//
+// Example:
+//
+// ctx := driver.GetContext()
+//
+//	if ctx == nil {
+//	  log.Fatalf("Context is nil")
+//	}
 func (d *Driver) GetContext() context.Context {
 	return d.Context
 }
 
-// SetContext sets the context associated with the Driver.
+// SetContext sets a new context for the Driver instance.
+//
+// This function sets a new context to be associated with the current Driver.
 //
 // Parameters:
 //
 // ctx (context.Context): The new context to be associated with this Driver.
+//
+// Example:
+//
+// newCtx := context.Background()
+// driver.SetContext(newCtx)
+//
+//	if driver.GetContext() != newCtx {
+//	  log.Fatalf("Failed to set new context")
+//	}
 func (d *Driver) SetContext(ctx context.Context) {
 	d.Context = ctx
 }
@@ -77,6 +105,14 @@ func setChromeOptions(browser *web.Browser, headless bool, ignoreCertErrors bool
 // web.Browser: A Browser instance which has been initialized.
 //
 // error: Any encountered error during initialization.
+//
+// Example:
+//
+// browser, err := chrome.Init(true, true)
+//
+//	if err != nil {
+//	  log.Fatalf("failed to initialize a chrome browser: %v", err)
+//	}
 func Init(headless bool, ignoreCertErrors bool) (web.Browser, error) {
 	var cancels []func()
 
@@ -87,25 +123,34 @@ func Init(headless bool, ignoreCertErrors bool) (web.Browser, error) {
 	options := []chromedp.ExecAllocatorOption{}
 	setChromeOptions(&browser, headless, ignoreCertErrors, &options)
 
+	driver, ok := browser.Driver.(*Driver)
+	if !ok {
+		err := errors.New("driver is not of type *ChromeDP")
+		return web.Browser{}, err
+	}
+
 	// Create contexts and their associated cancels.
 	allocatorCtx, cancel := chromedp.NewExecAllocator(
-		context.Background(), *browser.Driver.GetOptions())
+		context.Background(), *driver.Options...)
 	browser.Cancels = append([]func(){cancel}, cancels...)
-	browser.Driver.SetContext(chromedp.NewContext(allocatorCtx,
-		chromedp.WithLogf(log.Printf)))
+	driver.Context, cancel = chromedp.NewContext(allocatorCtx,
+		chromedp.WithLogf(log.Printf))
+	browser.Cancels = append([]func(){cancel}, cancels...)
 
 	return browser, nil
 }
 
-// InputAction contains selectors and actions to run with chrome.
+// InputAction represents selectors and actions to run with chrome.
 //
-// Contains:
+// It contains a description, a selector to find an element on the page, and an chromedp.Action which defines the action to perform on the selected element.
 //
-// Description: A description of this action.
+// Example:
 //
-// Selector: A selector to find an element on the page.
-//
-// Action: An chromedp.Action which defines the action to perform on the selected element.
+//	action := chrome.InputAction{
+//	  Description: "Type in search box",
+//	  Selector:    "#searchbox",
+//	  Action:      chromedp.SendKeys("#searchbox", "example search"),
+//	}
 type InputAction struct {
 	Description string
 	Selector    string
@@ -125,8 +170,25 @@ type InputAction struct {
 // string: The source code of the currently loaded page.
 //
 // error: An error if any occurred during source code retrieval.
+//
+// Example:
+//
+//	site := web.Site{
+//	  // initialize site
+//	}
+//
+// source, err := chrome.GetPageSource(site)
+//
+//	if err != nil {
+//	  log.Fatalf("failed to get page source: %v", err)
+//	}
 func GetPageSource(site web.Site) (string, error) {
-	chromeDriver := site.Session.Driver
+	// Convert the driver to a chrome-specific *Driver instance
+	chromeDriver, ok := site.Session.Driver.(*Driver)
+	if !ok {
+		return "", errors.New("driver is not of type *Driver")
+	}
+
 	// Get the page source code
 	var pageSource string
 	err := chromedp.Run(chromeDriver.GetContext(), chromedp.OuterHTML("html", &pageSource))
@@ -149,8 +211,23 @@ func GetPageSource(site web.Site) (string, error) {
 // Returns:
 //
 // error: An error if any occurred during navigation.
+//
+// Example:
+//
+//	actions := []chrome.InputAction{
+//	  // initialize actions
+//	}
+//
+// err := chrome.Navigate(site, actions, 1000)
+//
+//	if err != nil {
+//	  log.Fatalf("failed to navigate site: %v", err)
+//	}
 func Navigate(site web.Site, actions []InputAction, waitTime time.Duration) error {
-	chromeDriver := site.Session.Driver
+	chromeDriver, ok := site.Session.Driver.(*Driver)
+	if !ok {
+		return errors.New("driver is not of type *Driver")
+	}
 
 	// Enable network events
 	if err := chromedp.Run(chromeDriver.Context, network.Enable()); err != nil {
@@ -217,18 +294,28 @@ func Navigate(site web.Site, actions []InputAction, waitTime time.Duration) erro
 // Returns:
 //
 // error: An error if any occurred during screenshot capturing or saving.
+//
+// Example:
+//
+// err := chrome.ScreenShot(site, "/path/to/save/image.png")
+//
+//	if err != nil {
+//	  log.Fatalf("failed to capture screenshot: %v", err)
+//	}
 func ScreenShot(site web.Site, imgPath string) error {
 	var screenshot []byte
-	chromeDriver := site.Session.Driver
+	// Convert the driver to a chrome-specific *Driver instance
+	chromeDriver, ok := site.Session.Driver.(*Driver)
+	if !ok {
+		return errors.New("driver is not of type *Driver")
+	}
 
 	if err := chromedp.Run(chromeDriver.Context, takeSS(100, &screenshot)); err != nil {
-		fmt.Errorf("failed to take screenshot: %v", err)
-		return err
+		return fmt.Errorf("failed to take screenshot: %v", err)
 	}
 
 	if err := os.WriteFile(imgPath, screenshot, 0644); err != nil {
-		fmt.Errorf("failed to write screenshot to disk: %v", err)
-		return err
+		return fmt.Errorf("failed to write screenshot to disk: %v", err)
 	}
 
 	return nil
