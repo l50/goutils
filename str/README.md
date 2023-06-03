@@ -1,7 +1,8 @@
 # goutils/str
 
-The `str` package is a part of `goutils` library. It provides
-utility functions for string manipulation in Go.
+The `str` package is a part of `goutils` library.
+
+It provides utility functions for string manipulation in Go.
 
 ---
 
@@ -96,4 +97,4 @@ open an issue first to discuss what you would like to change.
 ## License
 
 This project is licensed under the MIT License - see
-the [LICENSE](../../LICENSE) file for details.
+the [LICENSE](../LICENSE) file for details.
