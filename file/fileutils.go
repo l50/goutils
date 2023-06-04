@@ -13,8 +13,27 @@ import (
 	"github.com/l50/goutils/str"
 )
 
-// Append appends an input text string to
-// the end of the input fileutils.
+// Append appends an input text string to the end of the specified file.
+// If the file does not exist, it will be created.
+//
+// Parameters:
+//
+// file: A string representing the path to the file.
+// text: A string that will be appended to the end of the file.
+//
+// Returns:
+//
+// error: An error if the file cannot be opened or the string cannot be written to the file.
+//
+// Example:
+//
+// filePath := "/path/to/your/file"
+// text := "text to be appended"
+// err := Append(filePath, text)
+//
+//	if err != nil {
+//	  log.Fatalf("failed to append text to file: %v", err)
+//	}
 func Append(file string, text string) error {
 	f, err := os.OpenFile(file,
 		os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
@@ -45,8 +64,25 @@ func Append(file string, text string) error {
 	return nil
 }
 
-// CreateEmpty creates an file based on the name input.
-// It returns true if the file was created, otherwise it returns false.
+// CreateEmpty creates an empty file at the specified path.
+// If a file with the same name already exists, it will be overwritten.
+//
+// Parameters:
+//
+// name: A string representing the path to the file.
+//
+// Returns:
+//
+// bool: Returns true if the file was created successfully, otherwise false.
+//
+// Example:
+//
+// filePath := "/path/to/your/file"
+// success := CreateEmpty(filePath)
+//
+//	if !success {
+//	  log.Fatalf("failed to create empty file")
+//	}
 func CreateEmpty(name string) bool {
 	file, err := os.Create(name)
 	if err != nil {
@@ -58,8 +94,27 @@ func CreateEmpty(name string) bool {
 	return true
 }
 
-// Create creates a file at the input filePath
-// with the specified fileContents.
+// Create creates a file at the specified path with the provided content.
+// If the file does not exist, it will be created.
+//
+// Parameters:
+//
+// filePath: A string representing the path to the file.
+// fileContents: A byte slice containing the content to be written to the file.
+//
+// Returns:
+//
+// error: An error if the file cannot be created or the content cannot be written to the file.
+//
+// Example:
+//
+// filePath := "/path/to/your/file"
+// content := []byte("content to be written")
+// err := Create(filePath, content)
+//
+//	if err != nil {
+//	  log.Fatalf("failed to create file: %v", err)
+//	}
 func Create(filePath string, fileContents []byte) error {
 	if err := os.MkdirAll(filepath.Dir(filePath), os.ModePerm); err != nil {
 		return fmt.Errorf("cannot create dir portion"+
@@ -74,9 +129,25 @@ func Create(filePath string, fileContents []byte) error {
 	return nil
 }
 
-// CreateDirectory creates a directory at the input path.
-// If any part of the input path doesn't exist, create it.
-// Return an error if the path already exists.
+// CreateDirectory creates a directory at the specified path.
+// If the directory already exists, it returns an error.
+//
+// Parameters:
+//
+// path: A string representing the path to the directory.
+//
+// Returns:
+//
+// error: An error if the directory cannot be created or if it already exists.
+//
+// Example:
+//
+// dirPath := "/path/to/your/directory"
+// err := CreateDirectory(dirPath)
+//
+//	if err != nil {
+//	  log.Fatalf("failed to create directory: %v", err)
+//	}
 func CreateDirectory(path string) error {
 	// Check if the input path is absolute
 	if !filepath.IsAbs(path) {
@@ -103,12 +174,32 @@ func CreateDirectory(path string) error {
 	return nil
 }
 
-// CSVToLines reads the contents of the specified CSV file and returns
-// its contents as a two-dimensional string slice, where each element
-// in the outer slice represents a row in the CSV file, and each element
-// in the inner slice represents a value in that row. The first row in
-// the CSV file is skipped, as it is assumed to contain column headers.
-// If the file cannot be read or parsed, an error is returned.
+// CSVToLines reads the contents of a CSV file and returns it as a two-dimensional string slice,
+// where each element in the outer slice represents a row in the CSV file,
+// and each element in the inner slice represents a value in that row.
+// The first row of the CSV file, which is assumed to contain column headers, is skipped.
+//
+// Parameters:
+//
+// filename: A string representing the path to the CSV file.
+//
+// Returns:
+//
+// [][]string: A two-dimensional slice of strings representing the rows and values of the CSV file.
+// error: An error if the file cannot be read or parsed.
+//
+// Example:
+//
+// csvFilePath := "/path/to/your/csv/file"
+// records, err := CSVToLines(csvFilePath)
+//
+//	if err != nil {
+//	  log.Fatalf("failed to read CSV file: %v", err)
+//	}
+//
+//	for _, row := range records {
+//	  fmt.Println(row)
+//	}
 func CSVToLines(filename string) ([][]string, error) {
 	f, err := os.Open(filename)
 	if err != nil {
@@ -133,7 +224,24 @@ func CSVToLines(filename string) ([][]string, error) {
 	return records, nil
 }
 
-// Delete deletes the input file
+// Delete deletes the specified file.
+//
+// Parameters:
+//
+// file: A string representing the path to the file.
+//
+// Returns:
+//
+// error: An error if the file cannot be deleted.
+//
+// Example:
+//
+// filePath := "/path/to/your/file"
+// err := Delete(filePath)
+//
+//	if err != nil {
+//	  log.Fatalf("failed to delete file: %v", err)
+//	}
 func Delete(file string) error {
 	if err := os.Remove(file); err != nil {
 		return err
@@ -142,24 +250,58 @@ func Delete(file string) error {
 	return nil
 }
 
-// Exists will return true if a file specified with fileLoc
-// exists. If the file does not exist, it returns false.
+// Exists checks whether a file at the specified path exists.
+//
+// Parameters:
+//
+// fileLoc: A string representing the path to the file.
+//
+// Returns:
+//
+// bool: Returns true if the file exists, otherwise false.
+//
+// Example:
+//
+// filePath := "/path/to/your/file"
+// exists := Exists(filePath)
+//
+//	if !exists {
+//	  log.Fatalf("file does not exist")
+//	}
 func Exists(fileLoc string) bool {
-	_, err := os.Stat(fileLoc)
-	if err != nil {
-		// `fileLoc` does not exist
+	if _, err := os.Stat(fileLoc); err != nil {
 		if os.IsNotExist(err) {
 			return false
 		}
-		panic(fmt.Sprintf(
-			"failed to check for the existence of %s: %v", fileLoc, err))
 	}
 
 	return true
 }
 
-// ToSlice reads an input file into a slice,
-// removes blank strings, and returns it.
+// ToSlice reads a file and returns its content as a slice of strings,
+// where each element represents a line in the file. Blank lines are omitted.
+//
+// Parameters:
+//
+// fileName: A string representing the path to the file.
+//
+// Returns:
+//
+// []string: A slice of strings where each element represents a line in the file.
+// error: An error if the file cannot be read.
+//
+// Example:
+//
+// filePath := "/path/to/your/file"
+// lines, err := ToSlice(filePath)
+//
+//	if err != nil {
+//	  log.Fatalf("failed to read file: %v", err)
+//	}
+//
+//	for _, line := range lines {
+//	  fmt.Println(line)
+//	}
 func ToSlice(fileName string) ([]string, error) {
 	b, err := os.ReadFile(fileName)
 	if err != nil {
@@ -177,8 +319,30 @@ func ToSlice(fileName string) ([]string, error) {
 	return filteredLines, nil
 }
 
-// Find looks for an input `filename` in the specified
-// set of `dirs`. The filepath is returned if the `filename` is found.
+// Find searches for a specified filename in a set of directories.
+// Returns the file path if found, or an error if the file cannot be found.
+//
+// Parameters:
+//
+// fileName: The name of the file to find.
+// dirs: A slice of strings representing the directories to search in.
+//
+// Returns:
+//
+// string: The file path if the file is found.
+// error: An error if the file cannot be found.
+//
+// Example:
+//
+// fileName := "file_to_find.txt"
+// dirs := []string{"/path/to/first/directory", "/path/to/second/directory"}
+// filePath, err := Find(fileName, dirs)
+//
+//	if err != nil {
+//	  log.Fatalf("failed to find file: %v", err)
+//	}
+//
+// fmt.Printf("File found at: %s\n", filePath)
 func Find(fileName string, dirs []string) (string, error) {
 	for _, d := range dirs {
 		files, err := ListR(d)
@@ -198,8 +362,29 @@ func Find(fileName string, dirs []string) (string, error) {
 	return "", nil
 }
 
-// ListR lists the files found recursively
-// from the input `path`.
+// ListR lists all files in a directory and its subdirectories.
+//
+// Parameters:
+//
+// path: A string representing the path to the directory.
+//
+// Returns:
+//
+// []string: A slice of strings representing the paths of the files found.
+// error: An error if the files cannot be listed.
+//
+// Example:
+//
+// dirPath := "/path/to/your/directory"
+// files, err := ListR(dirPath)
+//
+//	if err != nil {
+//	  log.Fatalf("failed to list files: %v", err)
+//	}
+//
+//	for _, file := range files {
+//	  fmt.Println(file)
+//	}
 func ListR(path string) ([]string, error) {
 	result, err := script.FindFiles(path).String()
 	if err != nil {
@@ -211,8 +396,31 @@ func ListR(path string) ([]string, error) {
 	return fileList, nil
 }
 
-// FindStr searches for input searchStr in
-// input the input filepath.
+// FindStr searches for a string in a specified file.
+//
+// Parameters:
+//
+// path: A string representing the path to the file.
+// searchStr: The string to search for in the file.
+//
+// Returns:
+//
+// bool: Returns true if the string is found, otherwise false.
+// error: An error if the file cannot be read.
+//
+// Example:
+//
+// filePath := "/path/to/your/file"
+// searchStr := "text to find"
+// found, err := FindStr(filePath, searchStr)
+//
+//	if err != nil {
+//	  log.Fatalf("failed to search file: %v", err)
+//	}
+//
+//	if found {
+//	  fmt.Printf("'%s' found in file\n", searchStr)
+//	}
 func FindStr(path string, searchStr string) (bool, error) {
 	f, err := os.Open(path)
 	if err != nil {

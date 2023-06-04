@@ -33,11 +33,11 @@ func TestAppend(t *testing.T) {
 	testFile := "test.txt"
 	created := fileutils.CreateEmpty(testFile)
 	exists := fileutils.Exists(testFile)
-	change := "I am a change!!"
-
 	if !exists {
-		t.Fatalf("unable to locate %s - xists() failed", testFile)
+		t.Fatalf("unable to locate %s - exists() failed", testFile)
 	}
+
+	change := "I am a change!!"
 
 	if err := fileutils.Append(testFile, change); err != nil {
 		t.Fatalf("failed to append %s to %s - Append() failed: %v",
@@ -61,8 +61,8 @@ func TestAppend(t *testing.T) {
 func TestCreateEmptyFile(t *testing.T) {
 	testFile := "test.txt"
 	created := fileutils.CreateEmpty(testFile)
-	exists := fileutils.Exists(testFile)
 
+	exists := fileutils.Exists(testFile)
 	if !exists {
 		t.Fatalf("unable to locate %s, FileExists() failed", testFile)
 	}
@@ -85,7 +85,6 @@ func TestCreateFile(t *testing.T) {
 	}
 
 	exists := fileutils.Exists(testFile)
-
 	if !exists {
 		t.Fatalf("unable to locate %s, FileExists() failed", testFile)
 	}
@@ -126,7 +125,6 @@ func TestDeleteFile(t *testing.T) {
 	testFile := "test.txt"
 	created := fileutils.CreateEmpty(testFile)
 	exists := fileutils.Exists(testFile)
-
 	if !exists {
 		t.Fatalf("unable to locate %s, FileExists() failed", testFile)
 	}
@@ -202,7 +200,6 @@ func equal(a, b []string) bool {
 func TestExists(t *testing.T) {
 	testFile := getTestFile(t)
 	exists := fileutils.Exists(testFile)
-
 	if !exists {
 		t.Fatalf("unable to locate %s, Exists() failed", testFile)
 	}
@@ -211,7 +208,6 @@ func TestExists(t *testing.T) {
 func TestToSlice(t *testing.T) {
 	testFile := getTestFile(t)
 	exists := fileutils.Exists(testFile)
-
 	if !exists {
 		t.Fatalf("unable to locate %s - FileExists() failed", testFile)
 	}
