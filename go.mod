@@ -11,7 +11,7 @@ require (
 	github.com/magefile/mage v1.15.0
 	github.com/otiai10/copy v1.11.0
 	github.com/shirou/gopsutil/v3 v3.23.4
-	github.com/stretchr/testify v1.8.3
+	github.com/stretchr/testify v1.8.4
 	github.com/tidwall/gjson v1.14.4
 )
 
