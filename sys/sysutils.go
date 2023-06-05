@@ -66,11 +66,9 @@ func CheckRoot() error {
 //	if err != nil {
 //	    fmt.Println("Failed to change directory.")
 //	}
-func Cd(dst string) error {
-	err := os.Chdir(dst)
-	if err != nil {
-		fmt.Printf("failed to change directory to %s: %v", dst, err)
-		return err
+func Cd(path string) error {
+	if err := os.Chdir(path); err != nil {
+		return fmt.Errorf("failed to change directory to %s: %v", path, err)
 	}
 
 	return nil
@@ -118,8 +116,7 @@ func CmdExists(cmd string) bool {
 //	}
 func Cp(src string, dst string) error {
 	if err := cp.Copy(src, dst); err != nil {
-		fmt.Printf("failed to copy %s to %s: %v", src, dst, err)
-		return err
+		return fmt.Errorf("failed to copy %s to %s: %v", src, dst, err)
 	}
 
 	return nil
@@ -145,11 +142,43 @@ func Cp(src string, dst string) error {
 func EnvVarSet(key string) error {
 	_, ok := os.LookupEnv(key)
 	if !ok {
-		err := errors.New(key + " not set")
-		return err
+		return errors.New(key + " not set")
 	}
 
 	return nil
+}
+
+// ExpandHomeDir expands the tilde (~) in a given path to the current user's home directory.
+//
+// Parameters:
+//
+// path: A string representing the path to be expanded.
+//
+// Returns:
+//
+// string: The expanded path.
+//
+// Example:
+//
+// path := "~/Documents/project"
+// expandedPath := ExpandHomeDir(path)
+//
+// fmt.Println("Expanded Path:", expandedPath)
+func ExpandHomeDir(path string) string {
+	if len(path) == 0 || path[0] != '~' {
+		return path
+	}
+
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return path
+	}
+
+	if len(path) == 1 || path[1] == '/' {
+		return filepath.Join(homeDir, path[1:])
+	}
+
+	return filepath.Join(homeDir, path[1:])
 }
 
 // GetHomeDir returns the current user's home directory.
@@ -157,14 +186,14 @@ func EnvVarSet(key string) error {
 // Returns:
 //
 // string: The home directory of the current user.
-// error: An error if any issue occurs while trying to get the home directory.
+// error: An error if there is a problem getting the home directory.
 //
 // Example:
 //
 // homeDir, err := GetHomeDir()
 //
 //	if err != nil {
-//	  log.Fatalf("failed to get user's home directory: %v", err)
+//	  log.Fatalf("failed to get home dir: %v", err)
 //	}
 //
 // fmt.Println("Home Directory:", homeDir)
@@ -550,37 +579,4 @@ func RmRf(path string) error {
 	}
 
 	return nil
-}
-
-// ExpandHomeDir expands the tilde (~) in a given path to the current user's home directory.
-//
-// Parameters:
-//
-// path: A string representing the path to be expanded.
-//
-// Returns:
-//
-// string: The expanded path.
-//
-// Example:
-//
-// path := "~/Documents/project"
-// expandedPath := ExpandHomeDir(path)
-//
-// fmt.Println("Expanded Path:", expandedPath)
-func ExpandHomeDir(path string) string {
-	if len(path) == 0 || path[0] != '~' {
-		return path
-	}
-
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		return path
-	}
-
-	if len(path) == 1 || path[1] == '/' {
-		return filepath.Join(homeDir, path[1:])
-	}
-
-	return filepath.Join(homeDir, path[1:])
 }

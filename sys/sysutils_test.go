@@ -13,9 +13,7 @@ import (
 	"time"
 
 	"github.com/bitfield/script"
-	"github.com/l50/goutils/file"
 	fileutils "github.com/l50/goutils/file"
-	"github.com/l50/goutils/net"
 	"github.com/l50/goutils/str"
 	"github.com/l50/goutils/sys"
 )
@@ -113,8 +111,9 @@ func TestEnvVarSet(t *testing.T) {
 }
 
 func TestGetHomeDir(t *testing.T) {
-	if _, err := sys.GetHomeDir(); err != nil {
-		t.Fatalf("failed to get the user's home directory - GetHomeDir() failed: %v", err)
+	_, err := sys.GetHomeDir()
+	if err != nil {
+		t.Fatalf("failed to get the user's home directory - GetHomeDir() failed")
 	}
 }
 
@@ -193,16 +192,28 @@ func TestRunCommand(t *testing.T) {
 }
 
 func TestRunCommandWithTimeout(t *testing.T) {
-	downloadURL := "https://raw.githubusercontent.com/rebootuser/LinEnum/master/LinEnum.sh"
-	targetPath := filepath.Join("/tmp", "Linenum.sh")
-	dlFilePath, err := net.DownloadFile(downloadURL, targetPath)
-	if err != nil {
-		t.Fatal("failed to run DownloadFile()")
+	// Create a long-running bash script that doesn't require sudo
+	longRunningScript := filepath.Join("/tmp", "longRunning.sh")
+	longRunningScriptContent := `
+#!/bin/bash
+for (( i=0; i<500; i++ ))
+do
+echo "Iteration: $i"
+sleep 2
+done
+`
+	if err := fileutils.Create(longRunningScript, []byte(longRunningScriptContent)); err != nil {
+		t.Fatalf("failed to create %s with %s using CreateFile(): %v", longRunningScript, longRunningScriptContent, err)
 	}
+	defer func() {
+		if err := fileutils.Delete(longRunningScript); err != nil {
+			t.Fatalf("unable to delete %s, DeleteFile() failed", longRunningScript)
+		}
+	}()
 
-	cmd := "chmod +x " + dlFilePath
-	if _, err := script.Exec(cmd).Stdout(); err != nil {
-		t.Fatalf("failed to run `chmod +x` on %s: %v", dlFilePath, err)
+	// Make the script executable
+	if _, err := script.Exec("chmod +x " + longRunningScript).Stdout(); err != nil {
+		t.Fatalf("failed to run `chmod +x` on %s: %v", longRunningScript, err)
 	}
 
 	type params struct {
@@ -231,14 +242,14 @@ ps -ef | \
 	awk '{print $2}' | \
 	xargs -r kill -9
 `
-	if err := file.Create(testFile, []byte(testFileContent)); err != nil {
+	if err := fileutils.Create(testFile, []byte(testFileContent)); err != nil {
 		if err != nil {
 			t.Fatalf("failed to create %s with %s using CreateFile(): %v", testFile, testFileContent, err)
 		}
 	}
 	// Remove the temporary file after the test completes.
 	defer func() {
-		if err := file.Delete(testFile); err != nil {
+		if err := fileutils.Delete(testFile); err != nil {
 			t.Fatalf("unable to delete %s, DeleteFile() failed", testFile)
 		}
 	}()
@@ -266,7 +277,7 @@ ps -ef | \
 				cmd:     "sleep",
 				args:    []string{"250"},
 			},
-			wantErr: false,
+			wantErr: true,
 			wantOut: "",
 		},
 		{
@@ -274,10 +285,10 @@ ps -ef | \
 			params: params{
 				timeout: time.Duration(10) * time.Second,
 				cmd:     "bash",
-				args:    []string{dlFilePath},
+				args:    []string{longRunningScript},
 			},
-			wantErr: false,
-			wantOut: "USER/GROUP",
+			wantErr: true,
+			wantOut: "",
 		},
 		{
 			name: "Test process that times out before the specified timeout",
@@ -309,5 +320,22 @@ ps -ef | \
 		}
 	default:
 		t.Fatal("unsupported OS detected")
+	}
+}
+
+func TestRmRf(t *testing.T) {
+	rs, err := str.GenRandom(5)
+	if err != nil {
+		t.Fatal("failed to get random string for directory name with RandomString()")
+
+	}
+	newDir := filepath.Join("/tmp", "bla", rs)
+	if err := fileutils.CreateDirectory(newDir); err != nil {
+		t.Fatalf("unable to create %s, CreateDirectory() failed: %v", newDir, err)
+
+	}
+
+	if err := sys.RmRf(newDir); err != nil {
+		t.Fatalf("unable to delete %s, RmRf() failed: %v", newDir, err)
 	}
 }

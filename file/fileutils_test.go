@@ -273,23 +273,6 @@ func TestStringInFile(t *testing.T) {
 	}
 }
 
-func TestRmRf(t *testing.T) {
-	rs, err := str.GenRandom(5)
-	if err != nil {
-		t.Fatal("failed to get random string for directory name with RandomString()")
-
-	}
-	newDir := filepath.Join("/tmp", "bla", rs)
-	if err := fileutils.CreateDirectory(newDir); err != nil {
-		t.Fatalf("unable to create %s, CreateDirectory() failed: %v", newDir, err)
-
-	}
-
-	if err := sys.RmRf(newDir); err != nil {
-		t.Fatalf("unable to delete %s, RmRf() failed: %v", newDir, err)
-	}
-}
-
 func TestExpandHomeDir(t *testing.T) {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
