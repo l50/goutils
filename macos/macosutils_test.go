@@ -2,6 +2,7 @@ package macos_test
 
 import (
 	"os"
+	"os/exec"
 	"testing"
 
 	"github.com/l50/goutils/macos"
@@ -50,5 +51,23 @@ func TestInstallBrewTFDeps(t *testing.T) {
 	}
 
 	err := macos.InstallBrewTFDeps()
-	assert.NoError(t, err)
+	if err != nil {
+		t.Errorf("failed to install brew dependencies: %v", err)
+	}
+
+	// Check each package is installed
+	brewPackages := []string{
+		"shellcheck",
+		"shfmt",
+		"terraform-docs",
+		"tflint",
+		"checkov",
+	}
+
+	for _, pkg := range brewPackages {
+		cmd := exec.Command("/bin/sh", "-c", "brew list | grep "+pkg)
+		if err := cmd.Run(); err != nil {
+			t.Errorf("package %s not found in brew list", pkg)
+		}
+	}
 }
