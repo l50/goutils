@@ -6,34 +6,6 @@ import (
 	"github.com/l50/goutils/net"
 )
 
-func TestPublicIP(t *testing.T) {
-	testCases := []struct {
-		name     string
-		protocol uint
-		wantErr  bool
-	}{
-		{
-			name:     "IPv4 public IP",
-			protocol: 4,
-			wantErr:  false,
-		},
-		{
-			name:     "IPv6 public IP",
-			protocol: 6,
-			wantErr:  true, // Considering that a lot of networks aren't using IPv6
-		},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			_, err := net.PublicIP(tc.protocol)
-			if (err != nil) != tc.wantErr {
-				t.Errorf("PublicIP() error = %v, wantErr %v", err, tc.wantErr)
-			}
-		})
-	}
-}
-
 func TestDownloadFile(t *testing.T) {
 	testCases := []struct {
 		name    string
@@ -60,6 +32,34 @@ func TestDownloadFile(t *testing.T) {
 			}
 			if got != tc.want {
 				t.Errorf("DownloadFile() = %v, want %v", got, tc.want)
+			}
+		})
+	}
+}
+
+func TestPublicIP(t *testing.T) {
+	testCases := []struct {
+		name     string
+		protocol uint
+		wantErr  bool
+	}{
+		{
+			name:     "IPv4 public IP",
+			protocol: 4,
+			wantErr:  false,
+		},
+		{
+			name:     "IPv6 public IP",
+			protocol: 6,
+			wantErr:  true, // Considering that a lot of networks aren't using IPv6
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := net.PublicIP(tc.protocol)
+			if (err != nil) != tc.wantErr {
+				t.Errorf("PublicIP() error = %v, wantErr %v", err, tc.wantErr)
 			}
 		})
 	}

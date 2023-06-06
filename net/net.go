@@ -7,6 +7,40 @@ import (
 	externalip "github.com/glendc/go-external-ip"
 )
 
+// DownloadFile downloads a file from the provided URL and saves it to the specified location on the local
+// filesystem. The function takes the source URL and the destination path as inputs and returns the path
+// where the file was saved or an error.
+//
+// Parameters:
+//
+// url: A string representing the URL of the file to be downloaded.
+// dest: A string representing the destination path where the file should be saved on the local filesystem.
+//
+// Returns:
+//
+// string: The path where the downloaded file was saved.
+// error: An error if the function fails to download the file.
+//
+// Example:
+//
+// url := "http://example.com/path/to/file"
+// dest := "/path/to/save/location"
+// file, err := DownloadFile(url, dest)
+//
+//	if err != nil {
+//	  log.Fatalf("failed to download file: %v", err)
+//	}
+//
+// log.Printf("File downloaded to: %s\n", file)
+func DownloadFile(url string, dest string) (string, error) {
+	resp, err := grab.Get(dest, url)
+	if err != nil {
+		return resp.Filename, fmt.Errorf("failed to download %s to %s: %v", url, dest, err)
+	}
+
+	return resp.Filename, nil
+}
+
 // PublicIP uses several external services to get the public IP address of the system running it, using the
 // package github.com/GlenDC/go-external-ip. The function takes an IP protocol version (4 or 6) as input and
 // returns the public IP address as a string or an error.
@@ -48,38 +82,4 @@ func PublicIP(protocol uint) (string, error) {
 
 	// Return the IP address in string format.
 	return ip.String(), nil
-}
-
-// DownloadFile downloads a file from the provided URL and saves it to the specified location on the local
-// filesystem. The function takes the source URL and the destination path as inputs and returns the path
-// where the file was saved or an error.
-//
-// Parameters:
-//
-// url: A string representing the URL of the file to be downloaded.
-// dest: A string representing the destination path where the file should be saved on the local filesystem.
-//
-// Returns:
-//
-// string: The path where the downloaded file was saved.
-// error: An error if the function fails to download the file.
-//
-// Example:
-//
-// url := "http://example.com/path/to/file"
-// dest := "/path/to/save/location"
-// file, err := DownloadFile(url, dest)
-//
-//	if err != nil {
-//	  log.Fatalf("failed to download file: %v", err)
-//	}
-//
-// log.Printf("File downloaded to: %s\n", file)
-func DownloadFile(url string, dest string) (string, error) {
-	resp, err := grab.Get(dest, url)
-	if err != nil {
-		return resp.Filename, fmt.Errorf("failed to download %s to %s: %v", url, dest, err)
-	}
-
-	return resp.Filename, nil
 }
