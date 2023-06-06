@@ -76,7 +76,7 @@ func GHRelease(newVer string) error {
 func GoReleaser() error {
 	if fileutils.Exists(".goreleaser.yaml") || fileutils.Exists(".goreleaser.yml") {
 		if sys.CmdExists("goreleaser") {
-			if _, err := script.Exec("goreleaser --snapshot --rm-dist").Stdout(); err != nil {
+			if _, err := script.Exec("goreleaser --snapshot --clean").Stdout(); err != nil {
 				return fmt.Errorf("failed to run goreleaser: %v", err)
 			}
 		} else {
