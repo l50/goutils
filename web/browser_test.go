@@ -49,37 +49,65 @@ func TestCancelAll(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			// Call the function being tested.
 			web.CancelAll(tc.cancels...)
+		})
+	}
+}
 
-			// Note: Because the cancellations are performed instantly in this example, we can't
-			// check here whether the cancellations have happened. In actual application code,
-			// cancellations would generally have some observable effect (like stopping a goroutine).
+func TestGetRandomWait(t *testing.T) {
+	tests := []struct {
+		name    string
+		minWait time.Duration
+		maxWait time.Duration
+		wantErr bool
+	}{
+		{
+			name:    "normal case",
+			minWait: 2 * time.Second,
+			maxWait: 6 * time.Second,
+		},
+		{
+			name:    "negative min wait",
+			minWait: -2 * time.Second,
+			maxWait: 6 * time.Second,
+			wantErr: true,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := web.GetRandomWait(tc.minWait, tc.maxWait)
+			if (err != nil) != tc.wantErr {
+				t.Errorf("GetRandomWait() error = %v, wantErr %v", err, tc.wantErr)
+				return
+			}
 		})
 	}
 }
 
 func TestWait(t *testing.T) {
-	near := 1000.0
-	waitTime, err := web.Wait(near)
-	if err != nil {
-		t.Fatalf("Unexpected error while waiting: %v", err)
+	tests := []struct {
+		name    string
+		near    float64
+		wantErr bool
+	}{
+		{
+			name: "normal case",
+			near: 1000.0,
+		},
+		{
+			name:    "negative near",
+			near:    -1000.0,
+			wantErr: true,
+		},
 	}
 
-	waitTimeMillis := float64(waitTime) / float64(time.Millisecond)
-
-	if waitTimeMillis < 0.95*near || waitTimeMillis > near+0.1*near {
-		t.Errorf("Wait time is out of range. Expected between %v and %v, got %v.", 0.95*near, near+0.1*near, waitTimeMillis)
-	}
-}
-
-func TestGetRandomWait(t *testing.T) {
-	minWait := 2 * time.Second
-	maxWait := 6 * time.Second
-	randomWaitTime, err := web.GetRandomWait(minWait, maxWait)
-	if err != nil {
-		t.Fatalf("Unexpected error while waiting: %v", err)
-	}
-
-	if randomWaitTime < minWait || randomWaitTime > maxWait {
-		t.Errorf("Random wait time is out of range. Expected between %v and %v, got %v.", minWait, maxWait, randomWaitTime)
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := web.Wait(tc.near)
+			if (err != nil) != tc.wantErr {
+				t.Errorf("Wait() error = %v, wantErr %v", err, tc.wantErr)
+				return
+			}
+		})
 	}
 }

@@ -35,6 +35,19 @@ type Site struct {
 	Debug    bool
 }
 
+// loginOptions is a struct that holds the configurations for the login process.
+//
+// twoFacEnabled: Determines if two-factor authentication is enabled during login.
+// logMeOut: Determines if the user is logged out after login.
+type loginOptions struct {
+	twoFacEnabled bool
+	logMeOut      bool
+}
+
+// LoginOption is a type for functions that modify the login options.
+// These functions take a pointer to a loginOptions struct and modify it in place.
+type LoginOption func(*loginOptions)
+
 // CancelAll executes all provided cancel functions. It is typically used for cleaning up or aborting operations
 // that were started earlier and can be cancelled.
 //
@@ -94,6 +107,13 @@ func cryptoRandIntn(n int64) (int64, error) {
 //
 //	time.Duration: A random duration between minWait and maxWait.
 func GetRandomWait(minWait, maxWait time.Duration) (time.Duration, error) {
+	if minWait < 0 {
+		return 0, fmt.Errorf("minWait cannot be less than 0: %v", minWait)
+	}
+	if maxWait < minWait {
+		return 0, fmt.Errorf("maxWait cannot be less than minWait: %v < %v", maxWait, minWait)
+	}
+
 	diff := maxWait - minWait
 	randomValue, err := cryptoRandIntn(int64(diff))
 	if err != nil {
@@ -136,4 +156,34 @@ func Wait(near float64) (time.Duration, error) {
 	additionalWait := int64(0.95 * near)
 	totalWait := x + additionalWait
 	return time.Duration(totalWait) * time.Millisecond, nil
+}
+
+// WithLogout is a function that returns a LoginOption function which sets the logMeOut option.
+//
+// Parameters:
+//
+// enabled: Determines if the user should be logged out after login.
+//
+// Returns:
+//
+// LoginOption: A function that modifies the logMeOut option of a loginOptions struct.
+func WithLogout(enabled bool) LoginOption {
+	return func(opts *loginOptions) {
+		opts.logMeOut = enabled
+	}
+}
+
+// WithTwoFac is a function that returns a LoginOption function which sets the twoFacEnabled option.
+//
+// Parameters:
+//
+// enabled: Determines if two-factor authentication should be enabled during login.
+//
+// Returns:
+//
+// LoginOption: A function that modifies the twoFacEnabled option of a loginOptions struct.
+func WithTwoFac(enabled bool) LoginOption {
+	return func(opts *loginOptions) {
+		opts.twoFacEnabled = enabled
+	}
 }
