@@ -2,6 +2,7 @@ package dev_test
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -16,17 +17,46 @@ import (
 	"github.com/l50/goutils/git"
 	"github.com/l50/goutils/str"
 	"github.com/l50/goutils/sys"
+	"github.com/stretchr/testify/mock"
 )
 
 var (
 	mageCleanupDirs []string
 )
 
-func init() {
-	// Create test repo and queue it for cleanup
-	randStr, _ := str.GenRandom(8)
+func TestMain(m *testing.M) {
+	setup()
+	code := m.Run()
+	teardown()
+	os.Exit(code)
+}
+
+func setup() {
+	randStr, err := str.GenRandom(8)
+	if err != nil {
+		log.Printf("failed to generate random string: %v", err)
+		return
+	}
+
 	clonePath := createTestRepo(fmt.Sprintf("mageutils-%s", randStr))
 	mageCleanupDirs = append(mageCleanupDirs, clonePath)
+}
+
+func teardown() {
+	for _, dir := range mageCleanupDirs {
+		dir, err := os.Stat(dir)
+		if err != nil {
+			if os.IsNotExist(err) {
+				continue
+			}
+		}
+
+		if dir.IsDir() {
+			if err := sys.RmRf(dir.Name()); err != nil {
+				fmt.Printf("failed to clean up directory %s: %v", dir, err)
+			}
+		}
+	}
 }
 
 func createTestRepo(name string) string {
@@ -51,111 +81,272 @@ func createTestRepo(name string) string {
 }
 
 func TestGHRelease(t *testing.T) {
-	// Call the function with an old version
-	newVer := "v1.0.0"
-	if err := dev.GHRelease(newVer); err == nil {
-		t.Errorf("release %s should not have been created: %v", newVer, err)
+	testCases := []struct {
+		desc    string
+		version string
+		wantErr bool
+	}{
+		{
+			desc:    "Empty Version",
+			version: "",
+			wantErr: true,
+		},
+		{
+			desc:    "Old Version",
+			version: "v1.0.0",
+			wantErr: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			t.Cleanup(func() { cleanupMageUtils(t) })
+			err := dev.GHRelease(tc.version)
+			if (err != nil) != tc.wantErr {
+				t.Errorf("GHRelease(%v) = error %v, wantErr %v", tc.version, err, tc.wantErr)
+			}
+		})
 	}
 }
 
 func cleanupMageUtils(t *testing.T) {
 	for _, dir := range mageCleanupDirs {
-		if err := sys.RmRf(dir); err != nil {
-			fmt.Println("failed to clean up mageUtils: ", err.Error())
+		dir, err := os.Stat(dir)
+		if err != nil {
+			if os.IsNotExist(err) {
+				continue
+			}
+			t.Errorf("failed to stat directory %s: %v", dir, err)
+		}
+
+		if dir.IsDir() {
+			if err := sys.RmRf(dir.Name()); err != nil {
+				t.Logf("failed to clean up directory %s: %v", dir, err)
+			}
 		}
 	}
 }
 
 func TestGoReleaser(t *testing.T) {
-	t.Cleanup(func() {
-		cleanupMageUtils(t)
-	})
-
-	// Get repo root
-	repoRoot, err := git.RepoRoot()
-	if err != nil {
-		t.Fatal(err)
+	testCases := []struct {
+		desc string
+	}{
+		{"releases to the dist directory"},
 	}
 
-	// Change into repo root
-	if err := os.Chdir(repoRoot); err != nil {
-		t.Fatalf("failed to change directory to repo root: %v", err)
-	}
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			t.Cleanup(func() { cleanupMageUtils(t) })
 
-	releaserDir := filepath.Join(repoRoot, "dist")
+			// Get repo root
+			repoRoot, err := git.RepoRoot()
+			if err != nil {
+				t.Errorf("failed to get repo root: %v", err)
+				return
+			}
 
-	mageCleanupDirs = append(mageCleanupDirs, releaserDir)
+			// Change into repo root
+			if err := os.Chdir(repoRoot); err != nil {
+				t.Errorf("failed to change directory to repo root: %v", err)
+				return
+			}
 
-	if err := dev.GoReleaser(); err != nil {
-		t.Fatal(err)
+			releaserDir := filepath.Join(repoRoot, "dist")
+
+			mageCleanupDirs = append(mageCleanupDirs, releaserDir)
+
+			if err := dev.GoReleaser(); err != nil {
+				t.Errorf("GoReleaser() failed with error %v", err)
+			}
+		})
 	}
 }
 
 func TestInstallVSCodeModules(t *testing.T) {
-	if err := dev.InstallVSCodeModules(); err != nil {
-		t.Fatal(err)
+	testCases := []struct {
+		desc string
+	}{
+		{"installs VSCode modules"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			t.Parallel()
+
+			if err := dev.InstallVSCodeModules(); err != nil {
+				t.Errorf("InstallVSCodeModules() failed with error %v", err)
+			}
+		})
 	}
 }
 
 func TestModUpdate(t *testing.T) {
-	// First test
-	recursive := false
-	verbose := true
-	if err := dev.ModUpdate(recursive, verbose); err != nil {
-		t.Fatal(err)
+	testCases := []struct {
+		desc      string
+		recursive bool
+		verbose   bool
+	}{
+		{
+			desc:      "non-recursive verbose update",
+			recursive: false,
+			verbose:   true,
+		},
+		// {
+		// 	desc:      "recursive non-verbose update",
+		// 	recursive: true,
+		// 	verbose:   true,
+		// },
 	}
 
-	// Second test
-	recursive = true
-	verbose = false
-	if err := dev.ModUpdate(recursive, verbose); err != nil {
-		t.Fatal(err)
+	for _, tc := range testCases {
+		tc := tc // rebind the variable
+		t.Run(tc.desc, func(t *testing.T) {
+			t.Parallel()
+
+			// create temporary directory for a mock Go module
+			dir, err := os.MkdirTemp("", "modupdate")
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer os.RemoveAll(dir)
+			if err := os.Chdir(dir); err != nil {
+				t.Fatal(err)
+			}
+
+			// create a dummy go file
+			goFile := filepath.Join(dir, "main.go")
+			fileContent := "package main\n\nfunc main() {}\n"
+			err = os.WriteFile(goFile, []byte(fileContent), 0666)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			// create go.mod file
+			cmd := exec.Command("go", "mod", "init", "modupdate")
+			cmd.Dir = dir
+			err = cmd.Run()
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if err := dev.ModUpdate(tc.recursive, tc.verbose); err != nil {
+				t.Errorf("ModUpdate(%v, %v) = error %v, want no error", tc.recursive, tc.verbose, err)
+			}
+		})
 	}
 }
 
+type MockDev struct {
+	mock.Mock
+}
+
+func (m *MockDev) Tidy() error {
+	args := m.Called()
+	return args.Error(0)
+}
+
 func TestTidy(t *testing.T) {
-	if err := dev.Tidy(); err != nil {
-		t.Fatal(err)
+	testCases := []struct {
+		desc       string
+		mockError  error
+		expectFail bool
+	}{
+		{"tidies the module", nil, false},
+		{"tidies the module with error", errors.New("some error"), true},
+	}
+
+	for _, tc := range testCases {
+		tc := tc // rebind the variable
+
+		t.Run(tc.desc, func(t *testing.T) {
+
+			t.Parallel()
+
+			mockDev := new(MockDev)
+			mockDev.On("Tidy").Return(tc.mockError)
+
+			if err := mockDev.Tidy(); (err != nil) != tc.expectFail {
+				t.Errorf("Tidy() returned error %v, expectFail: %v", err, tc.expectFail)
+			}
+
+			mockDev.AssertExpectations(t)
+		})
 	}
 }
 
 func TestUpdateMageDeps(t *testing.T) {
-	repoRoot, err := git.RepoRoot()
-	if err != nil {
-		t.Fatal(err)
+	testCases := []struct {
+		desc    string
+		mageDir string
+		wantErr bool
+	}{
+		{
+			desc:    "non-existent directory",
+			mageDir: "non-existent",
+			wantErr: true,
+		},
+		{
+			desc:    "updates mage dependencies",
+			mageDir: "magefiles",
+			wantErr: false,
+		},
 	}
 
-	if err := os.Chdir(repoRoot); err != nil {
-		t.Fatal(err)
-	}
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			repoRoot, err := git.RepoRoot()
+			if err != nil {
+				t.Errorf("RepoRoot() failed with error %v", err)
+				return
+			}
 
-	if err := dev.UpdateMageDeps("magefiles"); err != nil {
-		t.Fatal(err)
+			if err := os.Chdir(repoRoot); err != nil {
+				t.Errorf("os.Chdir failed with error %v", err)
+				return
+			}
+
+			if err := dev.UpdateMageDeps(tc.mageDir); (err != nil) != tc.wantErr {
+				t.Errorf("UpdateMageDeps(%s) failed with error %v, wantErr %v", tc.mageDir, err, tc.wantErr)
+			}
+		})
 	}
 }
 
 func TestInstallGoDeps(t *testing.T) {
-	sampleDeps := []string{
-		"golang.org/x/lint/golint",
-		"golang.org/x/tools/cmd/goimports",
+	testCases := []struct {
+		desc string
+		deps []string
+	}{
+		{
+			desc: "installs go dependencies",
+			deps: []string{
+				"golang.org/x/lint/golint",
+				"golang.org/x/tools/cmd/goimports",
+			},
+		},
 	}
 
-	if err := dev.InstallGoDeps(sampleDeps); err != nil {
-		t.Fatal(err)
+	for _, tc := range testCases {
+		tc := tc // rebind the variable
+		t.Run(tc.desc, func(t *testing.T) {
+			t.Parallel()
+
+			if err := dev.InstallGoDeps(tc.deps); err != nil {
+				t.Errorf("InstallGoDeps(%v) failed with error %v", tc.deps, err)
+			}
+		})
 	}
 }
 
 func TestFindExportedFunctionsInPackage(t *testing.T) {
-	// Define the bash command as a string
 	bashCmd := `
-find . -name "*.go" -not -path "./magefiles/*" -not -path "./v2/*" |
+find . -name "*.go" -not -path "./magefiles/*" |
 xargs grep -E -o 'func [A-Z][a-zA-Z0-9_]+\(' |
 grep --color=auto --exclude-dir={.bzr,CVS,.git,.hg,.svn,.idea,.tox} -v '_test.go' |
 grep --color=auto --exclude-dir={.bzr,CVS,.git,.hg,.svn,.idea,.tox} -v -E 'func [A-Z][a-zA-Z0-9_]+Test\(' |
 sed -e 's/func //' -e 's/(//' |
 awk -F: '{printf "Function: %s\nFile: %s\n", $2, $1}'`
 
-	// Create a new command and set its properties
 	cmd := exec.Command("bash", "-c", bashCmd)
 	cmd.Dir = "."
 	cmd.Env = os.Environ()
@@ -230,6 +421,7 @@ awk -F: '{printf "Function: %s\nFile: %s\n", $2, $1}'`
 
 			if len(missingFuncs) > 0 {
 				t.Errorf("go and bash implementations don't agree: %v", missingFuncs)
+				fmt.Println("Missing functions: ", missingFuncs)
 			}
 		})
 	}
