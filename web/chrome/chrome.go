@@ -281,7 +281,7 @@ func Navigate(site web.Site, actions []InputAction, waitTime time.Duration) erro
 	return nil
 }
 
-// ScreenShot takes a screenshot of the input `targetURL` and saves it to `imgPath`.
+// ScreenShot takes a screenshot of the input targetURL and saves it to imgPath.
 //
 // This function captures a screenshot of the currently loaded page in the provided Site's session and writes the image data to the provided file path.
 //

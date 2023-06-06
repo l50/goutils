@@ -12,7 +12,7 @@ password manager in Go.
 ### CommanderInstalled
 
 ```go
-func CommanderInstalled() bool {
+func CommanderInstalled() bool
 ```
 
 Check if the Keeper Commander tool is installed on the current system.
@@ -20,7 +20,7 @@ Check if the Keeper Commander tool is installed on the current system.
 ### LoggedIn
 
 ```go
-func LoggedIn() bool {
+func LoggedIn() bool
 ```
 
 Check if the user is logged in to Keeper.
@@ -28,7 +28,7 @@ Check if the user is logged in to Keeper.
 ### RetrieveRecord
 
 ```go
-func RetrieveRecord(keeperUID string) (Record, error) {
+func RetrieveRecord(keeperUID string) (Record, error)
 ```
 
 Retrieves a user's Keeper record using the provided unique identifier (keeperUID).
@@ -36,7 +36,7 @@ Retrieves a user's Keeper record using the provided unique identifier (keeperUID
 ### SearchRecords
 
 ```go
-func SearchRecords(searchTerm string) (string, error) {
+func SearchRecords(searchTerm string) (string, error)
 ```
 
 Searches the user's Keeper records for records that match the provided search term.

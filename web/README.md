@@ -1,15 +1,40 @@
 # goutils/web
 
-The `web` package is a part of `goutils` library. It provides
-utility functions to interact with web applications in Go,
-including the means to drive a headless browser using
-[chromeDP](https://github.com/chromedp/chromedp).
+The `web` package is a part of `goutils` library.
+
+It provides utility functions to interact with web applications 
+in Go, including the means to drive a headless browser 
+using [chromeDP](https://github.com/chromedp/chromedp).
 
 ---
 
 ## Functions
 
-### TODO
+### CancelAll
+
+```go
+func CancelAll(cancels ...func())
+```
+
+Executes all provided cancel functions. Typically used for cleaning 
+up or aborting operations that were started earlier and can be cancelled.
+
+### GetRandomWait
+
+```go
+func GetRandomWait(minWait, maxWait time.Duration) (time.Duration, error)
+```
+
+Return a random duration between the specified minWait and maxWait durations.
+
+### Wait
+
+```go
+func Wait(near float64) (time.Duration, error)
+```
+
+Generates a random period of time anchored to a given input value. 
+Useful for simulating more human-like interaction in the context of a web application.
 
 ---
 

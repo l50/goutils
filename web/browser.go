@@ -74,6 +74,35 @@ func cryptoRandIntn(n int64) (int64, error) {
 	return val.Int64(), nil
 }
 
+// GetRandomWait returns a random duration between the specified minWait and maxWait durations.
+// The function takes the minimum and maximum wait times as arguments, creates a new random
+// number generator with a seed based on the current Unix timestamp, and calculates the random
+// wait time within the given range.
+//
+// Example usage:
+//
+//	minWait := 2 * time.Second
+//	maxWait := 6 * time.Second
+//	randomWaitTime := GetRandomWait(minWait, maxWait)
+//
+// Parameters:
+//
+//	minWait: The minimum duration to wait.
+//	maxWait: The maximum duration to wait.
+//
+// Returns:
+//
+//	time.Duration: A random duration between minWait and maxWait.
+func GetRandomWait(minWait, maxWait time.Duration) (time.Duration, error) {
+	diff := maxWait - minWait
+	randomValue, err := cryptoRandIntn(int64(diff))
+	if err != nil {
+		return 0, err
+	}
+	randomWaitTime := time.Duration(randomValue) + minWait
+	return randomWaitTime, nil
+}
+
 // Wait generates a random period of time anchored to a given input value.
 //
 // Parameters:
@@ -107,33 +136,4 @@ func Wait(near float64) (time.Duration, error) {
 	additionalWait := int64(0.95 * near)
 	totalWait := x + additionalWait
 	return time.Duration(totalWait) * time.Millisecond, nil
-}
-
-// GetRandomWait returns a random duration between the specified minWait and maxWait durations.
-// The function takes the minimum and maximum wait times as arguments, creates a new random
-// number generator with a seed based on the current Unix timestamp, and calculates the random
-// wait time within the given range.
-//
-// Example usage:
-//
-//	minWait := 2 * time.Second
-//	maxWait := 6 * time.Second
-//	randomWaitTime := GetRandomWait(minWait, maxWait)
-//
-// Parameters:
-//
-//	minWait: The minimum duration to wait.
-//	maxWait: The maximum duration to wait.
-//
-// Returns:
-//
-//	time.Duration: A random duration between minWait and maxWait.
-func GetRandomWait(minWait, maxWait time.Duration) (time.Duration, error) {
-	diff := maxWait - minWait
-	randomValue, err := cryptoRandIntn(int64(diff))
-	if err != nil {
-		return 0, err
-	}
-	randomWaitTime := time.Duration(randomValue) + minWait
-	return randomWaitTime, nil
 }
