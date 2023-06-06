@@ -1,6 +1,6 @@
-# goutils/chrome
+# goutils/web/chrome
 
-The `chrome` package is a part of `goutils` library.
+The `web/chrome` package is a part of `goutils` library.
 
 It provides utility functions to interact with web applications 
 in Go, including the means to drive a headless browser 
