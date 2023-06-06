@@ -1,6 +1,6 @@
 # goutils/cloudflare
 
-The `cloudflare` package is a part of `goutils` library. It provides 
+The `cloudflare` package is a part of `goutils` library. It provides
 utility functions to interface with cloudflore using go.
 
 ---
@@ -13,7 +13,7 @@ utility functions to interface with cloudflore using go.
 func GetDNSRecords(cf Cloudflare) error
 ```
 
-Retrieve the DNS records from Cloudflare for a specified 
+Retrieve the DNS records from Cloudflare for a specified
 zone ID using the provided Cloudflare credentials.
 
 ---

@@ -1,6 +1,6 @@
 # goutils/dev
 
-The `dev` package is a part of `goutils` library. It provides utility 
+The `dev` package is a part of `goutils` library. It provides utility
 functions for development-oriented operations in Go.
 
 ---
@@ -21,7 +21,8 @@ Create a new release on GitHub with the given new version.
 func GoReleaser() error
 ```
 
-Run the Goreleaser tool to generate all the supported binaries specified in a .goreleaser configuration file.
+Run the Goreleaser tool to generate all the supported
+binaries specified in a .goreleaser configuration file.
 
 ### InstallVSCodeModules
 
@@ -37,7 +38,7 @@ Installs the modules used by the vscode-go extension in Visual Studio Code.
 func ModUpdate(recursive bool, v bool) error
 ```
 
-Updates go modules by running `go get -u` or 
+Updates go modules by running `go get -u` or
 `go get -u ./...` if recursive is set to true.
 
 ### Tidy
@@ -46,7 +47,7 @@ Updates go modules by running `go get -u` or
 func Tidy() error
 ```
 
-Run `go mod tidy` to clean up the 
+Run `go mod tidy` to clean up the
 module dependencies.
 
 ### UpdateMageDeps
@@ -63,7 +64,7 @@ Update the dependencies in a specified Magefile directory.
 func InstallGoDeps(deps []string) error
 ```
 
-Install the specified Go dependencies by 
+Install the specified Go dependencies by
 running `go install` for each dependency.
 
 ### FindExportedFunctionsInPackage
@@ -72,7 +73,7 @@ running `go install` for each dependency.
 func FindExportedFunctionsInPackage(pkgPath string) ([]FuncInfo, error)
 ```
 
-Find all exported functions in a given Go 
+Find all exported functions in a given Go
 package by recursively parsing all non-test
 Go files in the package directory.
 
@@ -82,7 +83,7 @@ Go files in the package directory.
 func FindExportedFuncsWithoutTests(pkgPath string) ([]string, error)
 ```
 
-Finds all exported functions in a given package path that 
+Finds all exported functions in a given package path that
 do not have corresponding tests.
 
 ---

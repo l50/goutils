@@ -1,6 +1,6 @@
 # goutils/macos
 
-The `macos` package is a part of `goutils` library. 
+The `macos` package is a part of `goutils` library.
 It provides utility functions for macos oriented operations in Go.
 
 ---
