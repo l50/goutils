@@ -12,7 +12,9 @@ import (
 	"github.com/l50/goutils/sys"
 )
 
-// Record represents a record maintained by Keeper.
+// Record represents a user's record in the Keeper application.
+// Each record includes a unique identifier (UID), title, URL,
+// username, password, TOTP, and a note.
 type Record struct {
 	UID      string
 	Title    string
@@ -32,15 +34,32 @@ func configPath() (string, error) {
 	return filepath.Join(home, ".keeper", "config.json"), nil
 }
 
-// CommanderInstalled returns true if keeper
-// commander is installed on the current system.
+// CommanderInstalled checks if the Keeper Commander tool is installed on the current system.
+//
+// Returns:
+//
+// bool: True if the Keeper Commander tool is installed, false otherwise.
+//
+// Example:
+//
+//	if !CommanderInstalled() {
+//	  log.Fatal("Keeper Commander is not installed.")
+//	}
 func CommanderInstalled() bool {
 	return sys.CmdExists("keeper")
 }
 
-// LoggedIn returns true if keeper vault
-// is logged in with the input `email`.
-// Otherwise, it returns false.
+// LoggedIn checks if the user is logged into their Keeper vault.
+//
+// Returns:
+//
+// bool: True if the user is logged into their Keeper vault, false otherwise.
+//
+// Example:
+//
+//	if !LoggedIn() {
+//	  log.Fatal("Not logged into Keeper vault.")
+//	}
 func LoggedIn() bool {
 	if !CommanderInstalled() {
 		err := errors.New(color.RedString(
@@ -82,7 +101,26 @@ type rawRecord struct {
 	} `json:"fields"`
 }
 
-// RetrieveRecord returns the record found with the input keeperPath.
+// RetrieveRecord retrieves a user's Keeper record using the provided unique identifier (keeperUID).
+//
+// Parameters:
+//
+// keeperUID: A string representing the unique identifier of the Keeper record to retrieve.
+//
+// Returns:
+//
+// Record: The retrieved Keeper record.
+// error: An error if the Keeper record cannot be retrieved.
+//
+// Example:
+//
+// record, err := RetrieveRecord("1234abcd")
+//
+//	if err != nil {
+//	  log.Fatalf("Failed to retrieve record: %v", err)
+//	}
+//
+// log.Printf("Retrieved record: %+v\n", record)
 func RetrieveRecord(keeperUID string) (Record, error) {
 	var record Record
 
@@ -91,8 +129,6 @@ func RetrieveRecord(keeperUID string) (Record, error) {
 	if !CommanderInstalled() || !LoggedIn() {
 		return record, errors.New("error: ensure keeper commander is installed and a valid keeper session is established")
 	}
-
-	// fmt.Printf("Retrieving record with ID %s from keeper\n", keeperUID)
 
 	configPath, err := configPath()
 	if err != nil {
@@ -133,17 +169,26 @@ func RetrieveRecord(keeperUID string) (Record, error) {
 	return record, nil
 }
 
-// SearchRecords searches the logged-in user's
-// keeper records for records matching the input searchTerm.
+// SearchRecords searches the user's Keeper records for records that match the provided search term.
 //
-// The searchTerm can be a string or regex.
+// Parameters:
 //
-// Example Inputs:
+// searchTerm: A string representing the term to search for in the Keeper records.
 //
-// SearchKeeperRecords("TESTING")
-// SearchKeeperRecords("TEST.*RD")
+// Returns:
 //
-// If a searchTerm matches a record, the associated UID is returned.
+// string: The unique identifier (UID) of the first Keeper record that matches the search term.
+// error: An error if the Keeper records cannot be searched or if the search term does not match any records.
+//
+// Example:
+//
+// uid, err := SearchRecords("search term")
+//
+//	if err != nil {
+//	  log.Fatalf("Failed to search records: %v", err)
+//	}
+//
+// log.Printf("Found matching record with UID: %s\n", uid)
 func SearchRecords(searchTerm string) (string, error) {
 	recordUID := ""
 

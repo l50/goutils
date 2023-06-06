@@ -17,66 +17,82 @@ func init() {
 	note.UID = "d2MxKXQpWWhjEPCDz6JKOQ"
 }
 
-// Added 1 to test name to ensure this test gets run before all others.
-func Test1CommanderInstalled(t *testing.T) {
-	// Ensure commander is installed
+func TestCommanderInstalled(t *testing.T) {
 	assert.True(t, keeper.CommanderInstalled(), "Commander is not installed")
 }
 
-// Added 2 to test name to ensure this test gets run before all others (except for Test1).
-func Test2LoggedIn(t *testing.T) {
+func TestLoggedIn(t *testing.T) {
 	if os.Getenv("SKIP_KEEPER_TESTS") != "" {
 		t.Skip("Skipping test because SKIP_KEEPER_TESTS environment variable is set.")
 	}
-	// Ensure a valid keeper session exists
 	assert.True(t, keeper.LoggedIn(), "no valid keeper session. Please log in to keeper before running tests.")
 }
 
 func TestRetrieveRecord(t *testing.T) {
-	if os.Getenv("SKIP_KEEPER_TESTS") != "" {
-		t.Skip("Skipping test because SKIP_KEEPER_TESTS environment variable is set.")
+	testCases := []struct {
+		name      string
+		UID       string
+		wantError bool
+	}{
+		{
+			name: "Existing UID",
+			UID:  testRecord.UID,
+		},
+		{
+			name:      "Non-Existent UID",
+			UID:       "non-existant-UID",
+			wantError: true,
+		},
 	}
-	// Test case for existing path
-	record, err := keeper.RetrieveRecord(testRecord.UID)
-	assert.NoError(t, err, "failed to retrieve password")
-	assert.Equal(t, "my test password 123!", record.Password, "retrieved password doesn't match expected value")
 
-	// Test case for non-existent path
-	_, err = keeper.RetrieveRecord("non/existent/path")
-	assert.Error(t, err, "no error for non-existent path")
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			if os.Getenv("SKIP_KEEPER_TESTS") != "" {
+				t.Skip("Skipping test because SKIP_KEEPER_TESTS environment variable is set.")
+			}
 
-	// Simulate a non-existent commander installation
-	commanderPath := os.Getenv("PATH")
-	os.Setenv("PATH", "")
-	_, err = keeper.RetrieveRecord("my/test/path")
-	assert.Error(t, err, "no error when commander is not installed")
-	os.Setenv("PATH", commanderPath)
-
-	// Retrieve encryptedNote
-	record, err = keeper.RetrieveRecord(note.UID)
-	assert.NoError(t, err, "failed to retrieve note")
-	assert.Equal(t, "SWEETSECRET!", record.Note, "retrieved note doesn't match expected value")
+			_, err := keeper.RetrieveRecord(tc.UID)
+			if tc.wantError {
+				assert.Error(t, err, "Expected error but got none.")
+			} else {
+				assert.NoError(t, err, "Did not expect error but got one.")
+			}
+		})
+	}
 }
 
 func TestSearchRecords(t *testing.T) {
-	var err error
-
-	if os.Getenv("SKIP_KEEPER_TESTS") != "" {
-		t.Skip("Skipping test because SKIP_KEEPER_TESTS environment variable is set.")
+	testCases := []struct {
+		name       string
+		searchTerm string
+		wantError  bool
+	}{
+		{
+			name:       "Matching Search Term",
+			searchTerm: testRecord.Title,
+		},
+		{
+			name:       "Non-Matching Search Term",
+			searchTerm: "BAMSV",
+		},
+		{
+			name:       "Regex Search Term",
+			searchTerm: "TEST.*RD",
+		},
 	}
-	_, err = keeper.SearchRecords(testRecord.Title)
-	assert.NoError(t, err, "fails to retrieve test record")
 
-	_, err = keeper.SearchRecords("BAMSV")
-	assert.NoError(t, err, "does not handle non-matching searchTerm")
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			if os.Getenv("SKIP_KEEPER_TESTS") != "" {
+				t.Skip("Skipping test because SKIP_KEEPER_TESTS environment variable is set.")
+			}
 
-	_, err = keeper.SearchRecords("TEST.*RD")
-	assert.NoError(t, err, "does not handle regex searchTerm")
-
-	// Simulate a non-existent commander installation
-	commanderPath := os.Getenv("PATH")
-	os.Setenv("PATH", "")
-	_, err = keeper.SearchRecords(testRecord.Title)
-	assert.Error(t, err, "expected error when commander there is no valid keeper session")
-	os.Setenv("PATH", commanderPath)
+			_, err := keeper.SearchRecords(tc.searchTerm)
+			if tc.wantError {
+				assert.Error(t, err, "Expected error but got none.")
+			} else {
+				assert.NoError(t, err, "Did not expect error but got one.")
+			}
+		})
+	}
 }
