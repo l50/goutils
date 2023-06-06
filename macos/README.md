@@ -1,6 +1,6 @@
 # goutils/macos
 
-The `macos` package is a part of `goutils` library. It provides utility functions for 
+The `macos` package is a part of `goutils` library. It provides utility functions for
 macos oriented operations in Go.
 
 ---
@@ -14,7 +14,6 @@ func InstallBrewDeps(brewPackages []string) error
 ```
 
 Installs the input brew packages by running brew install.
-
 
 ### InstallBrewTFDeps
 

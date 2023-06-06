@@ -1,6 +1,6 @@
 # goutils/logging
 
-The `logging` package is a part of `goutils` library. It provides utility 
+The `logging` package is a part of `goutils` library. It provides utility
 functions for logging operations in Go.
 
 ---
@@ -13,7 +13,7 @@ functions for logging operations in Go.
 func CreateLogFile(logDir string, logName string) (LogInfo, error)
 ```
 
-Create a log file in a directory named logs, which is a 
+Create a log file in a directory named logs, which is a
 subdirectory of the given directory.
 
 ---

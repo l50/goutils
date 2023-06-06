@@ -1,6 +1,6 @@
 # goutils/lint
 
-The `lint` package is a part of `goutils` library. It provides utility 
+The `lint` package is a part of `goutils` library. It provides utility
 functions for lint operations in Go.
 
 ---
@@ -53,9 +53,8 @@ Run all pre-commit hooks locally.
 func AddFencedCB(filePath string, language string) error
 ```
 
-Addresses MD040 issues found with markdownlint by adding the 
+Addresses MD040 issues found with markdownlint by adding the
 input language to fenced code blocks in the input filePath.
-
 
 ---
 

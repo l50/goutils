@@ -13,7 +13,7 @@ utility functions for network related operations in Go.
 func DownloadFile(url string, dest string) (string, error)
 ```
 
-Downloads a file from the provided URL and saves it to the 
+Downloads a file from the provided URL and saves it to the
 specified location on the local filesystem.
 
 ### PublicIP

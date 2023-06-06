@@ -2,8 +2,8 @@
 
 The `web/chrome` package is a part of `goutils` library.
 
-It provides utility functions to interact with web applications 
-in Go, including the means to drive a headless browser 
+It provides utility functions to interact with web applications
+in Go, including the means to drive a headless browser
 using [chromeDP](https://github.com/chromedp/chromedp).
 
 ---
@@ -16,8 +16,8 @@ using [chromeDP](https://github.com/chromedp/chromedp).
 func Init(headless bool, ignoreCertErrors bool) (web.Browser, error)
 ```
 
-This function initializes a Google Chrome browser instance with the 
-specified headless mode and SSL certificate error ignoring options. 
+This function initializes a Google Chrome browser instance with the
+specified headless mode and SSL certificate error ignoring options.
 It creates contexts and associated cancel functions for browser operation.
 
 ### GetPageSource
@@ -34,7 +34,7 @@ Retrieves the HTML source code of the currently loaded page in a site session.
 func Navigate(site web.Site, actions []InputAction, waitTime time.Duration) error
 ```
 
-Navigates a site using provided actions. It enables network events 
+Navigates a site using provided actions. It enables network events
 and sets up request logging.
 
 ### ScreenShot
