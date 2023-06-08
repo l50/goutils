@@ -1,4 +1,4 @@
-package chrome_test
+package cdpchrome_test
 
 import (
 	"context"
@@ -7,18 +7,18 @@ import (
 
 	"github.com/chromedp/chromedp"
 	"github.com/l50/goutils/web"
-	"github.com/l50/goutils/web/chrome"
+	"github.com/l50/goutils/web/cdpchrome"
 )
 
 func TestGetContext(t *testing.T) {
 	tests := []struct {
 		name   string
-		driver chrome.Driver
+		driver cdpchrome.Driver
 		want   context.Context
 	}{
 		{
 			name:   "Get existing context",
-			driver: chrome.Driver{Context: context.Background()},
+			driver: cdpchrome.Driver{Context: context.Background()},
 			want:   context.Background(),
 		},
 	}
@@ -35,13 +35,13 @@ func TestGetContext(t *testing.T) {
 func TestSetContext(t *testing.T) {
 	tests := []struct {
 		name     string
-		driver   chrome.Driver
+		driver   cdpchrome.Driver
 		newCtx   context.Context
 		expected context.Context
 	}{
 		{
 			name:     "Set new context",
-			driver:   chrome.Driver{Context: context.Background()},
+			driver:   cdpchrome.Driver{Context: context.Background()},
 			newCtx:   context.TODO(),
 			expected: context.TODO(),
 		},
@@ -72,7 +72,7 @@ func TestInit(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			browser, err := chrome.Init(tc.headless, tc.ignoreCertErrors)
+			browser, err := cdpchrome.Init(tc.headless, tc.ignoreCertErrors)
 			if err != nil {
 				t.Errorf("failed to initialize chrome: %v", err)
 			}
@@ -107,7 +107,7 @@ func TestNavigate(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			// Initialize the chrome browser
-			browser, err := chrome.Init(tc.headless, tc.ignoreCert)
+			browser, err := cdpchrome.Init(tc.headless, tc.ignoreCert)
 			if err != nil {
 				t.Fatalf("failed to initialize a chrome browser: %v", err)
 			}
@@ -120,7 +120,7 @@ func TestNavigate(t *testing.T) {
 				},
 			}
 
-			initialLoginActions := []chrome.InputAction{
+			initialLoginActions := []cdpchrome.InputAction{
 				{
 					Description: "Navigate to the login page",
 					Action:      chromedp.Navigate(tc.url),
@@ -132,7 +132,7 @@ func TestNavigate(t *testing.T) {
 				t.Errorf("failed to create random wait time: %v", err)
 			}
 
-			if err := chrome.Navigate(site, initialLoginActions, waitTime); err != nil {
+			if err := cdpchrome.Navigate(site, initialLoginActions, waitTime); err != nil {
 				t.Errorf("failed to navigate to %s: %v", site.LoginURL, err)
 			}
 		})
@@ -159,7 +159,7 @@ func TestScreenShot(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			// Initialize the chrome browser
-			browser, err := chrome.Init(true, true)
+			browser, err := cdpchrome.Init(true, true)
 			if err != nil {
 				t.Fatalf("failed to initialize a chrome browser: %v", err)
 			}
@@ -174,7 +174,7 @@ func TestScreenShot(t *testing.T) {
 			}
 
 			// Navigation actions to set up for the screenshot
-			initialLoginActions := []chrome.InputAction{
+			initialLoginActions := []cdpchrome.InputAction{
 				{
 					Description: "Navigate to the login page",
 					Action:      chromedp.Navigate(tc.url),
@@ -186,11 +186,11 @@ func TestScreenShot(t *testing.T) {
 				t.Errorf("failed to create random wait time: %v", err)
 			}
 
-			if err := chrome.Navigate(site, initialLoginActions, waitTime); err != nil {
+			if err := cdpchrome.Navigate(site, initialLoginActions, waitTime); err != nil {
 				t.Errorf("failed to navigate to %s: %v", site.LoginURL, err)
 			}
 
-			if err := chrome.ScreenShot(site, tc.filename); err != nil {
+			if err := cdpchrome.ScreenShot(site, tc.filename); err != nil {
 				t.Errorf("failed to take screenshot: %v", err)
 			} else {
 				// Check if the file was created
@@ -225,7 +225,7 @@ func TestGetPageSource(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			// Initialize the chrome browser
-			browser, err := chrome.Init(tc.headless, tc.ignoreCert)
+			browser, err := cdpchrome.Init(tc.headless, tc.ignoreCert)
 			if err != nil {
 				t.Fatalf("failed to initialize a chrome browser: %v", err)
 			}
@@ -240,7 +240,7 @@ func TestGetPageSource(t *testing.T) {
 			}
 
 			// Navigation actions to set up for the test
-			initialLoginActions := []chrome.InputAction{
+			initialLoginActions := []cdpchrome.InputAction{
 				{
 					Description: "Navigate to the page",
 					Action:      chromedp.Navigate(tc.url),
@@ -252,11 +252,11 @@ func TestGetPageSource(t *testing.T) {
 				t.Errorf("failed to create random wait time: %v", err)
 			}
 
-			if err := chrome.Navigate(site, initialLoginActions, waitTime); err != nil {
+			if err := cdpchrome.Navigate(site, initialLoginActions, waitTime); err != nil {
 				t.Errorf("failed to navigate to %s: %v", site.LoginURL, err)
 			}
 
-			source, err := chrome.GetPageSource(site)
+			source, err := cdpchrome.GetPageSource(site)
 			if err != nil {
 				t.Errorf("failed to get page source: %v", err)
 			}

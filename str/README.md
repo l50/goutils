@@ -27,6 +27,14 @@ func InSlice(strToFind string, inputSlice []string) bool
 Checks if a specific string exists in a given slice. It returns true
 if the string is found and false otherwise.
 
+### IsNumeric
+
+```go
+func IsNumeric(s string) bool
+```
+
+Checks if a given string is composed entirely of numeric characters (0-9).
+
 ### ToInt64
 
 ```go

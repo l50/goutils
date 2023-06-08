@@ -1,4 +1,4 @@
-package chrome
+package cdpchrome
 
 import (
 	"context"
@@ -8,6 +8,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/emulation"
 	"github.com/chromedp/cdproto/network"
 	"github.com/chromedp/cdproto/page"
@@ -15,13 +16,80 @@ import (
 	"github.com/l50/goutils/web"
 )
 
+// CheckElement checks if an element identified by a given XPath exists on the web page.
+// If the element is found, it assumes the account is locked out and returns an error.
+// The function waits up to 10 seconds for the element to appear on the page before timing out.
+//
+// Parameters:
+//
+// site: A web.Site struct representing the site to be checked.
+// elementXPath: A string representing the XPath of the element to be checked.
+// done: A channel to which the function sends an error if the element is found or another error occurs.
+//
+// Returns:
+//
+// error: An error if the element is found, the web driver is not of type *Driver, or another error occurs.
+//
+// Example:
+//
+// site := web.NewSite("http://example.com")
+// done := make(chan error)
+//
+//	go func() {
+//		if err := web.CheckElement(site, "//input[@id='username']", done); err != nil {
+//			log.Fatalf("CheckElement failed: %v", err)
+//		}
+//	}()
+func CheckElement(site web.Site, elementXPath string, done chan error) error {
+	// Create a new context with a timeout
+	chromeDriver, ok := site.Session.Driver.(*Driver)
+	if !ok {
+		return errors.New("driver is not of type *Driver")
+	}
+
+	ctx, cancel := context.WithTimeout(chromeDriver.GetContext(), 10*time.Second)
+	defer cancel()
+
+	actions := []InputAction{
+		{
+			Description: fmt.Sprintf("Check if the element with XPath %s is present", elementXPath),
+			Selector:    elementXPath,
+			Action: chromedp.ActionFunc(func(ctx context.Context) error {
+				go func() {
+					var nodes []*cdp.Node
+					err := chromedp.Run(ctx, chromedp.Nodes(elementXPath, &nodes, chromedp.BySearch))
+					if err == nil && len(nodes) > 0 {
+						err = fmt.Errorf("%s account is locked out", site.Session.Credential.User)
+					}
+					done <- err
+				}()
+
+				select {
+				case <-ctx.Done():
+					return ctx.Err()
+				case <-time.After(time.Second * 5):
+				}
+				return nil
+			}),
+			Context: ctx,
+		},
+	}
+
+	randomWaitTime, err := web.GetRandomWait(2, 6)
+	if err != nil {
+		return fmt.Errorf("failed to create random wait time: %v", err)
+	}
+
+	return Navigate(site, actions, randomWaitTime)
+}
+
 // Driver represents an interface to Google Chrome using go.
 //
 // It contains a context.Context associated with this Driver and Options for the execution of Google Chrome.
 //
 // Example:
 //
-// browser, err := chrome.Init(true, true)
+// browser, err := cdpchrome.Init(true, true)
 //
 //	if err != nil {
 //	  log.Fatalf("failed to initialize a chrome browser: %v", err)
@@ -108,7 +176,7 @@ func setChromeOptions(browser *web.Browser, headless bool, ignoreCertErrors bool
 //
 // Example:
 //
-// browser, err := chrome.Init(true, true)
+// browser, err := cdpchrome.Init(true, true)
 //
 //	if err != nil {
 //	  log.Fatalf("failed to initialize a chrome browser: %v", err)
@@ -146,7 +214,7 @@ func Init(headless bool, ignoreCertErrors bool) (web.Browser, error) {
 //
 // Example:
 //
-//	action := chrome.InputAction{
+//	action := cdpchrome.InputAction{
 //	  Description: "Type in search box",
 //	  Selector:    "#searchbox",
 //	  Action:      chromedp.SendKeys("#searchbox", "example search"),
@@ -178,7 +246,7 @@ type InputAction struct {
 //	  // initialize site
 //	}
 //
-// source, err := chrome.GetPageSource(site)
+// source, err := cdpchrome.GetPageSource(site)
 //
 //	if err != nil {
 //	  log.Fatalf("failed to get page source: %v", err)
@@ -215,11 +283,11 @@ func GetPageSource(site web.Site) (string, error) {
 //
 // Example:
 //
-//	actions := []chrome.InputAction{
+//	actions := []cdpchrome.InputAction{
 //	  // initialize actions
 //	}
 //
-// err := chrome.Navigate(site, actions, 1000)
+// err := cdpchrome.Navigate(site, actions, 1000)
 //
 //	if err != nil {
 //	  log.Fatalf("failed to navigate site: %v", err)
@@ -304,7 +372,7 @@ func Navigate(site web.Site, actions []InputAction, waitTime time.Duration) erro
 //
 // Example:
 //
-// err := chrome.ScreenShot(site, "/path/to/save/image.png")
+// err := cdpchrome.ScreenShot(site, "/path/to/save/image.png")
 //
 //	if err != nil {
 //	  log.Fatalf("failed to capture screenshot: %v", err)

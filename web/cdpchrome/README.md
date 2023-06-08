@@ -10,6 +10,14 @@ using [chromeDP](https://github.com/chromedp/chromedp).
 
 ## Functions
 
+### CheckElement
+
+```go
+func CheckElement(site web.Site, elementXPath string, done chan error) error
+```
+
+CheckElement checks if an element identified by a given XPath exists on the web page.
+
 ### Init
 
 ```go
