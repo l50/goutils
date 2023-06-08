@@ -265,6 +265,36 @@ func GetPageSource(site web.Site) (string, error) {
 	return pageSource, err
 }
 
+// enableNetwork enables network events
+func enableNetwork(chromeDriver *Driver) error {
+	return chromedp.Run(chromeDriver.Context, network.Enable())
+}
+
+// setUpRequestLogging sets up request logging
+func setUpRequestLogging(chromeDriver *Driver, site *web.Site) {
+	chromedp.ListenTarget(chromeDriver.Context, func(ev interface{}) {
+		switch msg := ev.(type) {
+		case *page.EventJavascriptDialogOpening:
+			go func() {
+				if err := chromedp.Run(chromeDriver.Context, page.HandleJavaScriptDialog(true)); err != nil {
+					log.Printf("Error handling JavaScript dialog: %v", err)
+				}
+			}()
+		case *network.EventRequestWillBeSent:
+			// Check if we have been redirected
+			// if so, change the URL that we are tracking.
+			if msg.RedirectResponse != nil && site.Debug {
+				fmt.Printf("Encountered redirect: %s\n", msg.RedirectResponse.URL)
+			}
+		case *network.EventResponseReceived:
+			if site.Debug {
+				fmt.Printf("Response URL: %s\n Response Headers: %s\n Response Status Code: %d\n",
+					msg.Response.URL, msg.Response.Headers, msg.Response.Status)
+			}
+		}
+	})
+}
+
 // Navigate navigates an input site using the provided InputActions.
 //
 // This function will perform the provided actions sequentially on the provided Site's session. It enables network events and sets up request logging.
@@ -298,38 +328,12 @@ func Navigate(site web.Site, actions []InputAction, waitTime time.Duration) erro
 		return errors.New("driver is not of type *Driver")
 	}
 
-	// Enable network events
-	if err := chromedp.Run(chromeDriver.Context, network.Enable()); err != nil {
+	if err := enableNetwork(chromeDriver); err != nil {
 		return err
 	}
 
-	// Set up request logging
-	chromedp.ListenTarget(chromeDriver.Context, func(ev interface{}) {
-		switch msg := ev.(type) {
-		case *page.EventJavascriptDialogOpening:
-			go func() {
-				err := chromedp.Run(chromeDriver.Context,
-					page.HandleJavaScriptDialog(true))
+	setUpRequestLogging(chromeDriver, &site)
 
-				if err != nil {
-					log.Fatal(err)
-				}
-			}()
-		case *network.EventRequestWillBeSent:
-			// Check if we have been redirected
-			// if so, change the URL that we are tracking.
-			if msg.RedirectResponse != nil && site.Debug {
-				fmt.Printf("Encountered redirect: %s\n", msg.RedirectResponse.URL)
-			}
-		case *network.EventResponseReceived:
-			if site.Debug {
-				fmt.Printf("Response URL: %s\n Response Headers: %s\n Response Status Code: %d\n",
-					msg.Response.URL, msg.Response.Headers, msg.Response.Status)
-			}
-		}
-	})
-
-	// Perform actions sequentially
 	for i, inputAction := range actions {
 		actionType := fmt.Sprintf("%T", inputAction.Action)
 		if inputAction.Description != "" && site.Debug {
