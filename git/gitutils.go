@@ -146,8 +146,7 @@ func Commit(repo *git.Repository, msg string) error {
 	return nil
 }
 
-// CloneRepo clones the repo specified with the input `url` to
-// clonePath.
+// CloneRepo clones the repo specified with the input url to provided clonePath.
 func CloneRepo(url string, clonePath string, auth transport.AuthMethod) (
 	*git.Repository, error) {
 	var err error
@@ -238,8 +237,8 @@ func GetGlobalUserCfg() (ConfigUserInfo, error) {
 	return userInfo, nil
 }
 
-// CreateTag is used to create an input `tag` in the
-// specified `repo` if it doesn't already exist.
+// CreateTag is used to create an input tag in the
+// specified repo if it doesn't already exist.
 // Resource: https://github.com/go-git/go-git/blob/bf3471db54b0255ab5b159005069f37528a151b7/_examples/tag-create-push/main.go
 func CreateTag(repo *git.Repository, tag string) error {
 	exists, err := tagExists(repo, tag)
@@ -352,9 +351,7 @@ func PushTag(repo *git.Repository, tag string, auth transport.AuthMethod) error 
 	return nil
 }
 
-// DeleteTag deletes the local input `tag` from the
-// specified repo.
-// DeletePushedTag deletes a tag from a given repository that has been pushed to a remote. The tag is deleted from both the local repository and the remote repository.
+// DeleteTag deletes the local input tag from the specified repo.
 //
 // Parameters:
 //
