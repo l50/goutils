@@ -87,6 +87,44 @@ func TestToInt64(t *testing.T) {
 	}
 }
 
+func TestIsNumeric(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected bool
+	}{
+		{
+			name:     "All numeric",
+			input:    "1234",
+			expected: true,
+		},
+		{
+			name:     "Alphanumeric",
+			input:    "1234abc",
+			expected: false,
+		},
+		{
+			name:     "All alphabetic",
+			input:    "abcd",
+			expected: false,
+		},
+		{
+			name:     "Empty string",
+			input:    "",
+			expected: true,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			result := str.IsNumeric(tc.input)
+			if result != tc.expected {
+				t.Errorf("Expected %v, but got %v", tc.expected, result)
+			}
+		})
+	}
+}
+
 func TestToSlice(t *testing.T) {
 	tests := []struct {
 		name     string

@@ -65,6 +65,35 @@ func InSlice(strToFind string, inputSlice []string) bool {
 	return false
 }
 
+// IsNumeric checks if a given string is composed entirely of numeric characters (0-9).
+// It iterates over each character in the string and checks if it can be converted to an integer
+// without error. If all characters are numeric, the function returns true; otherwise, it returns false.
+//
+// Parameters:
+//
+// s: A string to check for numeric characters.
+//
+// Returns:
+//
+// bool: Returns true if the string is numeric, false otherwise.
+//
+// Example:
+//
+// str := "1234"
+// isNum := str.IsNumeric(str)
+//
+//	if !isNum {
+//	  log.Printf("The string %s is not numeric.\n", str)
+//	}
+func IsNumeric(s string) bool {
+	for _, char := range s {
+		if _, err := strconv.Atoi(string(char)); err != nil {
+			return false
+		}
+	}
+	return true
+}
+
 // ToInt64 converts a string to an int64.
 //
 // Parameters:
