@@ -106,7 +106,10 @@ func cryptoRandIntn(n int64) (int64, error) {
 // Returns:
 //
 //	time.Duration: A random duration between minWait and maxWait.
-func GetRandomWait(minWait, maxWait time.Duration) (time.Duration, error) {
+func GetRandomWait(min, max int) (time.Duration, error) {
+	minWait := time.Duration(min) * time.Second
+	maxWait := time.Duration(max) * time.Second
+
 	if minWait < 0 {
 		return 0, fmt.Errorf("minWait cannot be less than 0: %v", minWait)
 	}

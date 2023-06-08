@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"testing"
-	"time"
 
 	"github.com/l50/goutils/web"
 )
@@ -56,19 +55,19 @@ func TestCancelAll(t *testing.T) {
 func TestGetRandomWait(t *testing.T) {
 	tests := []struct {
 		name    string
-		minWait time.Duration
-		maxWait time.Duration
+		minWait int
+		maxWait int
 		wantErr bool
 	}{
 		{
 			name:    "normal case",
-			minWait: 2 * time.Second,
-			maxWait: 6 * time.Second,
+			minWait: 2,
+			maxWait: 6,
 		},
 		{
 			name:    "negative min wait",
-			minWait: -2 * time.Second,
-			maxWait: 6 * time.Second,
+			minWait: -2,
+			maxWait: 6,
 			wantErr: true,
 		},
 	}
