@@ -155,6 +155,7 @@ type InputAction struct {
 	Description string
 	Selector    string
 	Action      chromedp.Action
+	Context     context.Context
 }
 
 // GetPageSource retrieves the source code of the web page currently loaded in the site session.
@@ -270,7 +271,12 @@ func Navigate(site web.Site, actions []InputAction, waitTime time.Duration) erro
 			fmt.Printf("Executing action #%d:\n Type: %s", i+1, actionType)
 		}
 
-		if err := chromedp.Run(chromeDriver.Context, chromedp.Tasks{
+		ctx := inputAction.Context
+		if ctx == nil {
+			ctx = chromeDriver.GetContext()
+		}
+
+		if err := chromedp.Run(ctx, chromedp.Tasks{
 			inputAction.Action,
 			chromedp.Sleep(waitTime),
 		}); err != nil {
@@ -283,7 +289,8 @@ func Navigate(site web.Site, actions []InputAction, waitTime time.Duration) erro
 
 // ScreenShot takes a screenshot of the input targetURL and saves it to imgPath.
 //
-// This function captures a screenshot of the currently loaded page in the provided Site's session and writes the image data to the provided file path.
+// This function captures a screenshot of the currently loaded page in the
+// provided Site's session and writes the image data to the provided file path.
 //
 // Parameters:
 //
