@@ -21,39 +21,79 @@ import (
 )
 
 var (
-	mageCleanupDirs []string
+	mageCleanupArtifacts []string
+	testingPath          string
 )
 
 func TestMain(m *testing.M) {
-	setup()
+	if err := setup(); err != nil {
+		fmt.Printf("setup failed: %v", err)
+		os.Exit(1)
+	}
 	code := m.Run()
 	teardown()
 	os.Exit(code)
 }
 
-func setup() {
+func setup() error {
 	randStr, err := str.GenRandom(8)
 	if err != nil {
-		log.Printf("failed to generate random string: %v", err)
-		return
+		return fmt.Errorf("failed to generate random string: %v", err)
 	}
 
-	clonePath := createTestRepo(fmt.Sprintf("mageutils-%s", randStr))
-	mageCleanupDirs = append(mageCleanupDirs, clonePath)
+	testingPath = createTestRepo(fmt.Sprintf("mageutils-%s", randStr))
+	cwd := sys.Gwd()
+	if err := sys.Cd(testingPath); err != nil {
+		return fmt.Errorf("failed to change directory to %s: %v", testingPath, err)
+	}
+	// obtain the repository root
+	repoRoot, err := git.RepoRoot()
+	if err != nil {
+		return fmt.Errorf("unable to find git root: %w", err)
+	}
+
+	// define the source directory
+	magefileSrc := filepath.Join(repoRoot, "magefiles")
+
+	// ensure the source directory exists
+	if _, err := os.Stat(magefileSrc); err != nil && !os.IsNotExist(err) {
+		return fmt.Errorf("magefiles directory does not exist at %s", magefileSrc)
+	} else if err != nil {
+		return fmt.Errorf("unexpected error when checking for magefiles directory: %w", err)
+	}
+
+	// define the test directory
+	testDir := filepath.Join(repoRoot, "test")
+
+	// create the test directory if it doesn't already exist
+	if _, err = os.Stat(testDir); err != nil && !os.IsNotExist(err) {
+		if err := os.Mkdir(testDir, os.ModePerm); err != nil {
+			return fmt.Errorf("unable to create test directory: %w", err)
+		}
+	}
+
+	if err := sys.Cd(cwd); err != nil {
+		return fmt.Errorf("failed to change directory to %s: %v", testingPath, err)
+	}
+
+	mageCleanupArtifacts = append(mageCleanupArtifacts, testingPath)
+
+	return nil
 }
 
 func teardown() {
-	for _, dir := range mageCleanupDirs {
-		dir, err := os.Stat(dir)
+	for _, dir := range mageCleanupArtifacts {
+		info, err := os.Stat(dir)
 		if err != nil {
 			if os.IsNotExist(err) {
 				continue
 			}
+			log.Printf("failed to stat directory %s: %v", dir, err)
 		}
 
-		if dir.IsDir() {
-			if err := sys.RmRf(dir.Name()); err != nil {
-				fmt.Printf("failed to clean up directory %s: %v", dir, err)
+		if info != nil {
+			if err := sys.RmRf(dir); err != nil {
+				log.Printf("failed to clean up directory %s: %v", dir, err)
 			}
 		}
 	}
@@ -61,14 +101,14 @@ func teardown() {
 
 func createTestRepo(name string) string {
 	cloneDir := "/tmp"
-	var currentTime time.Time
+	currentTime := time.Now()
 	targetPath := filepath.Join(
 		cloneDir, fmt.Sprintf(
 			"%s-%s", name, currentTime.Format("2006-01-02-15-04-05"),
 		),
 	)
 
-	testRepoURL := "https://github.com/l50/helloworld.git"
+	testRepoURL := "https://github.com/l50/goutils.git"
 	if _, err := git.CloneRepo(testRepoURL, targetPath, nil); err != nil {
 		log.Fatalf(
 			"failed to clone to %s - CloneRepo() failed: %v",
@@ -97,33 +137,18 @@ func TestGHRelease(t *testing.T) {
 			wantErr: true,
 		},
 	}
+	mageCleanupArtifacts = append(mageCleanupArtifacts, "CHANGELOG.md")
 
+	if err := sys.Cd(testingPath); err != nil {
+		t.Errorf("failed to change directory to %s: %v", testingPath, err)
+	}
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(t *testing.T) {
-			t.Cleanup(func() { cleanupMageUtils(t) })
 			err := dev.GHRelease(tc.version)
 			if (err != nil) != tc.wantErr {
 				t.Errorf("GHRelease(%v) = error %v, wantErr %v", tc.version, err, tc.wantErr)
 			}
 		})
-	}
-}
-
-func cleanupMageUtils(t *testing.T) {
-	for _, dir := range mageCleanupDirs {
-		dir, err := os.Stat(dir)
-		if err != nil {
-			if os.IsNotExist(err) {
-				continue
-			}
-			t.Errorf("failed to stat directory %s: %v", dir, err)
-		}
-
-		if dir.IsDir() {
-			if err := sys.RmRf(dir.Name()); err != nil {
-				t.Logf("failed to clean up directory %s: %v", dir, err)
-			}
-		}
 	}
 }
 
@@ -133,11 +158,12 @@ func TestGoReleaser(t *testing.T) {
 	}{
 		{"releases to the dist directory"},
 	}
+	if err := sys.Cd(testingPath); err != nil {
+		t.Errorf("failed to change directory to %s: %v", testingPath, err)
+	}
 
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(t *testing.T) {
-			t.Cleanup(func() { cleanupMageUtils(t) })
-
 			// Get repo root
 			repoRoot, err := git.RepoRoot()
 			if err != nil {
@@ -146,14 +172,13 @@ func TestGoReleaser(t *testing.T) {
 			}
 
 			// Change into repo root
-			if err := os.Chdir(repoRoot); err != nil {
-				t.Errorf("failed to change directory to repo root: %v", err)
-				return
+			if err := sys.Cd(repoRoot); err != nil {
+				t.Errorf("failed to change directory to %s: %v", testingPath, err)
 			}
 
 			releaserDir := filepath.Join(repoRoot, "dist")
 
-			mageCleanupDirs = append(mageCleanupDirs, releaserDir)
+			mageCleanupArtifacts = append(mageCleanupArtifacts, releaserDir)
 
 			if err := dev.GoReleaser(); err != nil {
 				t.Errorf("GoReleaser() failed with error %v", err)
@@ -167,6 +192,9 @@ func TestInstallVSCodeModules(t *testing.T) {
 		desc string
 	}{
 		{"installs VSCode modules"},
+	}
+	if err := sys.Cd(testingPath); err != nil {
+		t.Errorf("failed to change directory to %s: %v", testingPath, err)
 	}
 
 	for _, tc := range testCases {
@@ -191,13 +219,11 @@ func TestModUpdate(t *testing.T) {
 			recursive: false,
 			verbose:   true,
 		},
-		// {
-		// 	desc:      "recursive non-verbose update",
-		// 	recursive: true,
-		// 	verbose:   true,
-		// },
 	}
 
+	if err := sys.Cd(testingPath); err != nil {
+		t.Errorf("failed to change directory to %s: %v", testingPath, err)
+	}
 	for _, tc := range testCases {
 		tc := tc // rebind the variable
 		t.Run(tc.desc, func(t *testing.T) {
@@ -209,8 +235,8 @@ func TestModUpdate(t *testing.T) {
 				t.Fatal(err)
 			}
 			defer os.RemoveAll(dir)
-			if err := os.Chdir(dir); err != nil {
-				t.Fatal(err)
+			if err := sys.Cd(dir); err != nil {
+				t.Errorf("failed to change directory to %s: %v", testingPath, err)
 			}
 
 			// create a dummy go file
@@ -254,6 +280,9 @@ func TestTidy(t *testing.T) {
 		{"tidies the module", nil, false},
 		{"tidies the module with error", errors.New("some error"), true},
 	}
+	if err := sys.Cd(testingPath); err != nil {
+		t.Errorf("failed to change directory to %s: %v", testingPath, err)
+	}
 
 	for _, tc := range testCases {
 		tc := tc // rebind the variable
@@ -291,6 +320,9 @@ func TestUpdateMageDeps(t *testing.T) {
 			wantErr: false,
 		},
 	}
+	if err := sys.Cd(testingPath); err != nil {
+		t.Errorf("failed to change directory to %s: %v", testingPath, err)
+	}
 
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(t *testing.T) {
@@ -300,9 +332,8 @@ func TestUpdateMageDeps(t *testing.T) {
 				return
 			}
 
-			if err := os.Chdir(repoRoot); err != nil {
-				t.Errorf("os.Chdir failed with error %v", err)
-				return
+			if err := sys.Cd(repoRoot); err != nil {
+				t.Errorf("failed to change directory to %s: %v", testingPath, err)
 			}
 
 			if err := dev.UpdateMageDeps(tc.mageDir); (err != nil) != tc.wantErr {
@@ -324,6 +355,9 @@ func TestInstallGoDeps(t *testing.T) {
 				"golang.org/x/tools/cmd/goimports",
 			},
 		},
+	}
+	if err := sys.Cd(testingPath); err != nil {
+		t.Errorf("failed to change directory to %s: %v", testingPath, err)
 	}
 
 	for _, tc := range testCases {
@@ -381,13 +415,13 @@ awk -F: '{printf "Function: %s\nFile: %s\n", $2, $1}'`
 	}{
 		{
 			name:           "Valid package",
-			packagePath:    ".",
+			packagePath:    testingPath,
 			expectedFuncs:  bashFuncs,
 			expectedErrors: false,
 		},
 		{
 			name:           "Invalid package",
-			packagePath:    "nonexistent_package",
+			packagePath:    "/tmp",
 			expectedFuncs:  nil,
 			expectedErrors: true,
 		},
@@ -401,6 +435,7 @@ awk -F: '{printf "Function: %s\nFile: %s\n", $2, $1}'`
 				t.Errorf("expected an error but got none")
 			}
 			if !tc.expectedErrors && err != nil {
+				t.Logf("CURRENT DIRECTORY: %v", sys.Gwd())
 				t.Errorf("unexpected error: %v", err)
 			}
 
