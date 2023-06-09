@@ -1,6 +1,7 @@
 package sys
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -465,7 +466,7 @@ func RunCommand(cmd string, args ...string) (string, error) {
 //
 // output, _ := cmd.Output()
 // fmt.Println("Command output:", string(output))
-func RunCommandWithTimeout(to time.Duration, command string, args ...string) (*exec.Cmd, error) {
+func RunCommandWithTimeout(to time.Duration, command string, args ...string) ([]byte, error) {
 	// Create a new context and add a timeout to it
 	ctx, cancel := context.WithTimeout(context.Background(), to)
 	defer cancel()
@@ -473,6 +474,10 @@ func RunCommandWithTimeout(to time.Duration, command string, args ...string) (*e
 	// Create the command with our context
 	cmd := exec.CommandContext(ctx, command, args...)
 	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true} // create new process group
+
+	// Create a buffer to capture the output
+	var out bytes.Buffer
+	cmd.Stdout = &out
 
 	if err := cmd.Start(); err != nil {
 		return nil, fmt.Errorf("command start error: %w", err)
@@ -488,8 +493,10 @@ func RunCommandWithTimeout(to time.Duration, command string, args ...string) (*e
 		// If the context is done, check the reason
 		if ctx.Err() == context.DeadlineExceeded {
 			// The command timed out, now force kill the process group
-			syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL) // negative pid kills the process group
-			return nil, fmt.Errorf("command timed out")
+			if err := syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL); err != nil {
+				// negative pid kills the process group
+				return nil, fmt.Errorf("command timed out")
+			}
 		}
 	case err := <-done:
 		// The command completed before the timeout
@@ -498,7 +505,7 @@ func RunCommandWithTimeout(to time.Duration, command string, args ...string) (*e
 		}
 	}
 
-	return cmd, nil
+	return out.Bytes(), nil
 }
 
 // RmRf removes an input path and everything in it.

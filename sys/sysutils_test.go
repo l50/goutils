@@ -269,18 +269,12 @@ ps -ef | \
 	case "linux", "darwin":
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
-				cmd, err := sys.RunCommandWithTimeout(tt.params.timeout, tt.params.cmd, tt.params.args...)
+				_, err := sys.RunCommandWithTimeout(tt.params.timeout, tt.params.cmd, tt.params.args...)
 				if (err != nil) != tt.wantErr {
 					t.Errorf("RunCommandWithTimeout() error = %v, wantErr %v", err, tt.wantErr)
 					return
 				}
-				if !tt.wantErr {
-					// Here, you can do additional checks on cmd if needed.
-					// For instance, you can check if cmd.ProcessState indicates the command exited normally.
-					if !cmd.ProcessState.Success() {
-						t.Errorf("Command did not exit successfully.")
-					}
-				}
+				// Here we're not checking cmd.ProcessState as we no longer have the *exec.Cmd instance.
 			})
 		}
 	default:

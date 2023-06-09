@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/fatih/color"
 	"github.com/l50/goutils/sys"
@@ -70,21 +71,20 @@ func LoggedIn() bool {
 
 	configPath, err := configPath()
 	if err != nil {
-		err := errors.New(color.RedString(
-			"failed to retrieve keeper config path"))
+		err := errors.New("failed to retrieve keeper config path")
 		fmt.Println(err)
 		return false
 	}
 
 	loggedIn := "My Vault>"
-	out, err := sys.RunCommandWithTimeout(5, "keeper", "shell", "--config", configPath)
+	out, err := sys.RunCommandWithTimeout(15*time.Second, "keeper", "shell", "--config", configPath)
 	if err != nil {
 		fmt.Print("failed to check login state "+
 			"for keeper vault: ", err)
 		return false
 	}
 
-	if strings.Contains(out, loggedIn) {
+	if strings.Contains(string(out), loggedIn) {
 		return true
 	}
 
