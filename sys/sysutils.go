@@ -1,22 +1,19 @@
 package sys
 
 import (
-	"bytes"
+	"context"
 	"errors"
 	"fmt"
-	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
-	"sync"
 	"syscall"
 	"time"
 
 	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
 	cp "github.com/otiai10/copy"
-	"github.com/shirou/gopsutil/v3/process"
 )
 
 // Signal represents a signal that can be sent to a process.
@@ -431,7 +428,10 @@ func KillProcess(pid int, signal Signal) error {
 //
 // fmt.Println("Command output:", output)
 func RunCommand(cmd string, args ...string) (string, error) {
-	out, err := exec.Command(cmd, args...).CombinedOutput()
+	execCmd := exec.Command(cmd, args...)
+	execCmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true} // create new process group
+
+	out, err := execCmd.CombinedOutput()
 
 	if err != nil {
 		return "", fmt.Errorf("failed to run %s: args: %s, stdout: %s, err: %v", cmd, args, out, err)
@@ -441,7 +441,8 @@ func RunCommand(cmd string, args ...string) (string, error) {
 }
 
 // RunCommandWithTimeout runs a command for a specified number of
-// seconds before timing out and returning the output.
+// seconds before timing out. The command will be run in its own
+// process group to allow for killing child processes if necessary.
 //
 // Parameters:
 //
@@ -451,92 +452,53 @@ func RunCommand(cmd string, args ...string) (string, error) {
 //
 // Returns:
 //
-// string: The output from the command.
+// *exec.Cmd: The Cmd struct corresponding to the executed command.
 // error: An error if there was any problem running the command.
 //
 // Example:
 //
-// output, err := RunCommandWithTimeout(time.Second*5, "sleep", "10")
+// cmd, err := RunCommandWithTimeout(time.Second*5, "sleep", "10")
 //
 //	if err != nil {
-//	  log.Fatalf("Error running command: %v", err)
+//	    log.Fatalf("Error running command: %v", err)
 //	}
 //
-// fmt.Println("Command output:", output)
-func RunCommandWithTimeout(to time.Duration, command string, args ...string) (string, error) {
-	cmd := exec.Command(command, args...)
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		return "", err
-	}
+// output, _ := cmd.Output()
+// fmt.Println("Command output:", string(output))
+func RunCommandWithTimeout(to time.Duration, command string, args ...string) (*exec.Cmd, error) {
+	// Create a new context and add a timeout to it
+	ctx, cancel := context.WithTimeout(context.Background(), to)
+	defer cancel()
 
-	// Start the cmd.
+	// Create the command with our context
+	cmd := exec.CommandContext(ctx, command, args...)
+	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true} // create new process group
+
 	if err := cmd.Start(); err != nil {
-		return "", err
+		return nil, fmt.Errorf("command start error: %w", err)
 	}
 
-	// Used to avoid race conditions on timedOut
-	var mu sync.Mutex
+	done := make(chan error, 1)
+	go func() {
+		done <- cmd.Wait()
+	}()
 
-	mu.Lock()
-	timedOut := false
-	mu.Unlock()
-
-	// Create channel to grab any errors from the anonymous function below.
-	errCh := make(chan error)
-
-	// Create timer that triggers killing the created
-	// cmd process once the input duration (to) has been met.
-	timeout := time.AfterFunc(to, func() {
-		mu.Lock()
-		timedOut = true
-		mu.Unlock()
-		paramStr := strings.Join(args, " ")
-		// Once the timer has finished, get the cmd PID(s):
-		pids, _ := process.Pids()
-		for _, pid := range pids {
-			proc, _ := process.NewProcess(pid)
-			cmd, _ := proc.Cmdline()
-			if cmd == command+" "+paramStr {
-				if err := KillProcess(int(pid), SignalKill); err != nil {
-					errCh <- err
-				}
-			}
-		}
-	})
-
-	// Save output of the run cmd.
-	var out bytes.Buffer
-	if _, err := io.Copy(&out, stdout); err != nil {
-		return "", err
-	}
-	stdout.Close()
-
-	// Wait for cmd to exit and return any error that occurred.
-	err = cmd.Wait()
-
-	// Stop the timer created earlier.
-	timeout.Stop()
-
-	// Check if an error was sent through the channel
 	select {
-	case err := <-errCh:
-		return "", err
-	default:
+	case <-ctx.Done():
+		// If the context is done, check the reason
+		if ctx.Err() == context.DeadlineExceeded {
+			// The command timed out, now force kill the process group
+			syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL) // negative pid kills the process group
+			return nil, fmt.Errorf("command timed out")
+		}
+	case err := <-done:
+		// The command completed before the timeout
+		if err != nil {
+			return nil, fmt.Errorf("command error: %w", err)
+		}
 	}
 
-	// Remove newlines from output captured as a string.
-	output := strings.TrimSpace(out.String())
-
-	// If an expected timeout occurs, don't return an error.
-	mu.Lock()
-	if err != nil && !timedOut {
-		mu.Unlock()
-		return "", err
-	}
-	mu.Unlock()
-
-	return output, nil
+	return cmd, nil
 }
 
 // RmRf removes an input path and everything in it.
