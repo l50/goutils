@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
+	lint "github.com/l50/goutils/dev/lint"
 	"github.com/l50/goutils/git"
-	"github.com/l50/goutils/lint"
 	"github.com/l50/goutils/sys"
 )
 

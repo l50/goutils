@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/l50/goutils/dev"
+	mageutils "github.com/l50/goutils/dev/mage"
 	"github.com/l50/goutils/file"
 	"github.com/l50/goutils/sys"
 	"github.com/magefile/mage/sh"
@@ -72,7 +72,7 @@ func InstallGoPCDeps() error {
 		"github.com/goreleaser/goreleaser",
 	}
 
-	if err := dev.InstallGoDeps(deps); err != nil {
+	if err := mageutils.InstallGoDeps(deps); err != nil {
 		return fmt.Errorf("failed to install pre-commit golang dependencies: %v", err)
 	}
 

@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/fatih/color"
-	goutils "github.com/l50/goutils"
+	"github.com/l50/goutils/dev"
 
 	// mage utility functions
 	"github.com/magefile/mage/mg"
@@ -23,15 +23,15 @@ func init() {
 func InstallDeps() error {
 	fmt.Println(color.YellowString("Installing dependencies."))
 
-	if err := goutils.Tidy(); err != nil {
+	if err := dev.Tidy(); err != nil {
 		return fmt.Errorf("failed to install dependencies: %v", err)
 	}
 
-	if err := goutils.InstallGoPCDeps(); err != nil {
+	if err := dev.InstallGoPCDeps(); err != nil {
 		return fmt.Errorf("failed to install pre-commit dependencies: %v", err)
 	}
 
-	if err := goutils.InstallVSCodeModules(); err != nil {
+	if err := dev.InstallVSCodeModules(); err != nil {
 		return fmt.Errorf("failed to install vscode-go modules: %v", err)
 	}
 
@@ -43,7 +43,7 @@ func InstallPreCommitHooks() error {
 	mg.Deps(InstallDeps)
 
 	fmt.Println("Installing pre-commit hooks.")
-	if err := goutils.InstallPCHooks(); err != nil {
+	if err := dev.InstallPCHooks(); err != nil {
 		return err
 	}
 
@@ -55,17 +55,17 @@ func RunPreCommit() error {
 	mg.Deps(InstallDeps)
 
 	fmt.Println("Updating pre-commit hooks.")
-	if err := goutils.UpdatePCHooks(); err != nil {
+	if err := dev.UpdatePCHooks(); err != nil {
 		return err
 	}
 
 	fmt.Println("Clearing the pre-commit cache to ensure we have a fresh start.")
-	if err := goutils.ClearPCCache(); err != nil {
+	if err := dev.ClearPCCache(); err != nil {
 		return err
 	}
 
 	fmt.Println("Running all pre-commit hooks locally.")
-	if err := goutils.RunPCHooks(); err != nil {
+	if err := dev.RunPCHooks(); err != nil {
 		return err
 	}
 

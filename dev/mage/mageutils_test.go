@@ -1,4 +1,4 @@
-package dev_test
+package mageutils_test
 
 import (
 	"bufio"
@@ -13,7 +13,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/l50/goutils/dev"
+	mageutils "github.com/l50/goutils/dev/mage"
 	"github.com/l50/goutils/git"
 	"github.com/l50/goutils/str"
 	"github.com/l50/goutils/sys"
@@ -144,7 +144,7 @@ func TestGHRelease(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(t *testing.T) {
-			err := dev.GHRelease(tc.version)
+			err := mageutils.GHRelease(tc.version)
 			if (err != nil) != tc.wantErr {
 				t.Errorf("GHRelease(%v) = error %v, wantErr %v", tc.version, err, tc.wantErr)
 			}
@@ -180,7 +180,7 @@ func TestGoReleaser(t *testing.T) {
 
 			mageCleanupArtifacts = append(mageCleanupArtifacts, releaserDir)
 
-			if err := dev.GoReleaser(); err != nil {
+			if err := mageutils.GoReleaser(); err != nil {
 				t.Errorf("GoReleaser() failed with error %v", err)
 			}
 		})
@@ -201,7 +201,7 @@ func TestInstallVSCodeModules(t *testing.T) {
 		t.Run(tc.desc, func(t *testing.T) {
 			t.Parallel()
 
-			if err := dev.InstallVSCodeModules(); err != nil {
+			if err := mageutils.InstallVSCodeModules(); err != nil {
 				t.Errorf("InstallVSCodeModules() failed with error %v", err)
 			}
 		})
@@ -255,7 +255,7 @@ func TestModUpdate(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			if err := dev.ModUpdate(tc.recursive, tc.verbose); err != nil {
+			if err := mageutils.ModUpdate(tc.recursive, tc.verbose); err != nil {
 				t.Errorf("ModUpdate(%v, %v) = error %v, want no error", tc.recursive, tc.verbose, err)
 			}
 		})
@@ -336,7 +336,7 @@ func TestUpdateMageDeps(t *testing.T) {
 				t.Errorf("failed to change directory to %s: %v", testingPath, err)
 			}
 
-			if err := dev.UpdateMageDeps(tc.mageDir); (err != nil) != tc.wantErr {
+			if err := mageutils.UpdateMageDeps(tc.mageDir); (err != nil) != tc.wantErr {
 				t.Errorf("UpdateMageDeps(%s) failed with error %v, wantErr %v", tc.mageDir, err, tc.wantErr)
 			}
 		})
@@ -365,7 +365,7 @@ func TestInstallGoDeps(t *testing.T) {
 		t.Run(tc.desc, func(t *testing.T) {
 			t.Parallel()
 
-			if err := dev.InstallGoDeps(tc.deps); err != nil {
+			if err := mageutils.InstallGoDeps(tc.deps); err != nil {
 				t.Errorf("InstallGoDeps(%v) failed with error %v", tc.deps, err)
 			}
 		})
@@ -430,7 +430,7 @@ awk -F: '{printf "Function: %s\nFile: %s\n", $2, $1}'`
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			// Get the exported functions from the package
-			goFuncs, err := dev.FindExportedFunctionsInPackage(tc.packagePath)
+			goFuncs, err := mageutils.FindExportedFunctionsInPackage(tc.packagePath)
 			if tc.expectedErrors && err == nil {
 				t.Errorf("expected an error but got none")
 			}
@@ -521,7 +521,7 @@ func TestExportedFunc3(t *testing.T) {}
 	}
 
 	// Call FindExportedFuncsWithoutTests
-	exportedFuncs, err := dev.FindExportedFuncsWithoutTests(tempDir)
+	exportedFuncs, err := mageutils.FindExportedFuncsWithoutTests(tempDir)
 	if err != nil {
 		t.Fatalf("failed to find exported funcs: %v", err)
 	}
