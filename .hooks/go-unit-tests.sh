@@ -34,9 +34,9 @@ run_tests()
     RETURN_CODE=$?
 }
 
-if [[ "${TESTS_TO_RUN}" == 'all' ]]; then
+if [[ "${TESTS_TO_RUN}" == 'coverage' ]]; then
     run_tests 'coverage-all.out'
-elif [[ "${TESTS_TO_RUN}" == 'short' ]] || [[ "${TESTS_TO_RUN}" == 'coverage' ]]; then
+else
     run_tests
 fi
 

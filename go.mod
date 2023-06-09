@@ -47,6 +47,7 @@ require (
 	github.com/skeema/knownhosts v1.1.1 // indirect
 	github.com/stretchr/objx v0.5.0 // indirect
 	github.com/shoenig/go-m1cpu v0.1.5 // indirect
+	github.com/skeema/knownhosts v1.1.1 // indirect
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.1 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
