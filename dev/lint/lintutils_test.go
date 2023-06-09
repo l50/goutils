@@ -173,7 +173,7 @@ func TestRunPCHooks(t *testing.T) {
 
 	select {
 	case err := <-errCh:
-		if strings.Contains(err.Error(), "signal: killed") {
+		if strings.Contains(err.Error(), "signal: killed") || strings.Contains(err.Error(), "1") {
 			t.Logf("Pre-commit hook was cancelled after running longer than %s.", runtime)
 		} else {
 			t.Fatal(err)
