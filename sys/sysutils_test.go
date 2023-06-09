@@ -17,10 +17,6 @@ import (
 	"github.com/l50/goutils/sys"
 )
 
-var (
-	debug = false
-)
-
 func TestCd(t *testing.T) {
 	// Setup a temporary directory for testing
 	tmpDir, err := os.MkdirTemp("", "magefiles")

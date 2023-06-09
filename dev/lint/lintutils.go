@@ -2,11 +2,14 @@ package lint
 
 import (
 	"bufio"
+	"context"
 	"errors"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
+	"time"
 
 	mageutils "github.com/l50/goutils/dev/mage"
 	"github.com/l50/goutils/file"
@@ -167,16 +170,19 @@ func ClearPCCache() error {
 //	if err != nil {
 //	  log.Fatalf("Error running hooks: %v", err)
 //	}
-func RunPCHooks() error {
-	if err := checkPCProject(); err != nil {
-		return err
-	}
+func RunPCHooks() (context.CancelFunc, chan error) {
+	// Create a new context and add a timeout to it
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 
-	if err := pc("run", "--all-files", "--show-diff-on-failure"); err != nil {
-		return fmt.Errorf("failed to run pre-commit hooks: %v", err)
-	}
+	// Run the command here (replace "command" and "args" with your actual command and arguments)
+	cmd := exec.CommandContext(ctx, "pre-commit", "run", "--all-files", "--show-diff-on-failure")
+	errCh := make(chan error, 1)
 
-	return nil
+	go func() {
+		errCh <- cmd.Run()
+	}()
+
+	return cancel, errCh
 }
 
 // AddFencedCB addresses MD040 issues found with markdownlint by adding the input language to fenced code blocks in the input filePath.

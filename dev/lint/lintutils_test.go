@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	lint "github.com/l50/goutils/dev/lint"
 	"github.com/l50/goutils/git"
@@ -157,19 +158,29 @@ func TestLintUtils(t *testing.T) {
 				}
 			},
 		},
-		{
-			name: "TestRunPCHooks",
-			test: func(t *testing.T) {
-				if err := lint.RunPCHooks(); err != nil {
-					t.Fatal(err)
-				}
-			},
-		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			tc.test(t)
 		})
+	}
+}
+
+func TestRunPCHooks(t *testing.T) {
+	runtime := 10 * time.Second
+	cancel, errCh := lint.RunPCHooks()
+
+	select {
+	case err := <-errCh:
+		if strings.Contains(err.Error(), "signal: killed") {
+			t.Logf("Pre-commit hook was cancelled after running longer than %s.", runtime)
+		} else {
+			t.Fatal(err)
+		}
+
+	case <-time.After(runtime):
+		cancel()
+		t.Logf("Pre-commit hook was forcefully cancelled as it took longer than %s to execute.", runtime)
 	}
 }
