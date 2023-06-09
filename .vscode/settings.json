@@ -2,5 +2,6 @@
   "go.toolsEnvVars": {
     "GO111MODULE": "on",
     "GOARCH": "arm64"
-  }
+  },
+  "ansible.python.interpreterPath": "/Users/l/.pyenv/versions/3.8.3/bin/python"
 }
