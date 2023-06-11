@@ -1,7 +1,7 @@
 # goutils
 
 [![License](https://img.shields.io/github/license/l50/goutils?label=License&style=flat&color=blue&logo=github)](https://github.com/l50/goutils/blob/main/LICENSE)
-[![Go Report Card](https://goreportcard.com/badge/github.com/l50/goutils)](https://goreportcard.com/report/github.com/l50/goutils)
+[![Go Report Card](https://goreportcard.com/badge/github.com/l50/goutils/v2)](https://goreportcard.com/report/github.com/l50/goutils/v2)
 [![Tests](https://github.com/l50/goutils/actions/workflows/tests.yaml/badge.svg)](https://github.com/l50/goutils/actions/workflows/tests.yaml)
 [![🚨 CodeQL Analysis](https://github.com/l50/goutils/actions/workflows/codeql-analysis.yaml/badge.svg)](https://github.com/l50/goutils/actions/workflows/codeql-analysis.yaml)
 [![🚨 Semgrep Analysis](https://github.com/l50/goutils/actions/workflows/semgrep.yaml/badge.svg)](https://github.com/l50/goutils/actions/workflows/semgrep.yaml)
