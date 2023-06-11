@@ -87,16 +87,10 @@ func cryptoRandIntn(n int64) (int64, error) {
 	return val.Int64(), nil
 }
 
-// GetRandomWait returns a random duration between the specified minWait and maxWait durations.
-// The function takes the minimum and maximum wait times as arguments, creates a new random
-// number generator with a seed based on the current Unix timestamp, and calculates the random
-// wait time within the given range.
-//
-// Example usage:
-//
-//	minWait := 2 * time.Second
-//	maxWait := 6 * time.Second
-//	randomWaitTime := GetRandomWait(minWait, maxWait)
+// GetRandomWait returns a random duration in seconds between the specified minWait
+// and maxWait durations. The function takes the minimum and maximum wait times as
+// arguments, creates a new random number generator with a seed based on the current
+// Unix timestamp, and calculates the random wait time within the given range.
 //
 // Parameters:
 //
@@ -106,6 +100,17 @@ func cryptoRandIntn(n int64) (int64, error) {
 // Returns:
 //
 //	time.Duration: A random duration between minWait and maxWait.
+//	error: An error if the generation of the random wait time fails.
+//
+// Example:
+//
+//	minWait := 2
+//	maxWait := 6
+//	randomWaitTime, err := GetRandomWait(minWait, maxWait)
+//
+//	if err != nil {
+//	  log.Fatalf("failed to generate random wait time: %v", err)
+//	}
 func GetRandomWait(min, max int) (time.Duration, error) {
 	minWait := time.Duration(min) * time.Second
 	maxWait := time.Duration(max) * time.Second
