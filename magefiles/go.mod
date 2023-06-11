@@ -3,8 +3,7 @@ module magefile
 go 1.20
 
 require (
-	github.com/fatih/color v1.15.0
-	github.com/l50/goutils/v2 v2.0.1
+	github.com/l50/goutils/v2 v2.0.2
 	github.com/magefile/mage v1.15.0
 )
 
@@ -12,6 +11,7 @@ require (
 	github.com/Microsoft/go-winio v0.6.1 // indirect
 	github.com/acomagu/bufpipe v1.0.4 // indirect
 	github.com/bitfield/script v0.22.0 // indirect
+	github.com/fatih/color v1.15.0 // indirect
 	github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 // indirect
 	github.com/go-git/go-billy/v5 v5.4.1 // indirect
 	github.com/go-git/go-git/v5 v5.7.0 // indirect
