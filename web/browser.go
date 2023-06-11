@@ -131,6 +131,86 @@ func GetRandomWait(min, max int) (time.Duration, error) {
 	return randomWaitTime, nil
 }
 
+// IsTwoFacEnabled checks if two-factor authentication is enabled in the provided login options.
+//
+// Parameters:
+//
+// opts: A pointer to a loginOptions instance.
+//
+// Returns:
+//
+// bool: A boolean indicating whether two-factor authentication is enabled.
+//
+// Example:
+//
+//	options := []web.LoginOption{
+//	   web.WithTwoFacEnabled(false),
+//	}
+//
+// loginOpts := web.SetLoginOptions(options...)
+// isTwoFacEnabled := web.IsTwoFacEnabled(loginOpts) // isTwoFacEnabled is now false.
+func IsTwoFacEnabled(opts *loginOptions) bool {
+	return opts.twoFacEnabled
+}
+
+// IsLogMeOutEnabled checks if the option to log out the user after login is enabled in the provided login options.
+//
+// Parameters:
+//
+// opts: A pointer to a loginOptions instance.
+//
+// Returns:
+//
+// bool: A boolean indicating whether the user is to be logged out after login.
+//
+// Example:
+//
+//	options := []web.LoginOption{
+//	   web.WithLogMeOut(false),
+//	}
+//
+// loginOpts := web.SetLoginOptions(options...)
+// isLogMeOutEnabled := web.IsLogMeOutEnabled(loginOpts) // isLogMeOutEnabled is now false.
+func IsLogMeOutEnabled(opts *loginOptions) bool {
+	return opts.logMeOut
+}
+
+// SetLoginOptions applies provided login options to a new loginOptions instance with default values
+// and returns a pointer to this instance. This function is primarily used to configure login behavior
+// in the LoginAccount function.
+//
+// Parameters:
+//
+// options: A variadic set of LoginOption functions. Each LoginOption is a function that takes a
+// pointer to a loginOptions struct and modifies it in place.
+//
+// Returns:
+//
+// *loginOptions: A pointer to a loginOptions struct that has been configured with the provided options.
+//
+// Example:
+//
+//	options := []web.LoginOption{
+//	   web.WithTwoFacEnabled(false),
+//	   web.WithLogMeOut(true),
+//	}
+//
+// loginOpts := web.SetLoginOptions(options...)
+//
+// // Now loginOpts.twoFacEnabled is false and loginOpts.logMeOut is true.
+func SetLoginOptions(options ...LoginOption) *loginOptions {
+	loginOpts := &loginOptions{
+		twoFacEnabled: true, // Default value for twoFac
+		logMeOut:      true, // Default value for logout
+	}
+
+	for _, option := range options {
+		option(loginOpts)
+	}
+
+	return loginOpts
+}
+
 // Wait generates a random period of time anchored to a given input value.
 //
 // Parameters:
