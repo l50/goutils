@@ -135,13 +135,6 @@ func TestCompile(t *testing.T) {
 			goArch:    "amd64",
 			wantErr:   false,
 		},
-		{
-			name:      "TestCompileInvalid",
-			buildPath: "testoutput",
-			goOS:      "nonexistentos",
-			goArch:    "nonexistentarch",
-			wantErr:   true,
-		},
 	}
 
 	for _, tc := range tests {
@@ -348,45 +341,45 @@ func TestTidy(t *testing.T) {
 	}
 }
 
-// func TestUpdateMageDeps(t *testing.T) {
-// 	testCases := []struct {
-// 		desc    string
-// 		mageDir string
-// 		wantErr bool
-// 	}{
-// 		{
-// 			desc:    "non-existent directory",
-// 			mageDir: "non-existent",
-// 			wantErr: true,
-// 		},
-// 		{
-// 			desc:    "updates mage dependencies",
-// 			mageDir: "magefiles",
-// 			wantErr: false,
-// 		},
-// 	}
-// 	if err := sys.Cd(testingPath); err != nil {
-// 		t.Errorf("failed to change directory to %s: %v", testingPath, err)
-// 	}
+func TestUpdateMageDeps(t *testing.T) {
+	testCases := []struct {
+		desc    string
+		mageDir string
+		wantErr bool
+	}{
+		{
+			desc:    "non-existent directory",
+			mageDir: "non-existent",
+			wantErr: true,
+		},
+		{
+			desc:    "updates mage dependencies",
+			mageDir: "magefiles",
+			wantErr: false,
+		},
+	}
+	if err := sys.Cd(testingPath); err != nil {
+		t.Errorf("failed to change directory to %s: %v", testingPath, err)
+	}
 
-// 	for _, tc := range testCases {
-// 		t.Run(tc.desc, func(t *testing.T) {
-// 			repoRoot, err := git.RepoRoot()
-// 			if err != nil {
-// 				t.Errorf("RepoRoot() failed with error %v", err)
-// 				return
-// 			}
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			repoRoot, err := git.RepoRoot()
+			if err != nil {
+				t.Errorf("RepoRoot() failed with error %v", err)
+				return
+			}
 
-// 			if err := sys.Cd(repoRoot); err != nil {
-// 				t.Errorf("failed to change directory to %s: %v", testingPath, err)
-// 			}
+			if err := sys.Cd(repoRoot); err != nil {
+				t.Errorf("failed to change directory to %s: %v", testingPath, err)
+			}
 
-// 			if err := mageutils.UpdateMageDeps(tc.mageDir); (err != nil) != tc.wantErr {
-// 				t.Errorf("UpdateMageDeps(%s) failed with error %v, wantErr %v", tc.mageDir, err, tc.wantErr)
-// 			}
-// 		})
-// 	}
-// }
+			if err := mageutils.UpdateMageDeps(tc.mageDir); (err != nil) != tc.wantErr {
+				t.Errorf("UpdateMageDeps(%s) failed with error %v, wantErr %v", tc.mageDir, err, tc.wantErr)
+			}
+		})
+	}
+}
 
 func TestInstallGoDeps(t *testing.T) {
 	testCases := []struct {

@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/bitfield/script"
+	"github.com/fatih/color"
 	"github.com/magefile/mage/sh"
 
 	fileutils "github.com/l50/goutils/v2/file"
@@ -140,7 +141,7 @@ func GoReleaser() error {
 //	  log.Fatalf("failed to install VS Code modules: %v", err)
 //	}
 func InstallVSCodeModules() error {
-	fmt.Println("Installing vscode-go dependencies.")
+	fmt.Println(color.YellowString("Installing vscode-go dependencies."))
 	vscodeDeps := []string{
 		"github.com/uudashr/gopkgs/v2/cmd/gopkgs",
 		"github.com/ramya-rao-a/go-outline",
@@ -155,7 +156,8 @@ func InstallVSCodeModules() error {
 	}
 
 	if err := InstallGoDeps(vscodeDeps); err != nil {
-		return fmt.Errorf("failed to install vscode-go dependencies: %v", err)
+		return fmt.Errorf(
+			color.RedString("failed to install vscode-go dependencies: %v", err))
 	}
 
 	return nil
@@ -288,17 +290,11 @@ func UpdateMageDeps(magedir string) error {
 //	  log.Fatalf("failed to install Go dependencies: %v", err)
 //	}
 func InstallGoDeps(deps []string) error {
-	var err error
-	failed := false
-
 	for _, dep := range deps {
-		if err := sh.RunV("go", "install", dep+"@latest"); err != nil {
-			failed = true
+		_, err := sys.RunCommand("go", "install", dep+"@latest")
+		if err != nil {
+			return fmt.Errorf("failed to install input go dependencies: %v", err)
 		}
-	}
-
-	if failed {
-		return fmt.Errorf("failed to install input go dependencies: %w", err)
 	}
 
 	return nil
