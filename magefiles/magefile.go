@@ -7,7 +7,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/fatih/color"
 	"github.com/l50/goutils/v2/dev/lint"
 	mageutils "github.com/l50/goutils/v2/dev/mage"
 
@@ -22,7 +21,7 @@ func init() {
 
 // InstallDeps Installs go dependencies
 func InstallDeps() error {
-	fmt.Println(color.YellowString("Installing dependencies."))
+	fmt.Println("Installing dependencies.")
 
 	if err := mageutils.Tidy(); err != nil {
 		return fmt.Errorf("failed to install dependencies: %v", err)
