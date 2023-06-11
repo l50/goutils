@@ -2,14 +2,11 @@ package lint
 
 import (
 	"bufio"
-	"context"
 	"errors"
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
-	"time"
 
 	mageutils "github.com/l50/goutils/v2/dev/mage"
 	"github.com/l50/goutils/v2/file"
@@ -157,47 +154,43 @@ func ClearPCCache() error {
 	return nil
 }
 
-// RunPCHooks runs all pre-commit hooks locally. The function runs the hooks
-// in a goroutine and returns immediately. To check if the hooks have completed
-// and if they have succeeded, callers must read from the returned error channel.
+// RunPCHooks runs pre-commit hooks with a provided timeout. If no timeout is provided, it defaults to 600.
+//
+// Parameters:
+//
+// timeout (optional): An integer specifying the timeout duration for running pre-commit hooks.
 //
 // Returns:
 //
-// context.CancelFunc: A function that can be called to cancel the execution
-// of the hooks. This is useful if the caller decides it doesn't need the hooks
-// to complete (for instance, if the program is about to exit).
-//
-// chan error: A channel that will receive one value: the error from running the
-// hooks, or nil if the hooks ran successfully. The channel is buffered and
-// will never block. It will always receive a value, so callers should always
-// read from it, even if they call the cancel function.
+// error: An error if the pre-commit hook execution fails.
 //
 // Example:
 //
-// cancel, errCh := RunPCHooks()
-//
-// // In some other part of the program:
-// err := <-errCh
+// err := RunPCHooks() // Runs with a default timeout of 600.
 //
 //	if err != nil {
-//	  log.Fatalf("Error running hooks: %v", err)
+//	   log.Fatalf("Failed to run pre-commit hooks: %v", err)
 //	}
 //
-// // If the program doesn't care about the hooks anymore, it can cancel them:
-// cancel()
-func RunPCHooks() (context.CancelFunc, chan error) {
-	// Create a new context and add a timeout of ten minutes to it
-	ctx, cancel := context.WithTimeout(context.Background(), 600*time.Second)
+// err = RunPCHooks(300) // Runs with a specified timeout of 300.
+//
+//	if err != nil {
+//	   log.Fatalf("Failed to run pre-commit hooks: %v", err)
+//	}
+func RunPCHooks(timeout ...int) error {
+	var timeoutValue int
+	if len(timeout) > 0 {
+		timeoutValue = timeout[0] // use provided value if it was provided
+	} else {
+		timeoutValue = 600 // default timeout value of 30 minutes
+	}
 
-	// Run the command here (replace "command" and "args" with your actual command and arguments)
-	cmd := exec.CommandContext(ctx, "pre-commit", "run", "--all-files", "--show-diff-on-failure")
-	errCh := make(chan error, 1)
+	_, err := sys.RunCommandWithTimeout(timeoutValue, "pre-commit", "run", "--all-files", "--show-diff-on-failure")
+	if err != nil {
+		return err
+	}
 
-	go func() {
-		errCh <- cmd.Run()
-	}()
-
-	return cancel, errCh
+	return nil
 }
 
 // AddFencedCB addresses MD040 issues found with markdownlint by adding the input language to fenced code blocks in the input filePath.
