@@ -466,9 +466,10 @@ func RunCommand(cmd string, args ...string) (string, error) {
 //
 // output, _ := cmd.Output()
 // fmt.Println("Command output:", string(output))
-func RunCommandWithTimeout(to time.Duration, command string, args ...string) ([]byte, error) {
+func RunCommandWithTimeout(to int, command string, args ...string) ([]byte, error) {
+	timeout := time.Duration(to) * time.Second
 	// Create a new context and add a timeout to it
-	ctx, cancel := context.WithTimeout(context.Background(), to)
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
 	// Create the command with our context

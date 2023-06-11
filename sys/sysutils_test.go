@@ -229,7 +229,7 @@ done
 	}
 
 	type params struct {
-		timeout time.Duration
+		timeout int
 		cmd     string
 		args    []string
 	}
@@ -274,7 +274,7 @@ ps -ef | \
 		{
 			name: "Test command that runs quickly",
 			params: params{
-				timeout: time.Duration(5) * time.Second,
+				timeout: 5,
 				cmd:     "echo",
 				args:    []string{"hi"},
 			},
@@ -291,7 +291,6 @@ ps -ef | \
 					t.Errorf("RunCommandWithTimeout() error = %v, wantErr %v", err, tt.wantErr)
 					return
 				}
-				// Here we're not checking cmd.ProcessState as we no longer have the *exec.Cmd instance.
 			})
 		}
 	default:

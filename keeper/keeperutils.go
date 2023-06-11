@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
-	"time"
 
 	"github.com/fatih/color"
 	"github.com/l50/goutils/v2/sys"
@@ -77,7 +76,7 @@ func LoggedIn() bool {
 	}
 
 	loggedIn := "My Vault>"
-	out, err := sys.RunCommandWithTimeout(15*time.Second, "keeper", "shell", "--config", configPath)
+	out, err := sys.RunCommandWithTimeout(15, "keeper", "shell", "--config", configPath)
 	if err != nil {
 		fmt.Print("failed to check login state "+
 			"for keeper vault: ", err)
