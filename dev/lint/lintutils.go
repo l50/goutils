@@ -186,8 +186,8 @@ func ClearPCCache() error {
 // // If the program doesn't care about the hooks anymore, it can cancel them:
 // cancel()
 func RunPCHooks() (context.CancelFunc, chan error) {
-	// Create a new context and add a timeout to it
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	// Create a new context and add a timeout of ten minutes to it
+	ctx, cancel := context.WithTimeout(context.Background(), 600*time.Second)
 
 	// Run the command here (replace "command" and "args" with your actual command and arguments)
 	cmd := exec.CommandContext(ctx, "pre-commit", "run", "--all-files", "--show-diff-on-failure")

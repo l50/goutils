@@ -62,13 +62,30 @@ func TestCd(t *testing.T) {
 }
 
 func TestCmdExists(t *testing.T) {
-	fail := "asdf"
-	cmds := []string{"ls", "whoami", fail}
-	for _, cmd := range cmds {
-		if sys.CmdExists(cmd) && cmd == fail {
-			t.Fatalf(
-				"failed to properly identify installed cmd - CmdExists() failed")
-		}
+	tests := []struct {
+		name   string
+		cmd    string
+		expect bool
+	}{
+		{
+			name:   "Command Exists",
+			cmd:    "ls", // substitute with a command that surely exists on your system
+			expect: true,
+		},
+		{
+			name:   "Command Does Not Exist",
+			cmd:    "unknowncommand", // substitute with a command that surely does not exist on your system
+			expect: false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			result := sys.CmdExists(tc.cmd) // replace with your actual package name
+			if result != tc.expect {
+				t.Errorf("Expected %v, but got %v", tc.expect, result)
+			}
+		})
 	}
 }
 
