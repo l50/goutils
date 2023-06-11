@@ -16,6 +16,43 @@ import (
 	"github.com/l50/goutils/v2/sys"
 )
 
+// Compile builds a Go application for a specified operating system and
+// architecture by setting the appropriate environment variables and running
+// `go build`. The compiled application is placed in the specified build path.
+//
+// Parameters:
+//
+// buildPath: The output directory for the compiled application.
+// goOS: The target operating system (e.g., "linux", "darwin", "windows").
+// goArch: The target architecture (e.g., "amd64", "arm64").
+//
+// Returns:
+//
+// error: An error, if the compilation process encounters one.
+//
+// Example:
+//
+// buildPath := "/path/to/output/directory"
+// goOS := "linux"
+// goArch := "amd64"
+// err := Compile(buildPath, goOS, goArch)
+//
+//	if err != nil {
+//	  log.Fatalf("failed to compile: %v", err)
+//	}
+//
+// fmt.Printf("Application compiled successfully at: %s\n", buildPath)
+func Compile(buildPath string, goOS string, goArch string) error {
+	os.Setenv("GOOS", goOS)
+	os.Setenv("GOARCH", goArch)
+	err := sh.RunV(
+		"go",
+		"build",
+		"-o",
+		buildPath)
+	return err
+}
+
 // GHRelease creates a new release on GitHub with the given new version.
 // It requires that the gh CLI tool is available on the PATH.
 //

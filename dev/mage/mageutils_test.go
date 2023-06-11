@@ -120,6 +120,51 @@ func createTestRepo(name string) string {
 	return targetPath
 }
 
+func TestCompile(t *testing.T) {
+	tests := []struct {
+		name      string
+		buildPath string
+		goOS      string
+		goArch    string
+		wantErr   bool
+	}{
+		{
+			name:      "TestCompileValid",
+			buildPath: "testoutput",
+			goOS:      "linux",
+			goArch:    "amd64",
+			wantErr:   false,
+		},
+		{
+			name:      "TestCompileInvalid",
+			buildPath: "testoutput",
+			goOS:      "nonexistentos",
+			goArch:    "nonexistentarch",
+			wantErr:   true,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := mageutils.Compile(tc.buildPath, tc.goOS, tc.goArch)
+
+			if (err != nil) != tc.wantErr {
+				t.Fatalf("Compile() error = %v, wantErr %v", err, tc.wantErr)
+				return
+			}
+
+			if !tc.wantErr {
+				if _, err := os.Stat(tc.buildPath); os.IsNotExist(err) {
+					t.Fatalf("Compile() did not create the output file: %s", tc.buildPath)
+				}
+			}
+		})
+
+		// Clean up the output file
+		os.RemoveAll(tc.buildPath)
+	}
+}
+
 func TestGHRelease(t *testing.T) {
 	testCases := []struct {
 		desc    string
