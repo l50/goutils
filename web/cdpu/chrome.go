@@ -16,9 +16,11 @@ import (
 	"github.com/l50/goutils/v2/web"
 )
 
-// CheckElement checks if an element identified by a given XPath exists on the web page.
-// If the element is found, it assumes the account is locked out and returns an error.
+// CheckElement checks if an element identified by a given XPath exists on the web page within a specified timeout.
+// The function uses chromedp package to find the element on the page.
+// If the element is found, it sends an error to a provided channel indicating that the account is locked out.
 // The function waits up to 10 seconds for the element to appear on the page before timing out.
+// It also introduces a random wait time between 2 to 6 seconds before navigating to the site.
 //
 // Parameters:
 //
@@ -28,7 +30,7 @@ import (
 //
 // Returns:
 //
-// error: An error if the element is found, the web driver is not of type *Driver, or another error occurs.
+// error: An error if the element is found, the web driver is not of type *Driver, failed to create random wait time, or another error occurs.
 //
 // Example:
 //
@@ -40,6 +42,8 @@ import (
 //			log.Fatalf("CheckElement failed: %v", err)
 //		}
 //	}()
+//
+// Note: Make sure to handle the error sent to the "done" channel in a separate goroutine or after calling this function to avoid deadlock.
 func CheckElement(site web.Site, elementXPath string, done chan error) error {
 	// Create a new context with a timeout
 	chromeDriver, ok := site.Session.Driver.(*Driver)
