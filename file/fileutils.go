@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
 
 	"github.com/bitfield/script"
@@ -319,8 +318,9 @@ func ToSlice(fileName string) ([]string, error) {
 	return filteredLines, nil
 }
 
-// Find searches for a specified filename in a set of directories.
-// Returns the file path if found, or an error if the file cannot be found.
+// Find searches for a specified filename in a set of directories and returns
+// all matches found as a slice of file paths. If no matches are found, it
+// returns an error.
 //
 // Parameters:
 //
@@ -329,37 +329,46 @@ func ToSlice(fileName string) ([]string, error) {
 //
 // Returns:
 //
-// string: The file path if the file is found.
+// []string: A slice of file paths if the file is found.
 // error: An error if the file cannot be found.
 //
 // Example:
 //
 // fileName := "file_to_find.txt"
 // dirs := []string{"/path/to/first/directory", "/path/to/second/directory"}
-// filePath, err := Find(fileName, dirs)
+// filePaths, err := Find(fileName, dirs)
 //
 //	if err != nil {
 //	  log.Fatalf("failed to find file: %v", err)
 //	}
 //
-// fmt.Printf("File found at: %s\n", filePath)
-func Find(fileName string, dirs []string) (string, error) {
-	for _, d := range dirs {
-		files, err := ListR(d)
-		if err != nil {
-			return "", err
-		}
-		for _, f := range files {
-			fileReg := `/` + fileName + `$`
-			m, err := regexp.MatchString(fileReg, f)
+//	for _, filePath := range filePaths {
+//	    fmt.Printf("File found at: %s\n", filePath)
+//	}
+func Find(fileName string, dirs []string) ([]string, error) {
+	var files []string
+	for _, dir := range dirs {
+		err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 			if err != nil {
-				return "", fmt.Errorf("error - failed to locate %s: %v", fileReg, err)
-			} else if m {
-				return f, nil
+				return err
 			}
+			if !info.IsDir() && strings.HasSuffix(info.Name(), fileName) {
+				files = append(files, path)
+			}
+			return nil
+		})
+
+		// Handle potential error from filepath.Walk
+		if err != nil {
+			return nil, fmt.Errorf("failed to walk directory %v: %v", dir, err)
 		}
 	}
-	return "", nil
+
+	if len(files) == 0 {
+		return nil, fmt.Errorf("file %v not found in directories", fileName)
+	}
+
+	return files, nil
 }
 
 // ListR lists all files in a directory and its subdirectories.

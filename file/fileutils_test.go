@@ -7,8 +7,10 @@ import (
 	"path/filepath"
 	"reflect"
 	"runtime"
+	"strings"
 	"testing"
 
+	"github.com/l50/goutils/v2/file"
 	fileutils "github.com/l50/goutils/v2/file"
 	"github.com/l50/goutils/v2/str"
 	"github.com/l50/goutils/v2/sys"
@@ -218,11 +220,54 @@ func TestToSlice(t *testing.T) {
 	}
 }
 
-func TestFindFile(t *testing.T) {
-	testFile := ".bashrc"
-	if _, err := fileutils.Find(testFile, []string{"."}); err != nil {
-		t.Fatalf("unable to find %s - FindFile() failed", testFile)
+func TestFind(t *testing.T) {
+	tests := []struct {
+		name     string
+		fileName string
+		dirs     []string
+		wantErr  bool
+	}{
+		{
+			name:     "TestFileExists",
+			fileName: "testfile1.txt",
+			dirs:     []string{"testdir"},
+			wantErr:  false,
+		},
+		{
+			name:     "TestFileDoesNotExist",
+			fileName: "nonexistentfile.txt",
+			dirs:     []string{"testdir"},
+			wantErr:  true,
+		},
 	}
+
+	// Create a temporary test directory and files
+	testDir := "testdir"
+	if err := os.Mkdir(testDir, 0755); err != nil {
+		t.Fatalf("unable to create test directory: %v", err)
+	}
+
+	if _, err := os.Create(filepath.Join(testDir, "testfile1.txt")); err != nil {
+		t.Fatalf("unable to create test file: %v", err)
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			files, err := file.Find(tc.fileName, tc.dirs)
+
+			if (err != nil) != tc.wantErr {
+				t.Fatalf("Find() error = %v, wantErr %v", err, tc.wantErr)
+				return
+			}
+
+			if !tc.wantErr && (len(files) == 0 || !strings.Contains(files[0], tc.fileName)) {
+				t.Fatalf("Find() did not return the correct files: %v", files)
+			}
+		})
+	}
+
+	// Clean up the test directory
+	os.RemoveAll(testDir)
 }
 
 func randInt(min int, max int) int {
