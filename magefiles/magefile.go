@@ -65,11 +65,7 @@ func RunPreCommit() error {
 	}
 
 	fmt.Println("Running all pre-commit hooks locally.")
-	_, errCh := lint.RunPCHooks()
-
-	// Wait for hooks to complete and check for errors
-	err := <-errCh
-	if err != nil {
+	if err := lint.RunPCHooks(); err != nil {
 		return err
 	}
 
