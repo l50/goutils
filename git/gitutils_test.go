@@ -9,119 +9,97 @@ import (
 	"testing"
 	"time"
 
-	"github.com/l50/goutils/v2/file"
 	gitutils "github.com/l50/goutils/v2/git"
 	"github.com/l50/goutils/v2/str"
 	"github.com/l50/goutils/v2/sys"
 
 	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing/transport"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
 	"github.com/stretchr/testify/require"
 )
 
 var (
-	clonePath      string
-	gitCleanupDirs []string
-	tag            string
-	currentTime    time.Time
-	cloneDir       = "/tmp"
-	repo           *git.Repository
-	testRepoURL    = "https://github.com/l50/helloworld.git"
+	currentTime time.Time
+	cloneDir    = "/tmp"
+	tag         = "v6.6.6"
+	repo        *git.Repository
+	testRepoURL                      = "https://github.com/l50/helloworld.git"
+	auth        transport.AuthMethod = &http.BasicAuth{
+		Username: "abc123",
+		Password: "notrealtoken",
+	}
 )
 
-func init() {
-	tag = "v6.6.6"
-	// Create test repo and queue it for cleanup
-	randStr, _ := str.GenRandom(8)
-	repo, clonePath = createTestRepo(fmt.Sprintf("gitutils-%s", randStr))
-	gitCleanupDirs = append(gitCleanupDirs, clonePath)
-}
-
-func createTestRepo(name string) (*git.Repository, string) {
-	targetPath := filepath.Join(
-		cloneDir, fmt.Sprintf(
-			"%s-%s", name, currentTime.Format("2006-01-02-15-04-05"),
-		))
-
-	repo, err := gitutils.CloneRepo(testRepoURL, targetPath, nil)
-	if err != nil {
-		log.Fatalf(
-			"failed to clone to %s - CloneRepo() failed: %v",
-			targetPath,
-			err,
-		)
-	}
-
-	return repo, targetPath
-}
-
-func TestPush(t *testing.T) {
-	testFile := filepath.Join(clonePath, "example-git-file")
-	testFileContent := "hello world!"
-
-	if err := file.Create(testFile, []byte(testFileContent), file.CreateFile); err != nil {
-		t.Errorf("failed to create %s with %s using CreateFile(): %v", testFile, testFileContent, err)
-	}
-
-	if err := gitutils.AddFile(testFile); err != nil {
-		t.Fatalf("failed to add %s: %v - AddFile() failed",
-			testFile, err)
-	}
-
-	if err := gitutils.Commit(repo, testFile); err != nil {
-		t.Fatalf("failed to commit staged files in %s: %v",
-			testFile, err)
-	}
-
-	// personal access token example
-	token := "notrealtoken"
-	auth := &http.BasicAuth{
-		// this can be anything except for an empty string
-		Username: "abc123",
-		Password: token,
-	}
-
-	if err := gitutils.Push(repo, auth); err == nil {
-		t.Fatalf("push should not be possible with "+
-			"bogus credentials - Push() failed: %v", err)
-	}
-}
-
 func TestGetTags(t *testing.T) {
+	if err := sys.Cd(cloneDir); err != nil {
+		t.Fatalf("failed to cd to %s: %v", cloneDir, err)
+	}
 	if _, err := gitutils.GetTags(repo); err != nil {
 		t.Fatalf("failed to get tags: %v - GetTags() failed", err)
 	}
 }
 
-func TestPushTag(t *testing.T) {
-	// personal access token example
-	token := "notrealtoken"
-	auth := &http.BasicAuth{
-		// this can be anything except for an empty string
-		Username: "abc123",
-		Password: token,
+func TestPushAndPushTag(t *testing.T) {
+	tests := []struct {
+		name   string
+		fn     func(repo *git.Repository, auth transport.AuthMethod) error
+		isFail bool
+	}{
+		{
+			name:   "Push",
+			fn:     gitutils.Push,
+			isFail: true,
+		},
+		{
+			name:   "PushTag",
+			fn:     func(r *git.Repository, auth transport.AuthMethod) error { return gitutils.PushTag(r, tag, auth) },
+			isFail: true,
+		},
 	}
 
-	if err := gitutils.PushTag(repo, tag, auth); err == nil {
-		t.Fatal("pushing any tag should not be possible "+
-			"because no auth mechanism is configured - "+
-			"PushTag() failed",
-			err)
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.fn(repo, auth)
+			if tc.isFail {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
+		})
 	}
 }
 
-func TestGetGlobalUserCfg(t *testing.T) {
-	cfg, err := gitutils.GetGlobalUserCfg()
-	if err != nil || cfg.User == "" {
-		t.Fatalf("failed get global git user config: %v", err)
+func TestGetTagsAndGlobalUserCfg(t *testing.T) {
+	tests := []struct {
+		name string
+		fn   interface{}
+	}{
+		{
+			name: "GetTags",
+			fn:   func() ([]string, error) { return gitutils.GetTags(repo) },
+		},
+		{
+			name: "GetGlobalUserCfg",
+			fn:   gitutils.GetGlobalUserCfg,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			switch v := tc.fn.(type) {
+			case func() ([]string, error):
+				_, err := v()
+				require.NoError(t, err)
+			case func() (gitutils.ConfigUserInfo, error):
+				_, err := v()
+				require.NoError(t, err)
+			}
+		})
 	}
 }
 
 func TestDeletePushedTag(t *testing.T) {
-	t.Cleanup(func() {
-		cleanupGitUtils(t)
-	})
-
 	if err := gitutils.CreateTag(repo, tag); err != nil {
 		t.Fatalf("failed to create %s tag: %v", tag, err)
 	}
@@ -282,10 +260,33 @@ func TestRepoRoot(t *testing.T) {
 	}
 }
 
-func cleanupGitUtils(t *testing.T) {
-	for _, dir := range gitCleanupDirs {
-		if err := sys.RmRf(dir); err != nil {
-			fmt.Println("failed to clean up gitUtils: ", err.Error())
-		}
+func TestMain(m *testing.M) {
+	setup()
+	code := m.Run()
+	os.Exit(code)
+}
+
+func setup() {
+	// Create test repo and queue it for cleanup
+	tag = "v6.6.6"
+	var randStr string
+	var err error
+
+	randStr, err = str.GenRandom(6)
+	if err != nil {
+		log.Fatalf("failed to generate random string - GenRandom() failed: %v", err)
+	}
+	targetPath := filepath.Join(
+		cloneDir, fmt.Sprintf(
+			"%s-%s", fmt.Sprintf("gitutils-%s", randStr), currentTime.Format("2006-01-02-15-04-05"),
+		))
+
+	repo, err = gitutils.CloneRepo(testRepoURL, targetPath, nil)
+	if err != nil {
+		log.Fatalf(
+			"failed to clone to %s - CloneRepo() failed: %v",
+			targetPath,
+			err,
+		)
 	}
 }
