@@ -12,12 +12,20 @@ import (
 	"github.com/l50/goutils/v2/str"
 )
 
+func openFile(file string, flag int, perm os.FileMode) (*os.File, error) {
+	f, err := os.OpenFile(file, flag, perm)
+	if err != nil {
+		return nil, err
+	}
+	return f, nil
+}
+
 // Append appends an input text string to the end of the specified file.
 // If the file does not exist, it will be created.
 //
 // Parameters:
 //
-// file: A string representing the path to the file.
+// appendFilePath: A string representing the path to the file.
 // text: A string that will be appended to the end of the file.
 //
 // Returns:
@@ -33,11 +41,136 @@ import (
 //	if err != nil {
 //	  log.Fatalf("failed to append text to file: %v", err)
 //	}
-func Append(file string, text string) error {
-	f, err := os.OpenFile(file,
-		os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+func Append(appendFilePath string, text string) error {
+	f, err := openFile(appendFilePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		return err
+	}
+	defer f.Close()
+
+	if _, err := f.WriteString(text + "\n"); err != nil {
+		return err
+	}
+	return nil
+}
+
+// CreateType represents the type of file creation action to execute.
+type CreateType int
+
+const (
+	// CreateDirectory represents a directory creation action.
+	CreateDirectory CreateType = iota
+	// CreateEmptyFile represents an empty file creation action.
+	CreateEmptyFile
+	// CreateFile represents a file creation action.
+	CreateFile
+)
+
+// Create creates a directory, an empty file, or a file with content at the specified path,
+// depending on the createType argument.
+//
+// Parameters:
+//
+// path: A string representing the path to the directory or file.
+// contents: A byte slice representing the content to write to the file.
+// createType: A CreateType value representing whether to create a directory,
+// an empty file, or a file with content.
+//
+// Returns:
+//
+// error: An error if the directory or file cannot be created, if it already exists, or
+// if there is a problem writing to the file.
+//
+// Example:
+//
+// filePath := "/path/to/your/file"
+// err := Create(filePath, []byte("file contents"), CreateFile)
+//
+//	if err != nil {
+//	  log.Fatalf("failed to create file: %v", err)
+//	}
+func Create(path string, contents []byte, createType CreateType) error {
+	if Exists(path) {
+		return fmt.Errorf("file or directory at path %s already exists", path)
+	}
+	switch createType {
+	case CreateDirectory:
+		return createDirectory(path)
+	case CreateEmptyFile:
+		return createEmptyFile(path)
+	case CreateFile:
+		return createFile(path, contents)
+	default:
+		return fmt.Errorf("invalid createType %v", createType)
+	}
+}
+
+func createDirectory(path string) error {
+	if !filepath.IsAbs(path) {
+		absDir, err := filepath.Abs(path)
+		if err != nil {
+			return fmt.Errorf("failed to convert input relative path to an absolute path: %v", err)
+		}
+		path = absDir
+	}
+
+	if _, err := os.Stat(path); err == nil {
+		return fmt.Errorf("%s already exists", path)
+	}
+
+	if err := os.MkdirAll(path, 0755); err != nil {
+		return fmt.Errorf("failed to create new directory at %s: %v", path, err)
+	}
+	return nil
+}
+
+func createEmptyFile(name string) error {
+	file, err := os.Create(name)
+	if err != nil {
+		return err
+	}
+	return file.Close()
+}
+
+func createFile(filePath string, fileContents []byte) error {
+	if err := os.MkdirAll(filepath.Dir(filePath), os.ModePerm); err != nil {
+		return fmt.Errorf("cannot create dir portion of filepath %s: %v", filePath, err)
+	}
+	if err := os.WriteFile(filePath, fileContents, os.ModePerm); err != nil {
+		return fmt.Errorf("cannot write to file %s: %v", filePath, err)
+	}
+	return nil
+}
+
+// ContainsStr searches for a string in a specified file.
+//
+// Parameters:
+//
+// path: A string representing the path to the file.
+// searchStr: The string to search for in the file.
+//
+// Returns:
+//
+// bool: Returns true if the string is found, otherwise false.
+// error: An error if the file cannot be read.
+//
+// Example:
+//
+// filePath := "/path/to/your/file"
+// searchStr := "text to find"
+// found, err := ContainsStr(filePath, searchStr)
+//
+//	if err != nil {
+//	  log.Fatalf("failed to search file: %v", err)
+//	}
+//
+//	if found {
+//	  fmt.Printf("'%s' found in file\n", searchStr)
+//	}
+func ContainsStr(path string, searchStr string) (bool, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return false, err
 	}
 
 	// Create channel to grab any errors from the anonymous function below.
@@ -49,128 +182,28 @@ func Append(file string, text string) error {
 		}
 	}(f)
 
-	if _, err := f.WriteString(text + "\n"); err != nil {
-		return err
+	scanner := bufio.NewScanner(f)
+
+	line := 1
+	for scanner.Scan() {
+		if strings.Contains(scanner.Text(), searchStr) {
+			return true, nil
+		}
+		line++
+	}
+
+	if err := scanner.Err(); err != nil {
+		return false, err
 	}
 
 	// Check if an error was sent through the channel
 	select {
 	case err := <-errCh:
-		return err
+		return false, err
 	default:
 	}
 
-	return nil
-}
-
-// CreateEmpty creates an empty file at the specified path.
-// If a file with the same name already exists, it will be overwritten.
-//
-// Parameters:
-//
-// name: A string representing the path to the file.
-//
-// Returns:
-//
-// bool: Returns true if the file was created successfully, otherwise false.
-//
-// Example:
-//
-// filePath := "/path/to/your/file"
-// success := CreateEmpty(filePath)
-//
-//	if !success {
-//	  log.Fatalf("failed to create empty file")
-//	}
-func CreateEmpty(name string) bool {
-	file, err := os.Create(name)
-	if err != nil {
-		return false
-	}
-
-	file.Close()
-
-	return true
-}
-
-// Create creates a file at the specified path with the provided content.
-// If the file does not exist, it will be created.
-//
-// Parameters:
-//
-// filePath: A string representing the path to the file.
-// fileContents: A byte slice containing the content to be written to the file.
-//
-// Returns:
-//
-// error: An error if the file cannot be created or the content cannot be written to the file.
-//
-// Example:
-//
-// filePath := "/path/to/your/file"
-// content := []byte("content to be written")
-// err := Create(filePath, content)
-//
-//	if err != nil {
-//	  log.Fatalf("failed to create file: %v", err)
-//	}
-func Create(filePath string, fileContents []byte) error {
-	if err := os.MkdirAll(filepath.Dir(filePath), os.ModePerm); err != nil {
-		return fmt.Errorf("cannot create dir portion"+
-			"of filepath %s: %v", filePath, err)
-	}
-
-	if err := os.WriteFile(filePath, fileContents, os.ModePerm); err != nil {
-		return fmt.Errorf("cannot write to file %s: %v",
-			filePath, err)
-	}
-
-	return nil
-}
-
-// CreateDirectory creates a directory at the specified path.
-// If the directory already exists, it returns an error.
-//
-// Parameters:
-//
-// path: A string representing the path to the directory.
-//
-// Returns:
-//
-// error: An error if the directory cannot be created or if it already exists.
-//
-// Example:
-//
-// dirPath := "/path/to/your/directory"
-// err := CreateDirectory(dirPath)
-//
-//	if err != nil {
-//	  log.Fatalf("failed to create directory: %v", err)
-//	}
-func CreateDirectory(path string) error {
-	// Check if the input path is absolute
-	if !filepath.IsAbs(path) {
-		// If the input path is relative, attempt to convert it to an absolute path.
-		absDir, err := filepath.Abs(path)
-		if err != nil {
-			return fmt.Errorf("failed to convert input "+
-				"relative path to an absolute path: %v", err)
-		}
-		path = absDir
-	}
-
-	// Check if the directory already exists
-	if _, err := os.Stat(path); err == nil {
-		return fmt.Errorf("%s already exists", path)
-	}
-
-	// Create the input directory if we've gotten here successfully
-	if err := os.MkdirAll(path, 0755); err != nil {
-		return fmt.Errorf(
-			"failed to create new directory at %s: %v", path, err)
-	}
-
-	return nil
+	return false, nil
 }
 
 // CSVToLines reads the contents of a CSV file and returns it as a two-dimensional string slice,
@@ -180,7 +213,7 @@ func CreateDirectory(path string) error {
 //
 // Parameters:
 //
-// filename: A string representing the path to the CSV file.
+// path: A string representing the path to the CSV file.
 //
 // Returns:
 //
@@ -199,8 +232,8 @@ func CreateDirectory(path string) error {
 //	for _, row := range records {
 //	  fmt.Println(row)
 //	}
-func CSVToLines(filename string) ([][]string, error) {
-	f, err := os.Open(filename)
+func CSVToLines(path string) ([][]string, error) {
+	f, err := os.Open(path)
 	if err != nil {
 		return [][]string{}, err
 	}
@@ -227,7 +260,7 @@ func CSVToLines(filename string) ([][]string, error) {
 //
 // Parameters:
 //
-// file: A string representing the path to the file.
+// path: A string representing the path to the file.
 //
 // Returns:
 //
@@ -241,8 +274,12 @@ func CSVToLines(filename string) ([][]string, error) {
 //	if err != nil {
 //	  log.Fatalf("failed to delete file: %v", err)
 //	}
-func Delete(file string) error {
-	if err := os.Remove(file); err != nil {
+func Delete(path string) error {
+	if !Exists(path) {
+		return fmt.Errorf("file or directory at path %s does not exist", path)
+	}
+
+	if err := os.Remove(path); err != nil {
 		return err
 	}
 
@@ -282,7 +319,7 @@ func Exists(fileLoc string) bool {
 //
 // Parameters:
 //
-// fileName: A string representing the path to the file.
+// path: A string representing the path to the file.
 //
 // Returns:
 //
@@ -301,10 +338,10 @@ func Exists(fileLoc string) bool {
 //	for _, line := range lines {
 //	  fmt.Println(line)
 //	}
-func ToSlice(fileName string) ([]string, error) {
-	b, err := os.ReadFile(fileName)
+func ToSlice(path string) ([]string, error) {
+	b, err := os.ReadFile(path)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read %s: %v", fileName, err)
+		return nil, fmt.Errorf("failed to read %s: %v", path, err)
 	}
 
 	lines := strings.Split(string(b), "\n")
@@ -375,7 +412,7 @@ func Find(fileName string, dirs []string) ([]string, error) {
 //
 // Parameters:
 //
-// path: A string representing the path to the directory.
+// dirPath: A string representing the path to the directory.
 //
 // Returns:
 //
@@ -394,8 +431,8 @@ func Find(fileName string, dirs []string) ([]string, error) {
 //	for _, file := range files {
 //	  fmt.Println(file)
 //	}
-func ListR(path string) ([]string, error) {
-	result, err := script.FindFiles(path).String()
+func ListR(dirPath string) ([]string, error) {
+	result, err := script.FindFiles(dirPath).String()
 	if err != nil {
 		return []string{}, err
 	}
@@ -405,66 +442,29 @@ func ListR(path string) ([]string, error) {
 	return fileList, nil
 }
 
-// FindStr searches for a string in a specified file.
+// Write writes a string to a file.
 //
 // Parameters:
 //
 // path: A string representing the path to the file.
-// searchStr: The string to search for in the file.
+// content: The string to write to the file.
 //
 // Returns:
 //
-// bool: Returns true if the string is found, otherwise false.
-// error: An error if the file cannot be read.
+// error: An error if the file cannot be written.
 //
 // Example:
 //
 // filePath := "/path/to/your/file"
-// searchStr := "text to find"
-// found, err := FindStr(filePath, searchStr)
+// content := "text to write to file"
+// err := Write(filePath, content)
 //
 //	if err != nil {
-//	  log.Fatalf("failed to search file: %v", err)
+//	  log.Fatalf("failed to write to file: %v", err)
 //	}
-//
-//	if found {
-//	  fmt.Printf("'%s' found in file\n", searchStr)
-//	}
-func FindStr(path string, searchStr string) (bool, error) {
-	f, err := os.Open(path)
-	if err != nil {
-		return false, err
+func Write(path string, content string) error {
+	if err := os.WriteFile(path, []byte(content), 0644); err != nil {
+		return fmt.Errorf("failed to create file at path %s: %v", path, err)
 	}
-
-	// Create channel to grab any errors from the anonymous function below.
-	errCh := make(chan error)
-
-	defer func(*os.File) {
-		if err := f.Close(); err != nil {
-			errCh <- err
-		}
-	}(f)
-
-	scanner := bufio.NewScanner(f)
-
-	line := 1
-	for scanner.Scan() {
-		if strings.Contains(scanner.Text(), searchStr) {
-			return true, nil
-		}
-		line++
-	}
-
-	if err := scanner.Err(); err != nil {
-		return false, err
-	}
-
-	// Check if an error was sent through the channel
-	select {
-	case err := <-errCh:
-		return false, err
-	default:
-	}
-
-	return false, nil
+	return nil
 }
