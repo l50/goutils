@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -15,7 +16,6 @@ import (
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -148,32 +148,44 @@ func TestDeletePushedTag(t *testing.T) {
 }
 
 func TestPullRepos(t *testing.T) {
-	tmpDirRemote, err := createGitRepoWithCommit(t, "test-remote", "file.txt", "test commit")
-	require.NoError(t, err)
-	defer os.RemoveAll(tmpDirRemote)
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "Update multiple repositories",
+		},
+	}
 
-	tmpDir1, err := cloneGitRepo(t, tmpDirRemote, "test1")
-	require.NoError(t, err)
-	defer os.RemoveAll(tmpDir1)
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			tmpDirRemote, err := createGitRepoWithCommit(t, "test-remote", "file.txt", "test commit")
+			require.NoError(t, err)
+			defer os.RemoveAll(tmpDirRemote)
 
-	tmpDir2, err := cloneGitRepo(t, tmpDirRemote, "test2")
-	require.NoError(t, err)
-	defer os.RemoveAll(tmpDir2)
+			tmpDir1, err := cloneGitRepo(t, tmpDirRemote, "test1")
+			require.NoError(t, err)
+			defer os.RemoveAll(tmpDir1)
 
-	err = updateFileInRepo(t, tmpDirRemote, "file.txt", "test2")
-	require.NoError(t, err)
+			tmpDir2, err := cloneGitRepo(t, tmpDirRemote, "test2")
+			require.NoError(t, err)
+			defer os.RemoveAll(tmpDir2)
 
-	err = commitChangesInRepo(t, tmpDirRemote, "test2 commit")
-	require.NoError(t, err)
+			err = updateFileInRepo(t, tmpDirRemote, "file.txt", "test2")
+			require.NoError(t, err)
 
-	err = gitutils.PullRepos(tmpDir1, tmpDir2)
-	require.NoError(t, err)
+			err = commitChangesInRepo(t, tmpDirRemote, "test2 commit")
+			require.NoError(t, err)
 
-	for _, dir := range []string{tmpDir1, tmpDir2} {
-		out, err := sys.RunCommand("git", "-C", dir, "status")
-		require.NoError(t, err)
+			err = gitutils.PullRepos(tmpDir1, tmpDir2)
+			require.NoError(t, err)
 
-		require.Contains(t, out, "Your branch is up to date", "repo in %s was not updated: %s", dir, out)
+			for _, dir := range []string{tmpDir1, tmpDir2} {
+				out, err := sys.RunCommand("git", "-C", dir, "status")
+				require.NoError(t, err)
+
+				require.Contains(t, out, "Your branch is up to date", "repo in %s was not updated: %s", dir, out)
+			}
+		})
 	}
 }
 
@@ -237,12 +249,37 @@ func commitChangesInRepo(t *testing.T, repoDir string, commitMsg string) error {
 }
 
 func TestRepoRoot(t *testing.T) {
-	root, err := gitutils.RepoRoot()
-	if err != nil {
-		t.Fatalf("failed to retrieve root - RepoRoot() failed: %v", err)
+	testCases := []struct {
+		name           string
+		expectedSubstr string
+	}{
+		{
+			name:           "Find root of temporary repo",
+			expectedSubstr: "test-temp",
+		},
 	}
 
-	assert.Contains(t, root, "goutils", "Expected repo root to contain the word 'goutils'")
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			// Create a temporary git repository
+			tmpDir, err := createGitRepoWithCommit(t, tc.expectedSubstr, "file.txt", "test commit")
+			require.NoError(t, err)
+			defer os.RemoveAll(tmpDir)
+
+			// Change working directory to the temporary git repository
+			err = os.Chdir(tmpDir)
+			require.NoError(t, err)
+
+			root, err := gitutils.RepoRoot()
+			if err != nil {
+				t.Fatalf("failed to retrieve root - RepoRoot() failed: %v", err)
+			}
+
+			if !strings.Contains(root, tc.expectedSubstr) {
+				t.Fatalf("Expected repo root to contain the word '%s', got '%s'", tc.expectedSubstr, root)
+			}
+		})
+	}
 }
 
 func cleanupGitUtils(t *testing.T) {
