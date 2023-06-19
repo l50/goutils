@@ -59,7 +59,7 @@ func TestPush(t *testing.T) {
 	testFile := filepath.Join(clonePath, "example-git-file")
 	testFileContent := "hello world!"
 
-	if err := file.Create(testFile, []byte(testFileContent)); err != nil {
+	if err := file.Create(testFile, []byte(testFileContent), file.CreateFile); err != nil {
 		t.Errorf("failed to create %s with %s using CreateFile(): %v", testFile, testFileContent, err)
 	}
 

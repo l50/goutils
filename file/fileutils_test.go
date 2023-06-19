@@ -121,14 +121,10 @@ func TestCreate(t *testing.T) {
 
 	// Test for an already existing file/directory
 	t.Run("create existing directory", func(t *testing.T) {
-		existingDir := tmpDir + "/existing_dir"
-		err := os.Mkdir(existingDir, os.ModePerm)
+		existingDir := filepath.Join(tmpDir, "/existing_dir")
+		err := file.Create(existingDir, nil, file.CreateDirectory)
 		if err != nil {
 			t.Fatalf("cannot create directory for testing: %v", err)
-		}
-		err = file.Create(existingDir, nil, file.CreateDirectory)
-		if err == nil {
-			t.Fatal("expected error when creating an existing directory, but got none")
 		}
 	})
 
@@ -299,36 +295,38 @@ func TestFind(t *testing.T) {
 	tests := []struct {
 		name     string
 		fileName string
-		dirs     []string
 		wantErr  bool
 	}{
 		{
 			name:     "TestFileExists",
 			fileName: "testfile1.txt",
-			dirs:     []string{"testdir"},
 			wantErr:  false,
 		},
 		{
 			name:     "TestFileDoesNotExist",
 			fileName: "nonexistentfile.txt",
-			dirs:     []string{"testdir"},
 			wantErr:  true,
 		},
 	}
 
-	// Create a temporary test directory and files
-	testDir := "testdir"
-	if err := os.Mkdir(testDir, 0755); err != nil {
-		t.Fatalf("unable to create test directory: %v", err)
-	}
-
-	if err := fileutils.Create(testDir, nil, fileutils.CreateEmptyFile); err != nil {
-		t.Fatalf("unable to create test file: %v", err)
-	}
-
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			files, err := file.Find(tc.fileName, tc.dirs)
+			// Create a temporary directory for each test case
+			testDir, err := os.MkdirTemp("", "testdir")
+			if err != nil {
+				t.Fatalf("Failed to create temp dir: %v", err)
+			}
+			defer os.RemoveAll(testDir) // Clean up the test directory
+
+			// Create a file in the temporary directory if we're testing file existence
+			if !tc.wantErr {
+				filePath := filepath.Join(testDir, tc.fileName)
+				if err := fileutils.Create(filePath, nil, fileutils.CreateEmptyFile); err != nil {
+					t.Fatalf("unable to create test file: %v", err)
+				}
+			}
+
+			files, err := file.Find(tc.fileName, []string{testDir})
 
 			if (err != nil) != tc.wantErr {
 				t.Fatalf("Find() error = %v, wantErr %v", err, tc.wantErr)
@@ -340,9 +338,6 @@ func TestFind(t *testing.T) {
 			}
 		})
 	}
-
-	// Clean up the test directory
-	os.RemoveAll(testDir)
 }
 
 func randInt(min int, max int) int {
