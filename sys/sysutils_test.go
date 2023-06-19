@@ -69,19 +69,19 @@ func TestCmdExists(t *testing.T) {
 	}{
 		{
 			name:   "Command Exists",
-			cmd:    "ls", // substitute with a command that surely exists on your system
+			cmd:    "ls",
 			expect: true,
 		},
 		{
 			name:   "Command Does Not Exist",
-			cmd:    "unknowncommand", // substitute with a command that surely does not exist on your system
+			cmd:    "unknowncommand",
 			expect: false,
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			result := sys.CmdExists(tc.cmd) // replace with your actual package name
+			result := sys.CmdExists(tc.cmd)
 			if result != tc.expect {
 				t.Errorf("Expected %v, but got %v", tc.expect, result)
 			}
@@ -92,17 +92,17 @@ func TestCmdExists(t *testing.T) {
 func TestCp(t *testing.T) {
 	file := "test.txt"
 	copyLoc := "testing.txt"
-	created := fileutils.CreateEmpty(file)
-	if created {
-		if err := sys.Cp(file, copyLoc); err != nil {
-			t.Fatalf("failed to copy %s to %s - Cp() failed", file, copyLoc)
-		}
-		if fileutils.Exists(copyLoc) {
-			remove := []string{file, copyLoc}
-			for _, f := range remove {
-				if err := fileutils.Delete(f); err != nil {
-					t.Errorf("unable to delete %s, DeleteFile() failed", f)
-				}
+	if err := fileutils.Create(file, nil, fileutils.CreateEmptyFile); err != nil {
+		t.Fatalf("failed to create %s - Create() failed", file)
+	}
+	if err := sys.Cp(file, copyLoc); err != nil {
+		t.Fatalf("failed to copy %s to %s - Cp() failed", file, copyLoc)
+	}
+	if fileutils.Exists(copyLoc) {
+		remove := []string{file, copyLoc}
+		for _, f := range remove {
+			if err := fileutils.Delete(f); err != nil {
+				t.Errorf("unable to delete %s, DeleteFile() failed", f)
 			}
 		}
 	}
@@ -119,6 +119,54 @@ func TestEnvVarSet(t *testing.T) {
 
 	if err := sys.EnvVarSet(emptykey); err == nil {
 		t.Fatalf("failed to run EnvVarSet(): %v", err)
+	}
+}
+
+func TestExpandHomeDir(t *testing.T) {
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		t.Fatalf("failed to get user home directory: %v", err)
+	}
+
+	testCases := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{
+			name:     "EmptyPath",
+			input:    "",
+			expected: "",
+		},
+		{
+			name:     "NoTilde",
+			input:    "/path/without/tilde",
+			expected: "/path/without/tilde",
+		},
+		{
+			name:     "TildeOnly",
+			input:    "~",
+			expected: homeDir,
+		},
+		{
+			name:     "TildeWithSlash",
+			input:    "~/path/with/slash",
+			expected: filepath.Join(homeDir, "path/with/slash"),
+		},
+		{
+			name:     "TildeWithoutSlash",
+			input:    "~path/without/slash",
+			expected: filepath.Join(homeDir, "path/without/slash"),
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			actual := sys.ExpandHomeDir(tc.input)
+			if actual != tc.expected {
+				t.Errorf("test failed: ExpandHomeDir(%q) = %q; expected %q", tc.input, actual, tc.expected)
+			}
+		})
 	}
 }
 
@@ -214,7 +262,7 @@ echo "Iteration: $i"
 sleep 2
 done
 `
-	if err := fileutils.Create(longRunningScript, []byte(longRunningScriptContent)); err != nil {
+	if err := fileutils.Create(longRunningScript, []byte(longRunningScriptContent), fileutils.CreateFile); err != nil {
 		t.Fatalf("failed to create %s with %s using CreateFile(): %v", longRunningScript, longRunningScriptContent, err)
 	}
 	defer func() {
@@ -254,7 +302,7 @@ ps -ef | \
 	awk '{print $2}' | \
 	xargs -r kill -9
 `
-	if err := fileutils.Create(testFile, []byte(testFileContent)); err != nil {
+	if err := fileutils.Create(testFile, []byte(testFileContent), fileutils.CreateFile); err != nil {
 		if err != nil {
 			t.Fatalf("failed to create %s with %s using CreateFile(): %v", testFile, testFileContent, err)
 		}
@@ -305,7 +353,7 @@ func TestRmRf(t *testing.T) {
 
 	}
 	newDir := filepath.Join("/tmp", "bla", rs)
-	if err := fileutils.CreateDirectory(newDir); err != nil {
+	if err := fileutils.Create(newDir, nil, fileutils.CreateDirectory); err != nil {
 		t.Fatalf("unable to create %s, CreateDirectory() failed: %v", newDir, err)
 
 	}

@@ -2,6 +2,7 @@ package git
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -12,8 +13,8 @@ import (
 	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/go-git/go-git/v5/plumbing/transport"
-
 	"github.com/l50/goutils/v2/sys"
+
 	"github.com/magefile/mage/sh"
 )
 
@@ -146,7 +147,37 @@ func Commit(repo *git.Repository, msg string) error {
 	return nil
 }
 
-// CloneRepo clones the repo specified with the input url to provided clonePath.
+// CloneRepo clones a Git repository from the specified URL to the target path, using the provided authentication method if it is not nil.
+//
+// Parameters:
+//
+// url: A string representing the URL of the repository to clone.
+//
+// clonePath: A string representing the path where the repository should be cloned to.
+//
+// auth: A transport.AuthMethod interface representing the authentication method to use for cloning. If it's nil, no authentication is used.
+//
+// Returns:
+//
+// *git.Repository: A pointer to the Repository struct representing the cloned repository.
+//
+// error: An error if the repository cannot be cloned or already exists at the target path.
+//
+// Example:
+//
+// url := "https://github.com/user/repo.git"
+// clonePath := "/path/to/repo"
+//
+//	auth := &http.BasicAuth{
+//	    Username: "your_username",
+//	    Password: "your_password",
+//	}
+//
+// repo, err := CloneRepo(url, clonePath, auth)
+//
+//	if err != nil {
+//	  log.Fatalf("failed to clone repository: %v", err)
+//	}
 func CloneRepo(url string, clonePath string, auth transport.AuthMethod) (
 	*git.Repository, error) {
 	var err error
@@ -179,7 +210,31 @@ func CloneRepo(url string, clonePath string, auth transport.AuthMethod) (
 	return repo, nil
 }
 
-// GetTags returns the tags for an input repo.
+// GetTags returns all tags of the given repository.
+//
+// Parameters:
+//
+// repo: A pointer to the Repository struct representing the repository from which tags are retrieved.
+//
+// Returns:
+//
+// []string: A slice of strings, each representing a tag in the repository.
+//
+// error: An error if the tags cannot be retrieved.
+//
+// Example:
+//
+// repo, err := git.PlainOpen("/path/to/repo")
+//
+//	if err != nil {
+//	  log.Fatalf("failed to open repository: %v", err)
+//	}
+//
+// tags, err := GetTags(repo)
+//
+//	if err != nil {
+//	  log.Fatalf("failed to get tags: %v", err)
+//	}
 func GetTags(repo *git.Repository) ([]string, error) {
 	var tags []string
 	tagObjects, err := repo.TagObjects()
@@ -216,8 +271,21 @@ func tagExists(repo *git.Repository, tag string) (bool, error) {
 	return false, nil
 }
 
-// GetGlobalUserCfg returns the username and email from
-// the global git user settings.
+// GetGlobalUserCfg retrieves the username and email from the global git user settings.
+//
+// Returns:
+//
+// ConfigUserInfo: A ConfigUserInfo struct containing the global git username and email.
+//
+// error: An error if the global git username or email cannot be retrieved.
+//
+// Example:
+//
+// userInfo, err := GetGlobalUserCfg()
+//
+//	if err != nil {
+//	  log.Fatalf("failed to retrieve global git user settings: %v", err)
+//	}
 func GetGlobalUserCfg() (ConfigUserInfo, error) {
 	userInfo := ConfigUserInfo{}
 	var err error
@@ -237,9 +305,32 @@ func GetGlobalUserCfg() (ConfigUserInfo, error) {
 	return userInfo, nil
 }
 
-// CreateTag is used to create an input tag in the
-// specified repo if it doesn't already exist.
-// Resource: https://github.com/go-git/go-git/blob/bf3471db54b0255ab5b159005069f37528a151b7/_examples/tag-create-push/main.go
+// CreateTag creates a new tag in the given repository.
+//
+// Parameters:
+//
+// repo: A pointer to the Repository struct representing the repository where the tag should be created.
+//
+// tag: A string representing the name of the tag to create.
+//
+// Returns:
+//
+// error: An error if the tag cannot be created, already exists, or if the global git user settings cannot be retrieved.
+//
+// Example:
+//
+// repo, err := git.PlainOpen("/path/to/repo")
+//
+//	if err != nil {
+//	  log.Fatalf("failed to open repository: %v", err)
+//	}
+//
+// tag := "v1.0.0"
+// err = CreateTag(repo, tag)
+//
+//	if err != nil {
+//	  log.Fatalf("failed to create tag: %v", err)
+//	}
 func CreateTag(repo *git.Repository, tag string) error {
 	exists, err := tagExists(repo, tag)
 	if err != nil {
@@ -281,8 +372,36 @@ func CreateTag(repo *git.Repository, tag string) error {
 	return nil
 }
 
-// Push pushes the contents of the input
-// repo to the default remote (origin).
+// Push pushes the contents of the given repository to the default remote (origin).
+//
+// Parameters:
+//
+// repo: A pointer to the Repository struct representing the repository to push.
+//
+// auth: A transport.AuthMethod interface representing the authentication method to use for the push. If it's nil, no authentication is used.
+//
+// Returns:
+//
+// error: An error if the push fails.
+//
+// Example:
+//
+// repo, err := git.PlainOpen("/path/to/repo")
+//
+//	if err != nil {
+//	  log.Fatalf("failed to open repository: %v", err)
+//	}
+//
+//	auth := &http.BasicAuth{
+//	    Username: "your_username",
+//	    Password: "your_password",
+//	}
+//
+// err = Push(repo, auth)
+//
+//	if err != nil {
+//	  log.Fatalf("failed to push to remote: %v", err)
+//	}
 func Push(repo *git.Repository, auth transport.AuthMethod) error {
 	var pushOptions *git.PushOptions
 
@@ -314,7 +433,27 @@ func Push(repo *git.Repository, auth transport.AuthMethod) error {
 	return nil
 }
 
-// PushTag is used to push a tag to remote.
+// PushTag pushes a specific tag of the given repository to the default remote (origin).
+//
+// Parameters:
+//
+// repo: A pointer to the Repository struct representing the repository where the tag should be pushed.
+//
+// tag: A string representing the name of the tag to push.
+//
+// auth: A transport.AuthMethod interface representing the authentication method to use for the push. If it's nil, no authentication is used.
+//
+// Returns:
+//
+// error: An error if the push fails.
+//
+// Example:
+//
+// repo, err := git.PlainOpen("/path/to/repo")
+//
+//	if err != nil {
+//	  log.Fatalf("failed to open repository: %v", err)
+//	}
 func PushTag(repo *git.Repository, tag string, auth transport.AuthMethod) error {
 	var pushOptions *git.PushOptions
 
@@ -450,66 +589,103 @@ func DeletePushedTag(repo *git.Repository, tag string, auth transport.AuthMethod
 	return nil
 }
 
-// PullRepos updates all git repositories found in the given directories by pulling changes from the upstream branch.
-// It looks for repositories by finding directories with a ".git" subdirectory.
-// If a repository is not on the default branch, it will switch to the default branch before pulling changes.
-// Returns an error if any step of the process fails.
+// PullRepos updates all git repositories located in the specified directories.
+// It traverses each directory recursively, identifies directories that contain a ".git" subdirectory,
+// and runs a "git pull" command for the current branch. If no branch is checked out, it tries to pull the default branch.
+// Parameters:
+//
+// dirs: Strings representing paths to directories that should be searched for git repositories.
+//
+// Returns:
+//
+// error: An error if the current working directory cannot be obtained, a directory cannot be traversed,
+//
+//	a directory cannot be changed, or the current or default branch cannot be obtained.
+//
+// Example:
+//
+// dirs := []string{"/path/to/your/directory", "/another/path/to/your/directory"}
+// err := sys.PullRepos(dirs...)
+//
+//	if err != nil {
+//	  log.Fatalf("failed to pull repos: %v", err)
+//	}
 func PullRepos(dirs ...string) error {
-	// Save the current working directory
-	wd, err := os.Getwd()
-	if err != nil {
-		return fmt.Errorf("failed to get current working directory: %w", err)
-	}
-	defer func() {
-		// Change the working directory back to the original directory
-		if err := sys.Cd(wd); err != nil {
-			fmt.Printf("failed to change directory back to %s: %v\n", wd, err)
-		}
-	}()
-
 	for _, dir := range dirs {
-		if err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+		err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 			if err != nil {
 				return err
 			}
 			if info.IsDir() && info.Name() == ".git" {
-				// Get the path to the parent directory of the .git directory
-				repoDir := filepath.Dir(path)
-
-				// Change to the repository directory
-				if err := sys.Cd(repoDir); err != nil {
-					return fmt.Errorf("failed to change directory to %s: %w", repoDir, err)
-				}
-
-				// Get the current branch
-				refOutput, err := sys.RunCommand("git", "symbolic-ref", "HEAD")
-				if err != nil {
-					// If no branch is checked out, get the default branch
-					defaultBranchOutput, defaultBranchErr := sys.RunCommand("git", "config", "--get", "init.defaultBranch")
-					if defaultBranchErr != nil {
-						return fmt.Errorf("failed to get current or default branch for %s: %v, %v", repoDir, err, defaultBranchErr)
-					}
-					refOutput = defaultBranchOutput
-				}
-
-				// Pull changes in the current branch
-				ref := strings.TrimSpace(strings.TrimPrefix(refOutput, "refs/heads/"))
-				res, err := sys.RunCommand("git", "pull", "origin", ref)
-				if err != nil {
-					fmt.Printf("failed to update %s: %s\n", repoDir, res)
-				} else if strings.TrimSpace(res) != "Already up to date." {
-					fmt.Printf("Now pulling the latest from upstream for %s\n", repoDir)
-				}
+				return updateRepo(filepath.Dir(path))
 			}
 			return nil
-		}); err != nil {
+		})
+		if err != nil {
 			return fmt.Errorf("failed to find git repositories in %s: %w", dir, err)
 		}
 	}
 	return nil
 }
 
-// RepoRoot returns the root of the git repo a user is currently in.
+func updateRepo(repoDir string) error {
+	// Change to the repository directory
+	if err := os.Chdir(repoDir); err != nil {
+		return fmt.Errorf("failed to change directory to %s: %w", repoDir, err)
+	}
+
+	// Ensure that we switch back after the function returns
+	defer func() {
+		if err := os.Chdir(".."); err != nil {
+			log.Printf("failed to change directory: %v\n", err)
+		}
+	}()
+
+	// Get the current branch
+	refOutput, err := sys.RunCommand("git", "symbolic-ref", "--short", "HEAD")
+	if err != nil {
+		// If no branch is checked out, get the default branch
+		defaultBranchOutput, defaultBranchErr := sys.RunCommand("git", "config", "--get", "init.defaultBranch")
+		if defaultBranchErr != nil {
+			return fmt.Errorf("failed to get current or default branch for %s: %v, %v", repoDir, err, defaultBranchErr)
+		}
+		refOutput = defaultBranchOutput
+	}
+
+	// Pull changes in the current branch
+	ref := strings.TrimSpace(refOutput)
+	res, err := sys.RunCommand("git", "pull", "origin", ref)
+	if err != nil {
+		fmt.Printf("failed to update %s: %s\n", repoDir, res)
+	} else if strings.TrimSpace(res) != "Already up to date." {
+		fmt.Printf("Now pulling the latest from upstream for %s\n", repoDir)
+	}
+
+	return nil
+}
+
+// RepoRoot finds and returns the absolute path of the root directory of the current Git repository.
+// It does this by moving upwards through the directory hierarchy until it finds a directory containing a ".git" subdirectory.
+// If it reaches the filesystem root without finding a Git repository, an error is returned.
+//
+// Parameters:
+//
+// # None
+//
+// Returns:
+//
+// string: A string representing the absolute path to the root directory of the current Git repository.
+// error: An error if the current working directory cannot be obtained, or a Git repository root cannot be found.
+//
+// Example:
+//
+// root, err := gitutils.RepoRoot()
+//
+//	if err != nil {
+//	    log.Fatalf("failed to retrieve root: %v", err)
+//	}
+//
+// fmt.Printf("The root of the current Git repository is: %s\n", root)
 func RepoRoot() (string, error) {
 	cwd, err := os.Getwd()
 	if err != nil {
