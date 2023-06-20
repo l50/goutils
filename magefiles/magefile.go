@@ -63,16 +63,18 @@ func FindExportedFuncsWithoutTests(pkg string) ([]string, error) {
 
 }
 
+// PackageDoc represents the documentation for a package.
 type PackageDoc struct {
-	PackageName string
-	Functions   []FunctionDoc
-	GoGetPath   string
+	PackageName string        // PackageName is the name of the package.
+	Functions   []FunctionDoc // Functions is a slice of FunctionDoc representing the functions in the package.
+	GoGetPath   string        // GoGetPath is the Go get path for the package.
 }
 
+// FunctionDoc represents the documentation for a function.
 type FunctionDoc struct {
-	Name        string
-	Signature   string
-	Description string
+	Name        string // Name is the name of the function.
+	Signature   string // Signature is the function signature, including the parameters and return types.
+	Description string // Description is the description or documentation of the function.
 }
 
 // CreatePackageDocs creates package documentation
@@ -96,7 +98,9 @@ func CreatePackageDocs() error {
 			if file.IsDir() {
 				continue
 			}
-			if strings.HasSuffix(file.Name(), ".go") && !strings.HasSuffix(file.Name(), "_test.go") {
+			if strings.HasSuffix(file.Name(), ".go") &&
+				!strings.HasSuffix(file.Name(), "_test.go") &&
+				!strings.HasSuffix(file.Name(), "magefile.go") {
 				hasGoFiles = true
 				break
 			}

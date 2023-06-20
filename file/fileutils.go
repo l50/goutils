@@ -34,13 +34,16 @@ func openFile(file string, flag int, perm os.FileMode) (*os.File, error) {
 //
 // Example:
 //
+// ```go
 // filePath := "/path/to/your/file"
 // text := "text to be appended"
 // err := Append(filePath, text)
 //
 //	if err != nil {
-//	  log.Fatalf("failed to append text to file: %v", err)
+//	 log.Fatalf("failed to append text to file: %v", err)
 //	}
+//
+// ```
 func Append(appendFilePath string, text string) error {
 	f, err := openFile(appendFilePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
@@ -83,12 +86,15 @@ const (
 //
 // Example:
 //
+// ```go
 // filePath := "/path/to/your/file"
 // err := Create(filePath, []byte("file contents"), CreateFile)
 //
 //	if err != nil {
-//	  log.Fatalf("failed to create file: %v", err)
+//		 log.Fatalf("failed to create file: %v", err)
 //	}
+//
+// ```
 func Create(path string, contents []byte, createType CreateType) error {
 	if Exists(path) {
 		return fmt.Errorf("file or directory at path %s already exists", path)
