@@ -1,7 +1,9 @@
 package file_test
 
 import (
+	"bytes"
 	"encoding/csv"
+	"io"
 	"math/rand"
 	"os"
 	"path/filepath"
@@ -9,16 +11,229 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/l50/goutils/v2/file"
 	fileutils "github.com/l50/goutils/v2/file"
 	"github.com/l50/goutils/v2/str"
 	"github.com/stretchr/testify/require"
 )
 
+func TestRealFile_Open(t *testing.T) {
+	tests := []struct {
+		name    string
+		file    string
+		wantErr bool
+	}{
+		{
+			name:    "Opens valid file",
+			file:    "test.txt",
+			wantErr: false,
+		},
+		{
+			name:    "Fails to open non-existing file",
+			file:    "non-existing.txt",
+			wantErr: true,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			// Create a temporary directory for the test
+			tmpDir, err := os.MkdirTemp("", "")
+			if err != nil {
+				t.Fatalf("failed to create temp dir: %v", err)
+			}
+			defer os.RemoveAll(tmpDir) // clean up
+
+			// If the test case is not expected to result in an error,
+			// create the test file in the temporary directory.
+			if !tc.wantErr {
+				err = os.WriteFile(filepath.Join(tmpDir, tc.file), []byte("test content"), 0644)
+				if err != nil {
+					t.Fatalf("failed to create test file: %v", err)
+				}
+			}
+
+			rf := fileutils.RealFile(filepath.Join(tmpDir, tc.file))
+			_, err = rf.Open()
+			if (err != nil) != tc.wantErr {
+				t.Fatalf("Open() error = %v, wantErr %v", err, tc.wantErr)
+			}
+		})
+	}
+}
+
+func TestRealFile_RemoveAll(t *testing.T) {
+	tests := []struct {
+		name    string
+		file    string
+		wantErr bool
+	}{
+		{
+			name:    "Remove valid directory",
+			file:    "test",
+			wantErr: false,
+		},
+		{
+			name:    "Remove non-existing directory",
+			file:    "non-existing",
+			wantErr: false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			tmpDir, err := os.MkdirTemp("", "")
+			if err != nil {
+				t.Fatalf("failed to create temp dir: %v", err)
+			}
+			defer os.RemoveAll(tmpDir)
+
+			if tc.name == "Remove valid directory" {
+				err = os.Mkdir(filepath.Join(tmpDir, tc.file), 0755)
+				if err != nil {
+					t.Fatalf("failed to create test dir: %v", err)
+				}
+			}
+
+			rf := fileutils.RealFile(filepath.Join(tmpDir, tc.file))
+			err = rf.RemoveAll()
+			if (err != nil) != tc.wantErr {
+				t.Fatalf("RemoveAll() error = %v, wantErr %v", err, tc.wantErr)
+			}
+		})
+	}
+}
+
+func TestRealFile_Stat(t *testing.T) {
+	tests := []struct {
+		name    string
+		file    string
+		wantErr bool
+	}{
+		{
+			name:    "Stat valid file",
+			file:    "test.txt",
+			wantErr: false,
+		},
+		{
+			name:    "Fails to stat non-existing file",
+			file:    "non-existing.txt",
+			wantErr: true,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			tmpDir, err := os.MkdirTemp("", "")
+			if err != nil {
+				t.Fatalf("failed to create temp dir: %v", err)
+			}
+			defer os.RemoveAll(tmpDir)
+
+			if !tc.wantErr {
+				err = os.WriteFile(filepath.Join(tmpDir, tc.file), []byte("test content"), 0644)
+				if err != nil {
+					t.Fatalf("failed to create test file: %v", err)
+				}
+			}
+
+			rf := fileutils.RealFile(filepath.Join(tmpDir, tc.file))
+			_, err = rf.Stat()
+			if (err != nil) != tc.wantErr {
+				t.Fatalf("Stat() error = %v, wantErr %v", err, tc.wantErr)
+			}
+		})
+	}
+}
+
+func TestRealFile_Remove(t *testing.T) {
+	tests := []struct {
+		name    string
+		file    string
+		wantErr bool
+	}{
+		{
+			name:    "Remove valid file",
+			file:    "test.txt",
+			wantErr: false,
+		},
+		{
+			name:    "Fails to remove non-existing file",
+			file:    "non-existing.txt",
+			wantErr: true,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			tmpDir, err := os.MkdirTemp("", "")
+			if err != nil {
+				t.Fatalf("failed to create temp dir: %v", err)
+			}
+			defer os.RemoveAll(tmpDir)
+
+			if !tc.wantErr {
+				err = os.WriteFile(filepath.Join(tmpDir, tc.file), []byte("test content"), 0644)
+				if err != nil {
+					t.Fatalf("failed to create test file: %v", err)
+				}
+			}
+
+			rf := fileutils.RealFile(filepath.Join(tmpDir, tc.file))
+			err = rf.Remove()
+			if (err != nil) != tc.wantErr {
+				t.Fatalf("Remove() error = %v, wantErr %v", err, tc.wantErr)
+			}
+		})
+	}
+}
+
+func TestRealFile_Write(t *testing.T) {
+	tests := []struct {
+		name     string
+		file     string
+		contents []byte
+		wantErr  bool
+	}{
+		{
+			name:     "Writes to valid file",
+			file:     "test.txt",
+			contents: []byte("some data"),
+			wantErr:  false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			rf := fileutils.RealFile(tc.file)
+			err := rf.Write(tc.contents, 0644)
+			if (err != nil) != tc.wantErr {
+				t.Fatalf("Write() error = %v, wantErr %v", err, tc.wantErr)
+			}
+
+			// verify the contents if there is no error
+			if !tc.wantErr {
+				data, readErr := os.ReadFile(tc.file)
+				if readErr != nil {
+					t.Fatalf("Cannot read file: %v", readErr)
+				}
+
+				if !bytes.Equal(data, tc.contents) {
+					t.Fatalf("File contents = %v, want %v", data, tc.contents)
+				}
+
+				// clean up
+				if err := os.Remove(tc.file); err != nil {
+					t.Fatalf("Cannot remove file: %v", err)
+				}
+			}
+		})
+	}
+}
+
 func TestAppend(t *testing.T) {
 	tests := []struct {
 		name string
-		file string
+		file fileutils.RealFile
 		data string
 	}{
 		{
@@ -30,30 +245,32 @@ func TestAppend(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			if err := fileutils.Create(tc.file, []byte("I am a test!"), fileutils.CreateEmptyFile); err != nil {
-				t.Fatalf("failed to create %s - CreateEmptyFile() failed: %v", tc.file, err)
+			if err := tc.file.Write([]byte("I am a test!"), 0644); err != nil {
+				t.Fatalf("failed to create %s - Write() failed: %v", string(tc.file), err)
 			}
-			exists := fileutils.Exists(tc.file)
-			if !exists {
-				t.Fatalf("unable to locate %s - exists() failed", tc.file)
+			info, err := tc.file.Stat()
+			if err != nil || info.IsDir() {
+				t.Fatalf("unable to locate %s - Stat() failed", string(tc.file))
 			}
 
-			if err := file.Append(tc.file, tc.data); err != nil {
+			if err := tc.file.Append(tc.data); err != nil {
 				t.Fatalf("failed to append %s to %s - Append() failed: %v",
-					tc.data, tc.file, err)
+					tc.data, string(tc.file), err)
 			}
 
-			stringFoundInFile, err := fileutils.ContainsStr(tc.file, tc.data)
-			if err != nil || !stringFoundInFile {
-				t.Fatalf("failed to find %s in %s - StringInFile() failed: %v", tc.data, tc.file, err)
+			rc, err := tc.file.Open()
+			if err != nil {
+				t.Fatalf("failed to open %s - Open() failed: %v", string(tc.file), err)
+			}
+			defer rc.Close()
+
+			content, err := io.ReadAll(rc)
+			if err != nil || !strings.Contains(string(content), tc.data) {
+				t.Fatalf("failed to find %s in %s - ReadAll() or strings.Contains failed: %v", tc.data, string(tc.file), err)
 			}
 
-			if exists {
-				if err := file.Delete(tc.file); err != nil {
-					t.Fatalf("unable to delete %s, DeleteFile() failed", tc.file)
-				}
-			} else {
-				t.Fatalf("unable to create %s - CreateEmptyFile() failed", tc.file)
+			if err := tc.file.RemoveAll(); err != nil {
+				t.Fatalf("unable to delete %s, RemoveAll() failed", string(tc.file))
 			}
 		})
 	}
@@ -70,33 +287,33 @@ func TestCreate(t *testing.T) {
 		name       string
 		path       string
 		contents   []byte
-		createType file.CreateType
+		createType fileutils.CreateType
 		wantError  bool
 	}{
 		{
 			name:       "create directory",
 			path:       filepath.Join(tmpDir, "test_dir"),
-			createType: file.CreateDirectory,
+			createType: fileutils.CreateDirectory,
 			wantError:  false,
 		},
 		{
 			name:       "create empty file",
 			path:       filepath.Join(tmpDir, "test_file.txt"),
-			createType: file.CreateEmptyFile,
+			createType: fileutils.CreateEmptyFile,
 			wantError:  false,
 		},
 		{
 			name:       "create file with content",
 			path:       filepath.Join(tmpDir, "test_file_with_contents.txt"),
 			contents:   []byte("Hello, World!"),
-			createType: file.CreateFile,
+			createType: fileutils.CreateFile,
 			wantError:  false,
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			err := file.Create(tc.path, tc.contents, tc.createType)
+			err := fileutils.Create(tc.path, tc.contents, tc.createType)
 
 			if (err != nil) != tc.wantError {
 				t.Fatalf("create() error = %v, wantError %v", err, tc.wantError)
@@ -105,7 +322,7 @@ func TestCreate(t *testing.T) {
 
 			// If it's a file creation and we don't expect an error,
 			// check the contents of the file if needed
-			if !tc.wantError && tc.createType != file.CreateDirectory && len(tc.contents) > 0 {
+			if !tc.wantError && tc.createType != fileutils.CreateDirectory && len(tc.contents) > 0 {
 				contents, readErr := os.ReadFile(tc.path)
 				if readErr != nil {
 					t.Fatalf("cannot read file: %v", readErr)
@@ -122,7 +339,7 @@ func TestCreate(t *testing.T) {
 	// Test for an already existing file/directory
 	t.Run("create existing directory", func(t *testing.T) {
 		existingDir := filepath.Join(tmpDir, "/existing_dir")
-		err := file.Create(existingDir, nil, file.CreateDirectory)
+		err := fileutils.Create(existingDir, nil, fileutils.CreateDirectory)
 		if err != nil {
 			t.Fatalf("cannot create directory for testing: %v", err)
 		}
@@ -154,11 +371,11 @@ func TestContainsStr(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			tempDir := t.TempDir()
 			path := filepath.Join(tempDir, "test.txt")
-			if err := fileutils.Write(path, tc.input); err != nil {
+			if err := fileutils.RealFile(path).Write([]byte(tc.input), 0644); err != nil {
 				t.Fatalf("failed to write test data to %s: %v", path, err)
 			}
 
-			result, err := fileutils.ContainsStr(path, tc.searchStr)
+			result, err := fileutils.HasStr(path, tc.searchStr)
 			require.Equal(t, tc.err, err)
 			require.Equal(t, tc.expected, result)
 		})
@@ -231,14 +448,14 @@ func TestExistsAndDeleteFile(t *testing.T) {
 		// Create a temp directory
 		tmpDir, err := os.MkdirTemp("", "testdir")
 		if err != nil {
-			t.Fatalf("Failed to create temp dir: %v", err)
+			t.Fatalf("failed to create temp dir: %v", err)
 		}
 		defer os.RemoveAll(tmpDir) // clean up
 
 		// Create a temp file
 		tmpFile, err := os.CreateTemp(tmpDir, "testfile")
 		if err != nil {
-			t.Fatalf("Failed to create temp file: %v", err)
+			t.Fatalf("failed to create temp file: %v", err)
 		}
 
 		filePath := tmpFile.Name() // Get the full file path
@@ -251,7 +468,7 @@ func TestExistsAndDeleteFile(t *testing.T) {
 
 		// Delete the file
 		if err := fileutils.Delete(filePath); err != nil {
-			t.Fatalf("Failed to delete file: %v", err)
+			t.Fatalf("failed to delete file: %v", err)
 		}
 
 		// Check again if the file exists
@@ -280,7 +497,8 @@ func TestToSlice(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			tempDir := t.TempDir()
 			path := filepath.Join(tempDir, "test.txt")
-			if err := fileutils.Write(path, tc.input); err != nil {
+
+			if err := fileutils.RealFile(path).Write([]byte(tc.input), 0644); err != nil {
 				t.Fatalf("failed to write test data to %s: %v", path, err)
 			}
 
@@ -314,7 +532,7 @@ func TestFind(t *testing.T) {
 			// Create a temporary directory for each test case
 			testDir, err := os.MkdirTemp("", "testdir")
 			if err != nil {
-				t.Fatalf("Failed to create temp dir: %v", err)
+				t.Fatalf("failed to create temp dir: %v", err)
 			}
 			defer os.RemoveAll(testDir) // Clean up the test directory
 
@@ -326,8 +544,7 @@ func TestFind(t *testing.T) {
 				}
 			}
 
-			files, err := file.Find(tc.fileName, []string{testDir})
-
+			files, err := fileutils.Find(tc.fileName, []string{testDir})
 			if (err != nil) != tc.wantErr {
 				t.Fatalf("Find() error = %v, wantErr %v", err, tc.wantErr)
 				return
@@ -397,7 +614,7 @@ func TestWrite(t *testing.T) {
 			tempDir := t.TempDir()
 			path := filepath.Join(tempDir, "test.txt")
 
-			err := fileutils.Write(path, tc.input)
+			err := fileutils.RealFile(path).Write([]byte(tc.input), 0644)
 			require.Equal(t, tc.err, err)
 
 			result, _ := fileutils.ToSlice(path)

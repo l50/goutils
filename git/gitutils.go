@@ -18,33 +18,29 @@ import (
 	"github.com/magefile/mage/sh"
 )
 
-// ConfigUserInfo holds a username and
-// email to use for user.name and user.email.
+// ConfigUserInfo holds user details for the git configuration.
+//
+// **Attributes:**
+//
+// User: Global git username.
+// Email: Email associated with the global git user.
 type ConfigUserInfo struct {
 	User  string
 	Email string
 }
 
-// AddFile stages the file at the given file path in its associated Git repository. Returns an error if one occurs.
+// AddFile adds the file located at the given file path to its
+// affiliated Git repository. An error is returned if an issue
+// happens during this process.
 //
-// Parameters:
+// **Parameters:**
 //
-// filePath: A string representing the path to the file to be staged.
+// filePath: A string indicating the path to the file that
+// will be staged.
 //
-// Returns:
+// **Returns:**
 //
-// error: An error if one occurs during the staging process.
-//
-// Example:
-//
-// filePath := "/path/to/your/file"
-// err := AddFile(filePath)
-//
-//	if err != nil {
-//	  log.Fatalf("failed to stage file: %v", err)
-//	}
-//
-// log.Printf("Staged file: %s", filePath)
+// error: An error if any occurs during the staging process.
 func AddFile(filePath string) error {
 	repo, err := git.PlainOpen(filepath.Dir(filePath))
 	if err != nil {
@@ -79,105 +75,72 @@ func AddFile(filePath string) error {
 	return nil
 }
 
-// Commit creates a new commit in the given repository with the provided message. The author of the commit is retrieved from the global Git user settings.
+// Commit generates a new commit in the specified repository with
+// the given message. The commit's author is extracted from the
+// global Git user settings.
 //
-// Parameters:
+// **Parameters:**
 //
-// repo: A pointer to the Repository struct representing the repository where the commit should be created.
+// repo: A pointer to the Repository struct symbolizing the
+// repository where the commit should be made.
+// msg: A string depicting the commit message.
 //
-// msg: A string representing the commit message.
+// **Returns:**
 //
-// Returns:
-//
-// error: An error if the commit cannot be created.
-//
-// Example:
-//
-// repo, err := git.PlainOpen("/path/to/repo")
-//
-//	if err != nil {
-//	  log.Fatalf("failed to open repository: %v", err)
-//	}
-//
-// msg := "Commit message"
-// err = Commit(repo, msg)
-//
-//	if err != nil {
-//	  log.Fatalf("failed to create commit: %v", err)
-//	}
+// error: An error if the commit can't be created.
 func Commit(repo *git.Repository, msg string) error {
-	cfg, err := GetGlobalUserCfg()
+	cfg, err := repo.Config()
 	if err != nil {
-		return fmt.Errorf(
-			"failed get repo config: %v", err)
+		return fmt.Errorf("failed to get repo config: %v", err)
 	}
 
 	w, err := repo.Worktree()
 	if err != nil {
-		return fmt.Errorf(
-			"failed to retrieve worktree: %v", err)
+		return fmt.Errorf("failed to retrieve worktree: %v", err)
 	}
 
 	commit, err := w.Commit(msg, &git.CommitOptions{
 		Author: &object.Signature{
-			Name:  cfg.User,
-			Email: cfg.Email,
+			Name:  cfg.User.Name,
+			Email: cfg.User.Email,
 			When:  time.Now(),
 		},
 	})
 	if err != nil {
-		return fmt.Errorf(
-			"failed to commit current staging area`: %v",
-			err)
+		return fmt.Errorf("failed to commit current staging area: %v", err)
 	}
 
 	obj, err := repo.CommitObject(commit)
 	if err != nil {
-		return fmt.Errorf(
-			"failed to run `git show`: %v", err)
+		return fmt.Errorf("failed to run `git show`: %v", err)
 	}
 
-	if obj.Author.Email != cfg.Email {
-		return fmt.Errorf(
-			"author email in commit doesn't match "+
-				"global git config email - Commit() failed: %v",
-			err)
+	if obj.Author.Email != cfg.User.Email {
+		return fmt.Errorf("author email in commit doesn't match repo config email - Commit() failed: %v", err)
 	}
 
 	return nil
 }
 
-// CloneRepo clones a Git repository from the specified URL to the target path, using the provided authentication method if it is not nil.
+// CloneRepo clones a Git repository from the specified URL to
+// the given path, using the supplied authentication method, if
+// provided.
 //
-// Parameters:
+// **Parameters:**
 //
-// url: A string representing the URL of the repository to clone.
+// url: A string indicating the URL of the repository to clone.
+// clonePath: A string representing the path where the repository
+// will be cloned.
+// auth: A transport.AuthMethod interface symbolizing the
+// authentication method for cloning. If nil, no authentication is used.
 //
-// clonePath: A string representing the path where the repository should be cloned to.
+// **Returns:**
 //
-// auth: A transport.AuthMethod interface representing the authentication method to use for cloning. If it's nil, no authentication is used.
+// *git.Repository: A pointer to the Repository struct
+// representing the cloned repository.
 //
-// Returns:
-//
-// *git.Repository: A pointer to the Repository struct representing the cloned repository.
-//
-// error: An error if the repository cannot be cloned or already exists at the target path.
-//
-// Example:
-//
-// url := "https://github.com/user/repo.git"
-// clonePath := "/path/to/repo"
-//
-//	auth := &http.BasicAuth{
-//	    Username: "your_username",
-//	    Password: "your_password",
-//	}
-//
-// repo, err := CloneRepo(url, clonePath, auth)
-//
-//	if err != nil {
-//	  log.Fatalf("failed to clone repository: %v", err)
-//	}
+// error: An error if the repository can't be cloned or already
+// exists at the target path.
 func CloneRepo(url string, clonePath string, auth transport.AuthMethod) (
 	*git.Repository, error) {
 	var err error
@@ -212,29 +175,15 @@ func CloneRepo(url string, clonePath string, auth transport.AuthMethod) (
 
 // GetTags returns all tags of the given repository.
 //
-// Parameters:
+// **Parameters:**
 //
-// repo: A pointer to the Repository struct representing the repository from which tags are retrieved.
+// repo: A pointer to the Repository struct representing
+// the repo from which tags are retrieved.
 //
-// Returns:
+// **Returns:**
 //
 // []string: A slice of strings, each representing a tag in the repository.
-//
-// error: An error if the tags cannot be retrieved.
-//
-// Example:
-//
-// repo, err := git.PlainOpen("/path/to/repo")
-//
-//	if err != nil {
-//	  log.Fatalf("failed to open repository: %v", err)
-//	}
-//
-// tags, err := GetTags(repo)
-//
-//	if err != nil {
-//	  log.Fatalf("failed to get tags: %v", err)
-//	}
+// error: An error if a problem occurs while retrieving the tags.
 func GetTags(repo *git.Repository) ([]string, error) {
 	var tags []string
 	tagObjects, err := repo.TagObjects()
@@ -271,21 +220,16 @@ func tagExists(repo *git.Repository, tag string) (bool, error) {
 	return false, nil
 }
 
-// GetGlobalUserCfg retrieves the username and email from the global git user settings.
+// GetGlobalUserCfg fetches the username and email from the global git user
+// settings. It returns a ConfigUserInfo struct containing the global git
+// username and email. An error is returned if the global git username or email
+// cannot be retrieved.
 //
-// Returns:
+// **Returns:**
 //
-// ConfigUserInfo: A ConfigUserInfo struct containing the global git username and email.
+// ConfigUserInfo: Struct containing the global git username and email.
 //
-// error: An error if the global git username or email cannot be retrieved.
-//
-// Example:
-//
-// userInfo, err := GetGlobalUserCfg()
-//
-//	if err != nil {
-//	  log.Fatalf("failed to retrieve global git user settings: %v", err)
-//	}
+// error: Error if the global git username or email can't be retrieved.
 func GetGlobalUserCfg() (ConfigUserInfo, error) {
 	userInfo := ConfigUserInfo{}
 	var err error
@@ -305,32 +249,17 @@ func GetGlobalUserCfg() (ConfigUserInfo, error) {
 	return userInfo, nil
 }
 
-// CreateTag creates a new tag in the given repository.
+// CreateTag forms a new tag in the specified repository.
 //
-// Parameters:
+// **Parameters:**
 //
-// repo: A pointer to the Repository struct representing the repository where the tag should be created.
+// repo: Pointer to the Repository struct, the repository where the tag is created.
+// tag: String, the name of the tag to create.
 //
-// tag: A string representing the name of the tag to create.
+// **Returns:**
 //
-// Returns:
-//
-// error: An error if the tag cannot be created, already exists, or if the global git user settings cannot be retrieved.
-//
-// Example:
-//
-// repo, err := git.PlainOpen("/path/to/repo")
-//
-//	if err != nil {
-//	  log.Fatalf("failed to open repository: %v", err)
-//	}
-//
-// tag := "v1.0.0"
-// err = CreateTag(repo, tag)
-//
-//	if err != nil {
-//	  log.Fatalf("failed to create tag: %v", err)
-//	}
+// error: Error if the tag can't be created, already exists, or if the global git
+// user settings can't be retrieved.
 func CreateTag(repo *git.Repository, tag string) error {
 	exists, err := tagExists(repo, tag)
 	if err != nil {
@@ -372,36 +301,18 @@ func CreateTag(repo *git.Repository, tag string) error {
 	return nil
 }
 
-// Push pushes the contents of the given repository to the default remote (origin).
+// Push transmits the contents of the specified repository to the default
+// remote (origin).
 //
-// Parameters:
+// **Parameters:**
 //
-// repo: A pointer to the Repository struct representing the repository to push.
+// repo: Pointer to the Repository struct, the repository to push.
+// auth: A transport.AuthMethod interface, the authentication method for the push.
+// If it's nil, no authentication is used.
 //
-// auth: A transport.AuthMethod interface representing the authentication method to use for the push. If it's nil, no authentication is used.
+// **Returns:**
 //
-// Returns:
-//
-// error: An error if the push fails.
-//
-// Example:
-//
-// repo, err := git.PlainOpen("/path/to/repo")
-//
-//	if err != nil {
-//	  log.Fatalf("failed to open repository: %v", err)
-//	}
-//
-//	auth := &http.BasicAuth{
-//	    Username: "your_username",
-//	    Password: "your_password",
-//	}
-//
-// err = Push(repo, auth)
-//
-//	if err != nil {
-//	  log.Fatalf("failed to push to remote: %v", err)
-//	}
+// error: Error if the push fails.
 func Push(repo *git.Repository, auth transport.AuthMethod) error {
 	var pushOptions *git.PushOptions
 
@@ -419,11 +330,9 @@ func Push(repo *git.Repository, auth transport.AuthMethod) error {
 	}
 
 	err := repo.Push(pushOptions)
-
 	if err != nil {
 		if err == git.NoErrAlreadyUpToDate {
-			fmt.Print(color.YellowString(
-				"origin remote is up-to-date, no push was executed."))
+			fmt.Print("origin remote is up-to-date, no push was executed.")
 			return nil
 		}
 		return fmt.Errorf(
@@ -433,27 +342,17 @@ func Push(repo *git.Repository, auth transport.AuthMethod) error {
 	return nil
 }
 
-// PushTag pushes a specific tag of the given repository to the default remote (origin).
+// PushTag pushes a specific tag of the given repository to the default remote.
 //
-// Parameters:
+// **Parameters:**
 //
-// repo: A pointer to the Repository struct representing the repository where the tag should be pushed.
+// repo: Repository where the tag should be pushed.
+// tag: Name of the tag to push.
+// auth: Authentication method for the push. If nil, no authentication is used.
 //
-// tag: A string representing the name of the tag to push.
+// **Returns:**
 //
-// auth: A transport.AuthMethod interface representing the authentication method to use for the push. If it's nil, no authentication is used.
-//
-// Returns:
-//
-// error: An error if the push fails.
-//
-// Example:
-//
-// repo, err := git.PlainOpen("/path/to/repo")
-//
-//	if err != nil {
-//	  log.Fatalf("failed to open repository: %v", err)
-//	}
+// error: Error if the push fails.
 func PushTag(repo *git.Repository, tag string, auth transport.AuthMethod) error {
 	var pushOptions *git.PushOptions
 
@@ -475,7 +374,6 @@ func PushTag(repo *git.Repository, tag string, auth transport.AuthMethod) error 
 	}
 
 	err := repo.Push(pushOptions)
-
 	if err != nil {
 		if err == git.NoErrAlreadyUpToDate {
 			fmt.Print(color.YellowString(
@@ -492,38 +390,14 @@ func PushTag(repo *git.Repository, tag string, auth transport.AuthMethod) error 
 
 // DeleteTag deletes the local input tag from the specified repo.
 //
-// Parameters:
+// **Parameters:**
 //
-// repo: A pointer to the Repository struct representing the repository where the tag should be deleted.
+// repo: Repository where the tag should be deleted.
+// tag: The tag that should be deleted.
 //
-// tag: A string representing the tag that should be deleted.
+// **Returns:**
 //
-// auth: An AuthMethod representing the method used to authenticate with the remote repository.
-//
-// Returns:
-//
-// error: An error if the tag cannot be deleted.
-//
-// Example:
-//
-// repo, err := git.PlainOpen("/path/to/repo")
-//
-//	if err != nil {
-//	  log.Fatalf("failed to open repository: %v", err)
-//	}
-//
-// tag := "v1.0.0"
-// auth, err := ssh.NewSSHAgentAuth("git")
-//
-//	if err != nil {
-//	  log.Fatalf("failed to create authentication method: %v", err)
-//	}
-//
-// err = DeletePushedTag(repo, tag, auth)
-//
-//	if err != nil {
-//	  log.Fatalf("failed to delete pushed tag: %v", err)
-//	}
+// error: Error if the tag cannot be deleted.
 func DeleteTag(repo *git.Repository, tag string) error {
 	if err := repo.DeleteTag(tag); err != nil {
 		return fmt.Errorf(
@@ -533,41 +407,17 @@ func DeleteTag(repo *git.Repository, tag string) error {
 	return nil
 }
 
-// DeletePushedTag deletes a tag from a given repository that has been pushed remote.
-// The tag is deleted from both the local repository and the remote repository.
+// DeletePushedTag deletes a tag from a repository that has been pushed.
 //
-// Parameters:
+// **Parameters:**
 //
-// repo: A pointer to the Repository struct representing the repository where the tag should be deleted.
+// repo: Repository where the tag should be deleted.
+// tag: The tag that should be deleted.
+// auth: Authentication method for the push.
 //
-// tag: A string representing the tag that should be deleted.
+// **Returns:**
 //
-// auth: An AuthMethod representing the method used to authenticate with the remote repository.
-//
-// Returns:
-//
-// error: An error if the tag cannot be deleted.
-//
-// Example:
-//
-// repo, err := git.PlainOpen("/path/to/repo")
-//
-//	if err != nil {
-//	  log.Fatalf("failed to open repository: %v", err)
-//	}
-//
-// tag := "v1.0.0"
-// auth, err := ssh.NewSSHAgentAuth("git")
-//
-//	if err != nil {
-//	  log.Fatalf("failed to create authentication method: %v", err)
-//	}
-//
-// err = DeletePushedTag(repo, tag, auth)
-//
-//	if err != nil {
-//	  log.Fatalf("failed to delete pushed tag: %v", err)
-//	}
+// error: Error if the tag cannot be deleted.
 func DeletePushedTag(repo *git.Repository, tag string, auth transport.AuthMethod) error {
 	err := repo.Push(&git.PushOptions{
 		RemoteName: "origin",
@@ -590,26 +440,14 @@ func DeletePushedTag(repo *git.Repository, tag string, auth transport.AuthMethod
 }
 
 // PullRepos updates all git repositories located in the specified directories.
-// It traverses each directory recursively, identifies directories that contain a ".git" subdirectory,
-// and runs a "git pull" command for the current branch. If no branch is checked out, it tries to pull the default branch.
-// Parameters:
 //
-// dirs: Strings representing paths to directories that should be searched for git repositories.
+// **Parameters:**
 //
-// Returns:
+// dirs: Paths to directories to be searched for git repositories.
 //
-// error: An error if the current working directory cannot be obtained, a directory cannot be traversed,
+// **Returns:**
 //
-//	a directory cannot be changed, or the current or default branch cannot be obtained.
-//
-// Example:
-//
-// dirs := []string{"/path/to/your/directory", "/another/path/to/your/directory"}
-// err := sys.PullRepos(dirs...)
-//
-//	if err != nil {
-//	  log.Fatalf("failed to pull repos: %v", err)
-//	}
+// error: Error if there's a problem with pulling the repositories.
 func PullRepos(dirs ...string) error {
 	for _, dir := range dirs {
 		err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
@@ -664,28 +502,12 @@ func updateRepo(repoDir string) error {
 	return nil
 }
 
-// RepoRoot finds and returns the absolute path of the root directory of the current Git repository.
-// It does this by moving upwards through the directory hierarchy until it finds a directory containing a ".git" subdirectory.
-// If it reaches the filesystem root without finding a Git repository, an error is returned.
+// RepoRoot finds and returns the root directory of the current Git repository.
 //
-// Parameters:
+// **Returns:**
 //
-// # None
-//
-// Returns:
-//
-// string: A string representing the absolute path to the root directory of the current Git repository.
-// error: An error if the current working directory cannot be obtained, or a Git repository root cannot be found.
-//
-// Example:
-//
-// root, err := gitutils.RepoRoot()
-//
-//	if err != nil {
-//	    log.Fatalf("failed to retrieve root: %v", err)
-//	}
-//
-// fmt.Printf("The root of the current Git repository is: %s\n", root)
+// string: Absolute path to the root directory of the current Git repository.
+// error: Error if the Git repository root cannot be found.
 func RepoRoot() (string, error) {
 	cwd, err := os.Getwd()
 	if err != nil {

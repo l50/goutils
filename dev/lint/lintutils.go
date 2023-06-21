@@ -16,20 +16,6 @@ import (
 
 var pc = sh.RunCmd("pre-commit")
 
-// checkPCProject ensures the project utilizes pre-commit,
-// otherwise these utilities are not very useful to run.
-//
-// Returns:
-//
-// error: An error if pre-commit is not configured for the current project.
-//
-// Example:
-//
-// err := checkPCProject()
-//
-//	if err != nil {
-//	  log.Fatalf("Error checking project: %v", err)
-//	}
 func checkPCProject() error {
 	cwd := sys.Gwd()
 	pcFile := ".pre-commit-config.yaml"
@@ -45,19 +31,12 @@ func checkPCProject() error {
 	return nil
 }
 
-// InstallGoPCDeps installs dependencies used for pre-commit with Golang projects.
+// InstallGoPCDeps installs dependencies used for pre-commit with Golang
+// projects.
 //
-// Returns:
+// **Returns:**
 //
 // error: An error if the dependencies fail to install.
-//
-// Example:
-//
-// err := InstallGoPCDeps()
-//
-//	if err != nil {
-//	  log.Fatalf("Error installing dependencies: %v", err)
-//	}
 func InstallGoPCDeps() error {
 	if err := checkPCProject(); err != nil {
 		return err
@@ -81,17 +60,9 @@ func InstallGoPCDeps() error {
 
 // InstallPCHooks installs pre-commit hooks locally.
 //
-// Returns:
+// **Returns:**
 //
 // error: An error if the hooks fail to install.
-//
-// Example:
-//
-// err := InstallPCHooks()
-//
-//	if err != nil {
-//	  log.Fatalf("Error installing hooks: %v", err)
-//	}
 func InstallPCHooks() error {
 	if err := checkPCProject(); err != nil {
 		return err
@@ -106,17 +77,9 @@ func InstallPCHooks() error {
 
 // UpdatePCHooks updates pre-commit hooks locally.
 //
-// Returns:
+// **Returns:**
 //
 // error: An error if the hooks fail to update.
-//
-// Example:
-//
-// err := UpdatePCHooks()
-//
-//	if err != nil {
-//	  log.Fatalf("Error updating hooks: %v", err)
-//	}
 func UpdatePCHooks() error {
 	if err := checkPCProject(); err != nil {
 		return err
@@ -131,17 +94,9 @@ func UpdatePCHooks() error {
 
 // ClearPCCache clears the pre-commit cache.
 //
-// Returns:
+// **Returns:**
 //
 // error: An error if the cache fails to clear.
-//
-// Example:
-//
-// err := ClearPCCache()
-//
-//	if err != nil {
-//	  log.Fatalf("Error clearing cache: %v", err)
-//	}
 func ClearPCCache() error {
 	if err := checkPCProject(); err != nil {
 		return err
@@ -154,29 +109,16 @@ func ClearPCCache() error {
 	return nil
 }
 
-// RunPCHooks runs pre-commit hooks with a provided timeout. If no timeout is provided, it defaults to 600.
+// RunPCHooks runs pre-commit hooks with a provided timeout.
+// If no timeout is provided, it defaults to 600.
 //
-// Parameters:
+// **Parameters:**
 //
-// timeout (optional): An integer specifying the timeout duration for running pre-commit hooks.
+// timeout (optional): An integer specifying the timeout duration.
 //
-// Returns:
+// **Returns:**
 //
 // error: An error if the pre-commit hook execution fails.
-//
-// Example:
-//
-// err := RunPCHooks() // Runs with a default timeout of 600.
-//
-//	if err != nil {
-//	   log.Fatalf("Failed to run pre-commit hooks: %v", err)
-//	}
-//
-// err = RunPCHooks(300) // Runs with a specified timeout of 300.
-//
-//	if err != nil {
-//	   log.Fatalf("Failed to run pre-commit hooks: %v", err)
-//	}
 func RunPCHooks(timeout ...int) error {
 	var timeoutValue int
 	if len(timeout) > 0 {
@@ -193,24 +135,17 @@ func RunPCHooks(timeout ...int) error {
 	return nil
 }
 
-// AddFencedCB addresses MD040 issues found with markdownlint by adding the input language to fenced code blocks in the input filePath.
+// AddFencedCB addresses MD040 issues found with markdownlint by adding
+// the input language to fenced code blocks in the input filePath.
 //
-// Parameters:
+// **Parameters:**
 //
-// filePath: A string representing the path to the markdown file to modify.
-// language: A string representing the language to be added to the fenced code block.
+// filePath: Path to the markdown file to modify.
+// language: Language to be added to the fenced code block.
 //
-// Returns:
+// **Returns:**
 //
 // error: An error if the markdown file fails to be modified.
-//
-// Example:
-//
-// err := AddFencedCB("/path/to/markdown/file", "go")
-//
-//	if err != nil {
-//	  log.Fatalf("Error modifying markdown file: %v", err)
-//	}
 func AddFencedCB(filePath string, language string) error {
 	// Open the file
 	file, err := os.Open(filePath)

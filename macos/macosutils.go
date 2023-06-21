@@ -6,25 +6,16 @@ import (
 	"github.com/magefile/mage/sh"
 )
 
-// InstallBrewDeps installs the input brew packages by running brew install.
+// InstallBrewDeps executes brew install for the input packages.
 // If any installation fails, it returns an error.
 //
-// Parameters:
+// **Parameters:**
 //
-// brewPackages: A slice of strings representing the brew packages to be installed.
+// brewPackages: Slice of strings representing the packages to install.
 //
-// Returns:
+// **Returns:**
 //
-// error: An error if any brew package fails to install.
-//
-// Example:
-//
-// brewPackages := []string{"shellcheck", "shfmt"}
-// err := macos.InstallBrewDeps(brewPackages)
-//
-//	if err != nil {
-//	  log.Fatalf("failed to install brew dependencies: %v", err)
-//	}
+// error: An error if any package fails to install.
 func InstallBrewDeps(brewPackages []string) error {
 	for _, pkg := range brewPackages {
 		err := sh.RunV("brew", "install", pkg)
@@ -36,21 +27,13 @@ func InstallBrewDeps(brewPackages []string) error {
 	return nil
 }
 
-// InstallBrewTFDeps installs dependencies for terraform projects using homebrew.
-// The dependencies include several shell and terraform tools.
-// If any installation fails, it returns an error.
+// InstallBrewTFDeps installs dependencies for terraform projects
+// using homebrew. The dependencies include several shell and
+// terraform tools. If any installation fails, it returns an error.
 //
-// Returns:
+// **Returns:**
 //
-// error: An error if any brew package fails to install.
-//
-// Example:
-//
-// err := macos.InstallBrewTFDeps()
-//
-//	if err != nil {
-//	  log.Fatalf("failed to install terraform brew dependencies: %v", err)
-//	}
+// error: An error if any package fails to install.
 func InstallBrewTFDeps() error {
 	brewPackages := []string{
 		// Install shell tools
