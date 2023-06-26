@@ -17,32 +17,30 @@ import (
 	"github.com/l50/goutils/v2/sys"
 )
 
-// Compile builds a Go application for a specified operating system and
-// architecture by setting the appropriate environment variables and running
-// `go build`. The compiled application is placed in the specified build path.
+// FuncInfo represents information about an exported function within a Go package.
 //
-// Parameters:
+// **Attributes:**
+//
+// FilePath: A string representing the path to the source file containing the function declaration.
+// FuncName: A string representing the name of the exported function.
+type FuncInfo struct {
+	FilePath string // FilePath is the file path of the source file containing the function declaration.
+	FuncName string // FuncName is the name of the exported function.
+}
+
+// Compile builds a Go application for a specified operating system and
+// architecture. It sets the appropriate environment variables and runs `go
+// build`. The compiled application is placed in the specified build path.
+//
+// **Parameters:**
 //
 // buildPath: The output directory for the compiled application.
 // goOS: The target operating system (e.g., "linux", "darwin", "windows").
 // goArch: The target architecture (e.g., "amd64", "arm64").
 //
-// Returns:
+// **Returns:**
 //
-// error: An error, if the compilation process encounters one.
-//
-// Example:
-//
-// buildPath := "/path/to/output/directory"
-// goOS := "linux"
-// goArch := "amd64"
-// err := Compile(buildPath, goOS, goArch)
-//
-//	if err != nil {
-//	  log.Fatalf("failed to compile: %v", err)
-//	}
-//
-// fmt.Printf("Application compiled successfully at: %s\n", buildPath)
+// error: An error if the compilation process encounters one.
 func Compile(buildPath string, goOS string, goArch string) error {
 	os.Setenv("GOOS", goOS)
 	os.Setenv("GOARCH", goArch)
@@ -54,25 +52,16 @@ func Compile(buildPath string, goOS string, goArch string) error {
 	return err
 }
 
-// GHRelease creates a new release on GitHub with the given new version.
-// It requires that the gh CLI tool is available on the PATH.
+// GHRelease creates a new release on GitHub using the given new version.
+// It requires the gh CLI tool to be available on the PATH.
 //
-// Parameters:
+// **Parameters:**
 //
 // newVer: A string specifying the new version, e.g., "v1.0.1"
 //
-// Returns:
+// **Returns:**
 //
-// error: An error if the GHRelease function was not successful.
-//
-// Example:
-//
-// newVer := "v1.0.1"
-// err := GHRelease(newVer)
-//
-//	if err != nil {
-//	  log.Fatalf("failed to create new GH release: %v", err)
-//	}
+// error: An error if the GHRelease function is not successful.
 func GHRelease(newVer string) error {
 	cmd := "gh"
 	if !sys.CmdExists("gh") {
@@ -98,19 +87,12 @@ func GHRelease(newVer string) error {
 	return nil
 }
 
-// GoReleaser runs the Goreleaser tool to generate all the supported binaries specified in a .goreleaser configuration file.
+// GoReleaser runs the Goreleaser tool to generate all the supported binaries
+// specified in a .goreleaser configuration file.
 //
-// Returns:
+// **Returns:**
 //
-// error: An error if the Goreleaser function was not successful.
-//
-// Example:
-//
-// err := GoReleaser()
-//
-//	if err != nil {
-//	  log.Fatalf("failed to run GoReleaser: %v", err)
-//	}
+// error: An error if the Goreleaser function is not successful.
 func GoReleaser() error {
 	if fileutils.Exists(".goreleaser.yaml") || fileutils.Exists(".goreleaser.yml") {
 		if sys.CmdExists("goreleaser") {
@@ -127,19 +109,12 @@ func GoReleaser() error {
 	return nil
 }
 
-// InstallVSCodeModules installs the modules used by the vscode-go extension in Visual Studio Code.
+// InstallVSCodeModules installs the modules used by the vscode-go extension in
+// Visual Studio Code.
 //
-// Returns:
+// **Returns:**
 //
-// error: An error if the InstallVSCodeModules function was not successful.
-//
-// Example:
-//
-// err := InstallVSCodeModules()
-//
-//	if err != nil {
-//	  log.Fatalf("failed to install VS Code modules: %v", err)
-//	}
+// error: An error if the InstallVSCodeModules function is not successful.
 func InstallVSCodeModules() error {
 	fmt.Println(color.YellowString("Installing vscode-go dependencies."))
 	vscodeDeps := []string{
@@ -163,27 +138,18 @@ func InstallVSCodeModules() error {
 	return nil
 }
 
-// ModUpdate updates go modules by running 'go get -u' or 'go get -u ./...' if recursive is set to true.
-// The function will run in verbose mode if 'v' is set to true.
+// ModUpdate updates go modules by running 'go get -u' or 'go get -u ./...' if
+// recursive is set to true. The function will run in verbose mode if 'v' is
+// set to true.
 //
-// Parameters:
+// **Parameters:**
 //
 // recursive: A boolean specifying whether to run the update recursively.
 // v: A boolean specifying whether to run the update in verbose mode.
 //
-// Returns:
+// **Returns:**
 //
-// error: An error if the ModUpdate function was not successful.
-//
-// Example:
-//
-// recursive := true
-// verbose := true
-// err := ModUpdate(recursive, verbose)
-//
-//	if err != nil {
-//	  log.Fatalf("failed to update modules: %v", err)
-//	}
+// error: An error if the ModUpdate function is not successful.
 func ModUpdate(recursive bool, v bool) error {
 	verbose := ""
 	if v {
@@ -203,19 +169,11 @@ func ModUpdate(recursive bool, v bool) error {
 	return nil
 }
 
-// Tidy runs 'go mod tidy' to clean up the module dependencies.
+// Tidy executes 'go mod tidy' to clear the module dependencies.
 //
-// Returns:
+// **Returns:**
 //
-// error: An error if the Tidy function was not successful.
-//
-// Example:
-//
-// err := Tidy()
-//
-//	if err != nil {
-//	  log.Fatalf("failed to tidy modules: %v", err)
-//	}
+// error: An error if the Tidy function didn't run successfully.
 func Tidy() error {
 	if err := sh.Run("go", "mod", "tidy"); err != nil {
 		return fmt.Errorf("failed to run `go mod tidy`: %v", err)
@@ -224,25 +182,16 @@ func Tidy() error {
 	return nil
 }
 
-// UpdateMageDeps updates the dependencies in a specified Magefile directory.
-// If no directory is provided, it defaults to the 'magefiles' directory.
+// UpdateMageDeps modifies the dependencies in a given Magefile directory.
+// If no directory is provided, it falls back to the 'magefiles' directory.
 //
-// Parameters:
+// **Parameters:**
 //
-// magedir: A string specifying the path to the magefiles directory.
+// magedir: A string defining the path to the magefiles directory.
 //
-// Returns:
+// **Returns:**
 //
-// error: An error if the UpdateMageDeps function was not successful.
-//
-// Example:
-//
-// magedir := "custom/mage/dir"
-// err := UpdateMageDeps(magedir)
-//
-//	if err != nil {
-//	  log.Fatalf("failed to update Mage dependencies: %v", err)
-//	}
+// error: An error if the UpdateMageDeps function didn't run successfully.
 func UpdateMageDeps(magedir string) error {
 	if magedir == "" {
 		magedir = "magefiles"
@@ -271,28 +220,19 @@ func UpdateMageDeps(magedir string) error {
 	return nil
 }
 
-// InstallGoDeps installs the specified Go dependencies by running 'go install' for each dependency.
+// InstallGoDeps installs the specified Go dependencies by executing 'go install'
+// for each dependency.
 //
-// Parameters:
+// **Parameters:**
 //
-// deps: A slice of strings specifying the dependencies to install.
+// deps: A slice of strings defining the dependencies to install.
 //
-// Returns:
+// **Returns:**
 //
-// error: An error if the InstallGoDeps function was not successful.
-//
-// Example:
-//
-// deps := []string{"github.com/stretchr/testify", "github.com/go-chi/chi"}
-// err := InstallGoDeps(deps)
-//
-//	if err != nil {
-//	  log.Fatalf("failed to install Go dependencies: %v", err)
-//	}
+// error: An error if the InstallGoDeps function didn't run successfully.
 func InstallGoDeps(deps []string) error {
 	for _, dep := range deps {
-		_, err := sys.RunCommand("go", "install", dep+"@latest")
-		if err != nil {
+		if _, err := sys.RunCommand("go", "install", dep+"@latest"); err != nil {
 			return fmt.Errorf("failed to install input go dependencies: %v", err)
 		}
 	}
@@ -300,39 +240,22 @@ func InstallGoDeps(deps []string) error {
 	return nil
 }
 
-// FuncInfo contains information about an exported function, including the file path and function name.
-type FuncInfo struct {
-	// FilePath is the file path of the source file containing the function declaration.
-	FilePath string
-	// FuncName is the name of the exported function.
-	FuncName string
-}
-
-// FindExportedFunctionsInPackage finds all exported functions in a given Go package by recursively parsing all non-test
-// Go files in the package directory and returning a slice of FuncInfo structs, each containing the file path and the
-// name of an exported function. If no exported functions are found in the package, an error is returned.
+// FindExportedFunctionsInPackage finds all exported functions in a given Go
+// package by parsing all non-test Go files in the package directory. It returns
+// a slice of FuncInfo structs. Each contains the file path and the name of an
+// exported function. If no exported functions are found in the package, an
+// error is returned.
 //
-// Parameters:
+// **Parameters:**
 //
-// pkgPath: A string representing the path to the directory containing the package to search for exported functions.
+// pkgPath: A string representing the path to the directory containing the package
+// to search for exported functions.
 //
-// Returns:
+// **Returns:**
 //
-// []FuncInfo: A slice of FuncInfo structs, each containing the file path and the name of an exported function found in the package.
+// []FuncInfo: A slice of FuncInfo structs, each containing the file path and the
+// name of an exported function found in the package.
 // error: An error if no exported functions are found.
-//
-// Example:
-//
-// packagePath := "/path/to/your/go/package"
-// funcs, err := FindExportedFunctionsInPackage(packagePath)
-//
-//	if err != nil {
-//		 log.Fatalf("failed to find exported functions: %v", err)
-//	}
-//
-//	for _, f := range funcs {
-//		 log.Printf("Exported function %s found in file %s\n", f.Name, f.FilePath)
-//	}
 func FindExportedFunctionsInPackage(pkgPath string) ([]FuncInfo, error) {
 	var funcs []FuncInfo
 
@@ -368,31 +291,20 @@ func FindExportedFunctionsInPackage(pkgPath string) ([]FuncInfo, error) {
 	return funcs, nil
 }
 
-// FindExportedFuncsWithoutTests finds all exported functions in a given package path that do not have corresponding tests.
+// FindExportedFuncsWithoutTests discovers all exported functions in a given
+// package path that lack corresponding tests.
 //
-// Parameters:
+// **Parameters:**
 //
-// pkgPath: A string specifying the package path to search.
+// pkgPath: A string defining the package path to search.
 //
-// Returns:
+// **Returns:**
 //
-// []string: A slice of strings containing the names of exported functions that do not have corresponding tests.
+// []string: A slice of strings containing the names of exported functions that
+// lack corresponding tests.
 //
 // error: An error if there was a problem parsing the package or finding the tests.
-//
-// Example:
-//
-// funcs, err := FindExportedFuncsWithoutTests("github.com/myorg/mypackage")
-//
-//	if err != nil {
-//	  log.Fatalf("failed to find exported functions without tests: %v", err)
-//	}
-//
-//	for _, funcName := range funcs {
-//	  fmt.Println(funcName)
-//	}
 func FindExportedFuncsWithoutTests(pkgPath string) ([]string, error) {
-	// Find all exported functions in the package
 	funcs, err := FindExportedFunctionsInPackage(pkgPath)
 	if err != nil {
 		return nil, err

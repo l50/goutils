@@ -14,6 +14,7 @@ import (
 	"time"
 
 	mageutils "github.com/l50/goutils/v2/dev/mage"
+	fileutils "github.com/l50/goutils/v2/file"
 	"github.com/l50/goutils/v2/git"
 	"github.com/l50/goutils/v2/str"
 	"github.com/l50/goutils/v2/sys"
@@ -83,7 +84,8 @@ func setup() error {
 
 func teardown() {
 	for _, dir := range mageCleanupArtifacts {
-		info, err := os.Stat(dir)
+		file := fileutils.RealFile(dir)
+		info, err := file.Stat()
 		if err != nil {
 			if os.IsNotExist(err) {
 				continue
@@ -92,7 +94,7 @@ func teardown() {
 		}
 
 		if info != nil {
-			if err := sys.RmRf(dir); err != nil {
+			if err := sys.RmRf(file); err != nil {
 				log.Printf("failed to clean up directory %s: %v", dir, err)
 			}
 		}

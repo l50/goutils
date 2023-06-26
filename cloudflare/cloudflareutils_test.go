@@ -1,6 +1,7 @@
 package cloudflare_test
 
 import (
+	"bytes"
 	"io"
 	"net/http"
 	"strings"
@@ -57,4 +58,24 @@ func TestGetDNSRecords(t *testing.T) {
 			}
 		})
 	}
+}
+
+type MockHTTPClient struct{}
+
+func (m *MockHTTPClient) Do(req *http.Request) (*http.Response, error) {
+	// Here you have to provide a response in the format that your function expects
+	jsonResp := `{
+		"result": [
+			{
+				"name": "your-dns-name",
+				"content": "your-dns-content"
+			}
+		]
+	}`
+
+	return &http.Response{
+		StatusCode: 200,
+		Body:       io.NopCloser(bytes.NewBufferString(jsonResp)),
+		Header:     make(http.Header),
+	}, nil
 }

@@ -1,118 +1,238 @@
-# goutils/v2/dev
+# goutils/v2/mageutils
 
-The `dev` package is a part of `goutils` library. It provides utility
-functions for development-oriented operations in Go.
+The `mageutils` package is a collection of utility functions
+designed to simplify common mageutils tasks.
+
+Table of contents:
+
+- [Functions](#functions)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Tests](#tests)
+- [Contributing](#contributing)
+- [License](#license)
 
 ---
 
 ## Functions
 
-### GHRelease
+### Compile
 
 ```go
-func GHRelease(newVer string) error
+Compile(string, string, string) error
 ```
 
-Create a new release on GitHub with the given new version.
+Compile builds a Go application for a specified operating system and
+architecture. It sets the appropriate environment variables and runs `go
+build`. The compiled application is placed in the specified build path.
 
-### GoReleaser
+**Parameters:**
 
-```go
-func GoReleaser() error
-```
+buildPath: The output directory for the compiled application.
+goOS: The target operating system (e.g., "linux", "darwin", "windows").
+goArch: The target architecture (e.g., "amd64", "arm64").
 
-Run the Goreleaser tool to generate all the supported
-binaries specified in a .goreleaser configuration file.
+**Returns:**
 
-### InstallVSCodeModules
+error: An error if the compilation process encounters one.
 
-```go
-func InstallVSCodeModules() error
-```
-
-Installs the modules used by the vscode-go extension in Visual Studio Code.
-
-### ModUpdate
-
-```go
-func ModUpdate(recursive bool, v bool) error
-```
-
-Updates go modules by running `go get -u` or
-`go get -u ./...` if recursive is set to true.
-
-### Tidy
-
-```go
-func Tidy() error
-```
-
-Run `go mod tidy` to clean up the
-module dependencies.
-
-### UpdateMageDeps
-
-```go
-func UpdateMageDeps(magedir string) error
-```
-
-Update the dependencies in a specified Magefile directory.
-
-### InstallGoDeps
-
-```go
-func InstallGoDeps(deps []string) error
-```
-
-Install the specified Go dependencies by
-running `go install` for each dependency.
-
-### FindExportedFunctionsInPackage
-
-```go
-func FindExportedFunctionsInPackage(pkgPath string) ([]FuncInfo, error)
-```
-
-Find all exported functions in a given Go
-package by recursively parsing all non-test
-Go files in the package directory.
+---
 
 ### FindExportedFuncsWithoutTests
 
 ```go
-func FindExportedFuncsWithoutTests(pkgPath string) ([]string, error)
+FindExportedFuncsWithoutTests(string) []string, error
 ```
 
-Finds all exported functions in a given package path that
-do not have corresponding tests.
+FindExportedFuncsWithoutTests discovers all exported functions in a given
+package path that lack corresponding tests.
+
+**Parameters:**
+
+pkgPath: A string defining the package path to search.
+
+**Returns:**
+
+[]string: A slice of strings containing the names of exported functions that
+lack corresponding tests.
+
+error: An error if there was a problem parsing the package or finding the tests.
+
+---
+
+### FindExportedFunctionsInPackage
+
+```go
+FindExportedFunctionsInPackage(string) []FuncInfo, error
+```
+
+FindExportedFunctionsInPackage finds all exported functions in a given Go
+package by parsing all non-test Go files in the package directory. It returns
+a slice of FuncInfo structs. Each contains the file path and the name of an
+exported function. If no exported functions are found in the package, an
+error is returned.
+
+**Parameters:**
+
+pkgPath: A string representing the path to the directory containing the package
+to search for exported functions.
+
+**Returns:**
+
+[]FuncInfo: A slice of FuncInfo structs, each containing the file path and the
+name of an exported function found in the package.
+error: An error if no exported functions are found.
+
+---
+
+### GHRelease
+
+```go
+GHRelease(string) error
+```
+
+GHRelease creates a new release on GitHub using the given new version.
+It requires the gh CLI tool to be available on the PATH.
+
+**Parameters:**
+
+newVer: A string specifying the new version, e.g., "v1.0.1"
+
+**Returns:**
+
+error: An error if the GHRelease function is not successful.
+
+---
+
+### GoReleaser
+
+```go
+GoReleaser() error
+```
+
+GoReleaser runs the Goreleaser tool to generate all the supported binaries
+specified in a .goreleaser configuration file.
+
+**Returns:**
+
+error: An error if the Goreleaser function is not successful.
+
+---
+
+### InstallGoDeps
+
+```go
+InstallGoDeps([]string) error
+```
+
+InstallGoDeps installs the specified Go dependencies by executing 'go install'
+for each dependency.
+
+**Parameters:**
+
+deps: A slice of strings defining the dependencies to install.
+
+**Returns:**
+
+error: An error if the InstallGoDeps function didn't run successfully.
+
+---
+
+### InstallVSCodeModules
+
+```go
+InstallVSCodeModules() error
+```
+
+InstallVSCodeModules installs the modules used by the vscode-go extension in
+Visual Studio Code.
+
+**Returns:**
+
+error: An error if the InstallVSCodeModules function is not successful.
+
+---
+
+### ModUpdate
+
+```go
+ModUpdate(bool, bool) error
+```
+
+ModUpdate updates go modules by running 'go get -u' or 'go get -u ./...' if
+recursive is set to true. The function will run in verbose mode if 'v' is
+set to true.
+
+**Parameters:**
+
+recursive: A boolean specifying whether to run the update recursively.
+v: A boolean specifying whether to run the update in verbose mode.
+
+**Returns:**
+
+error: An error if the ModUpdate function is not successful.
+
+---
+
+### Tidy
+
+```go
+Tidy() error
+```
+
+Tidy executes 'go mod tidy' to clear the module dependencies.
+
+**Returns:**
+
+error: An error if the Tidy function didn't run successfully.
+
+---
+
+### UpdateMageDeps
+
+```go
+UpdateMageDeps(string) error
+```
+
+UpdateMageDeps modifies the dependencies in a given Magefile directory.
+If no directory is provided, it falls back to the 'magefiles' directory.
+
+**Parameters:**
+
+magedir: A string defining the path to the magefiles directory.
+
+**Returns:**
+
+error: An error if the UpdateMageDeps function didn't run successfully.
 
 ---
 
 ## Installation
 
-To use the `goutils/v2/dev` package, you need to install it via `go get`:
+To use the goutils/v2/mageutils package, you first need to install it.
+Follow the steps below to install via go get.
 
 ```bash
-go get github.com/l50/goutils/v2/dev
+go get github.com/goutils/v2/l50/mageutils
 ```
 
 ---
 
 ## Usage
 
-After installation, you can import it in your project:
+After installation, you can import the package in your Go project
+using the following import statement:
 
 ```go
-import "github.com/l50/goutils/v2/dev"
+import "github.com/goutils/v2/l50/mageutils"
 ```
 
 ---
 
 ## Tests
 
-To run the tests for the `goutils/v2/dev` package, navigate to
-your `$GOPATH/src/github.com/l50/goutils/v2/dev` directory
-and run go test:
+To ensure the package is working correctly, run the following
+command to execute the tests for `goutils/v2/mageutils`:
 
 ```bash
 go test -v
@@ -122,12 +242,14 @@ go test -v
 
 ## Contributing
 
-Pull requests are welcome. For major changes, please
-open an issue first to discuss what you would like to change.
+Pull requests are welcome. For major changes,
+please open an issue first to discuss what
+you would like to change.
 
 ---
 
 ## License
 
-This project is licensed under the MIT License - see
-the [LICENSE](../../LICENSE) file for details.
+This project is licensed under the MIT
+License - see the [LICENSE](../LICENSE)
+file for details.

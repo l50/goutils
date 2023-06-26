@@ -1,8 +1,16 @@
 # goutils/v2/str
 
-The `str` package is a part of `goutils` library.
+The `str` package is a collection of utility functions
+designed to simplify common str tasks.
 
-It provides utility functions for string manipulation in Go.
+Table of contents:
+
+- [Functions](#functions)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Tests](#tests)
+- [Contributing](#contributing)
+- [License](#license)
 
 ---
 
@@ -11,83 +19,142 @@ It provides utility functions for string manipulation in Go.
 ### GenRandom
 
 ```go
-func GenRandom(length int) (string, error)
+GenRandom(int) string, error
 ```
 
-Generates a random string of the specified length. This function
-takes an integer input representing the length and returns a
-string of hexadecimal characters. If the generation fails, an error is returned.
+GenRandom generates a random string of a specified length.
+
+**Parameters:**
+
+length: Length of the random string to be generated.
+
+**Returns:**
+
+string: Generated random string.
+error: An error if random string generation fails.
+
+---
 
 ### InSlice
 
 ```go
-func InSlice(strToFind string, inputSlice []string) bool
+InSlice(string, []string) bool
 ```
 
-Checks if a specific string exists in a given slice. It returns true
-if the string is found and false otherwise.
+InSlice determines if a specified string exists in a given slice.
+
+**Parameters:**
+
+strToFind: String to search for in the slice.
+inputSlice: Slice of strings to be searched.
+
+**Returns:**
+
+bool: true if string is found in the slice, false otherwise.
+
+---
 
 ### IsNumeric
 
 ```go
-func IsNumeric(s string) bool
+IsNumeric(string) bool
 ```
 
-Checks if a given string is composed entirely of numeric characters (0-9).
+IsNumeric checks if a string is entirely composed of numeric characters.
 
-### ToInt64
+**Parameters:**
 
-```go
-func ToInt64(value string) (int64, error)
-```
+s: String to check for numeric characters.
 
-Converts a string to an int64 value. If the conversion fails, an error is returned.
+**Returns:**
 
-### ToSlice
+bool: true if the string is numeric, false otherwise.
 
-```go
-func ToSlice(delimStr string, delim string) []string
-```
-
-Splits a given string into a slice based on the provided delimiter.
+---
 
 ### SlicesEqual
 
 ```go
-func SlicesEqual(a, b []string) bool
+SlicesEqual([]string) bool
 ```
 
-Compares two string slices for equality. It returns true if the slices
-have the same length and contain the same strings in the same order.
-It returns false otherwise.
+SlicesEqual compares two slices of strings for equality.
+
+**Parameters:**
+
+a: First string slice for comparison.
+b: Second string slice for comparison.
+
+**Returns:**
+
+bool: true if slices are equal, false otherwise.
+
+---
+
+### ToInt64
+
+```go
+ToInt64(string) int64, error
+```
+
+ToInt64 converts a string to int64.
+
+**Parameters:**
+
+value: String to be converted to int64.
+
+**Returns:**
+
+int64: int64 equivalent of the string.
+error: An error if the conversion fails.
+
+---
+
+### ToSlice
+
+```go
+ToSlice(string, string) []string
+```
+
+ToSlice converts a string to a slice of strings using a delimiter.
+
+**Parameters:**
+
+delimStr: String to be split into a slice.
+delim: Delimiter to be used for splitting the string.
+
+**Returns:**
+
+[]string: Slice of strings from the split input string.
 
 ---
 
 ## Installation
 
-To use the `goutils/v2/str` package, you need to install it via `go get`:
+To use the goutils/v2/str package, you first need to install it.
+Follow the steps below to install via go get.
 
 ```bash
-go get github.com/l50/goutils/v2/str
+go get github.com/goutils/v2/l50/str
 ```
 
 ---
 
 ## Usage
 
-After installation, you can import it in your project:
+After installation, you can import the package in your Go project
+using the following import statement:
 
 ```go
-import "github.com/l50/goutils/v2/str"
+import "github.com/goutils/v2/l50/str"
 ```
 
 ---
 
 ## Tests
 
-To run the tests for the `goutils/v2/str` package, navigate to
-your `$GOPATH/src/github.com/l50/goutils/v2/str` directory
-and run go test:
+To ensure the package is working correctly, run the following
+command to execute the tests for `goutils/v2/str`:
 
 ```bash
 go test -v
@@ -97,12 +164,14 @@ go test -v
 
 ## Contributing
 
-Pull requests are welcome. For major changes, please
-open an issue first to discuss what you would like to change.
+Pull requests are welcome. For major changes,
+please open an issue first to discuss what
+you would like to change.
 
 ---
 
 ## License
 
-This project is licensed under the MIT License - see
-the [LICENSE](../LICENSE) file for details.
+This project is licensed under the MIT
+License - see the [LICENSE](../LICENSE)
+file for details.

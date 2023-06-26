@@ -1,9 +1,16 @@
-# goutils/v2/web/cdpu
+# goutils/v2/cdpu
 
-The `goutils/v2/web/cdpu` package is a part of `goutils` library.
+The `cdpu` package is a collection of utility functions
+designed to simplify common cdpu tasks.
 
-It provides utility functions to driver headless browsers using
-[chromeDP](https://github.com/cdpchromedp/cdpchromedp).
+Table of contents:
+
+- [Functions](#functions)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Tests](#tests)
+- [Contributing](#contributing)
+- [License](#license)
 
 ---
 
@@ -12,74 +19,167 @@ It provides utility functions to driver headless browsers using
 ### CheckElement
 
 ```go
-func CheckElement(site cdpchrome.Site, elementXPath string, done chan error) error
+CheckElement(web.Site, string, chan error) error
 ```
 
-CheckElement checks if an element identified by a given XPath
-exists on the cdpchrome page.
+CheckElement checks if a web page element, identified by the provided XPath,
+exists within a specified timeout.
 
-### Init
+**Note:** Ensure to handle the error sent to the "done" channel in a
+separate goroutine or after calling this function to avoid deadlock.
+
+**Parameters:**
+
+site: A web.Site struct representing the target site.
+elementXPath: A string representing the XPath of the target element.
+done: A channel through which the function sends an error if the
+element is found or another error occurs.
+
+**Returns:**
+
+error: An error if the element is found, the web driver is not of
+type *Driver, failed to create a random wait time, or another error occurs.
+
+---
+
+### GetContext
 
 ```go
-func Init(headless bool, ignoreCertErrors bool) (cdpchrome.Browser, error)
+GetContext() context.Context
 ```
 
-This function initializes a Google Chrome browser instance with the
-specified headless mode and SSL certificate error ignoring options.
-It creates contexts and associated cancel functions for browser operation.
+GetContext retrieves the context associated with the Driver instance.
+
+**Returns:**
+
+context.Context: The context associated with this Driver.
+
+---
 
 ### GetPageSource
 
 ```go
-func GetPageSource(site cdpchrome.Site) (string, error)
+GetPageSource(web.Site) string, error
 ```
 
-Retrieves the HTML source code of the currently loaded page in a site session.
+GetPageSource retrieves the HTML source code of the currently loaded
+page in the provided Site's session.
+
+**Parameters:**
+
+site (web.Site): The site whose source code is to be retrieved.
+
+**Returns:**
+
+string: The source code of the currently loaded page.
+error: An error if any occurred during source code retrieval.
+
+---
+
+### Init
+
+```go
+Init(bool, bool) web.Browser, error
+```
+
+Init initializes a chrome browser instance with the specified headless mode and
+SSL certificate error ignoring options, then returns the browser instance for
+further operations.
+
+**Parameters:**
+
+headless (bool): Whether or not the browser should be in headless mode.
+ignoreCertErrors (bool): Whether or not SSL certificate errors should be ignored.
+
+**Returns:**
+
+web.Browser: An initialized Browser instance.
+error: Any error encountered during initialization.
+
+---
 
 ### Navigate
 
 ```go
-func Navigate(site cdpchrome.Site, actions []InputAction, waitTime time.Duration) error
+Navigate(web.Site, []InputAction, time.Duration) error
 ```
 
-Navigates a site using provided actions. It enables network events
-and sets up request logging.
+Navigate performs the provided actions sequentially on the provided Site's
+session. It enables network events and sets up request logging.
+
+**Parameters:**
+
+site (web.Site): The site on which the actions should be performed.
+actions ([]InputAction): A slice of InputAction objects which define
+the actions to be performed.
+waitTime (time.Duration): The time to wait between actions.
+
+**Returns:**
+
+error: An error if any occurred during navigation.
+
+---
 
 ### ScreenShot
 
 ```go
-func ScreenShot(site cdpchrome.Site, imgPath string) error
+ScreenShot(web.Site, string) error
 ```
 
-ScreenShot takes a screenshot of the input `targetURL` and saves it to `imgPath`.
+ScreenShot captures a screenshot of the currently loaded page in the
+provided Site's session and writes the image data to the provided file path.
+
+**Parameters:**
+
+site (web.Site): The site whose page a screenshot should be taken of.
+imgPath (string): The path to which the screenshot should be saved.
+
+**Returns:**
+
+error: An error if any occurred during screenshot capturing or saving.
+
+---
+
+### SetContext
+
+```go
+SetContext(context.Context)
+```
+
+SetContext associates a new context with the Driver instance.
+
+**Parameters:**
+
+ctx (context.Context): The new context to be associated with this Driver.
 
 ---
 
 ## Installation
 
-To use the `goutils/v2/cdpchrome` package, you need to install it via `go get`:
+To use the goutils/v2/cdpu package, you first need to install it.
+Follow the steps below to install via go get.
 
 ```bash
-go get github.com/l50/goutils/v2/cdpchrome
+go get github.com/goutils/v2/l50/cdpu
 ```
 
 ---
 
 ## Usage
 
-After installation, you can import it in your project:
+After installation, you can import the package in your Go project
+using the following import statement:
 
 ```go
-import "github.com/l50/goutils/v2/cdpchrome"
+import "github.com/goutils/v2/l50/cdpu"
 ```
 
 ---
 
 ## Tests
 
-To run the tests for the `goutils/v2/cdpchrome` package, navigate to
-your `$GOPATH/src/github.com/l50/goutils/v2/cdpchrome` directory
-and run go test:
+To ensure the package is working correctly, run the following
+command to execute the tests for `goutils/v2/cdpu`:
 
 ```bash
 go test -v
@@ -89,12 +189,14 @@ go test -v
 
 ## Contributing
 
-Pull requests are welcome. For major changes, please
-open an issue first to discuss what you would like to change.
+Pull requests are welcome. For major changes,
+please open an issue first to discuss what
+you would like to change.
 
 ---
 
 ## License
 
-This project is licensed under the MIT License - see
-the [LICENSE](../../LICENSE) file for details.
+This project is licensed under the MIT
+License - see the [LICENSE](../LICENSE)
+file for details.

@@ -35,12 +35,12 @@ func TestRetrieveRecord(t *testing.T) {
 		wantError bool
 	}{
 		{
-			name: "Existing UID",
+			name: "Existing record",
 			UID:  testRecord.UID,
 		},
 		{
-			name:      "Non-Existent UID",
-			UID:       "non-existant-UID",
+			name:      "Non-existent record",
+			UID:       "Non-existent UID",
 			wantError: true,
 		},
 	}
