@@ -5,41 +5,44 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/spf13/afero"
 )
 
-// LogInfo contains parameters used to provide logging throughout a program.
+// LogInfo represents parameters used to manage logging throughout
+// a program.
+//
+// **Attributes:**
+//
+// Dir: A string representing the directory where the log file is located.
+// File: An afero.File object representing the log file.
+// FileName: A string representing the name of the log file.
+// Path: A string representing the full path to the log file.
 type LogInfo struct {
 	Dir      string
-	FilePtr  *os.File
+	File     afero.File
 	FileName string
 	Path     string
 }
 
-// CreateLogFile creates a log file in a directory named logs, which is a subdirectory of the given directory.
-// The log file's name is the base name of the given directory with the extension .log.
+// CreateLogFile creates a log file in a 'logs' subdirectory of the
+// specified directory. The log file's name is the provided log name
+// with the extension '.log'.
 //
-// Parameters:
+// **Parameters:**
 //
-// logDir: A string representing the directory where the logs subdirectory should be created.
+// fs: An afero.Fs instance to mock filesystem for testing.
+// logDir: A string for the directory where 'logs' subdirectory and
+// log file should be created.
+// logName: A string for the name of the log file to be created.
 //
-// Returns:
+// **Returns:**
 //
-// LogInfo: A struct containing information about the log file, including its directory, file pointer, file name, and path.
-//
-// error: An error if the log file or its parent directory cannot be created.
-//
-// Example:
-//
-// logDir := "/path/to/logDir"
-// logName := "stuff.log"
-// logInfo, err := logging.CreateLogFile(logDir, logName)
-//
-//	if err != nil {
-//	  fmt.Printf("failed to create log file: %v", err)
-//	}
-//
-// fmt.Printf("Log file created at: %s", logInfo.Path)
-func CreateLogFile(logDir string, logName string) (LogInfo, error) {
+// LogInfo: A LogInfo struct with information about the log file,
+// including its directory, file pointer, file name, and path.
+// error: An error, if an issue occurs while creating the directory
+// or the log file.
+func CreateLogFile(fs afero.Fs, logDir string, logName string) (LogInfo, error) {
 	logInfo := LogInfo{}
 	var err error
 
@@ -65,14 +68,14 @@ func CreateLogFile(logDir string, logName string) (LogInfo, error) {
 	logInfo.Path = filepath.Join(logInfo.Dir, logInfo.FileName)
 
 	// Create path to log file if the log file doesn't already exist.
-	if _, err := os.Stat(logInfo.Path); os.IsNotExist(err) {
-		if err := os.MkdirAll(logInfo.Dir, os.ModePerm); err != nil {
+	if _, err := fs.Stat(logInfo.Path); os.IsNotExist(err) {
+		if err := fs.MkdirAll(logInfo.Dir, os.ModePerm); err != nil {
 			return logInfo, fmt.Errorf("failed to create %s: %v", logInfo.Dir, err)
 		}
 	}
 
 	// Create log file.
-	logInfo.FilePtr, err = os.OpenFile(logInfo.Path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	logInfo.File, err = fs.OpenFile(logInfo.Path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
 		return logInfo, fmt.Errorf("failed to create %s: %v", logInfo.Path, err)
 	}

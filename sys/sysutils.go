@@ -5,8 +5,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
+	"os/user"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -14,30 +16,28 @@ import (
 	"time"
 
 	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
+	fileutils "github.com/l50/goutils/v2/file"
 	cp "github.com/otiai10/copy"
 )
 
 // Signal represents a signal that can be sent to a process.
+//
+// **Attributes:**
+//
+// SignalKill: A signal that causes the process to be killed immediately.
 type Signal int
 
+// Signal constants
 const (
-	// SignalKill is a signal that causes the process to be killed immediately.
+	// SignalKill represents a signal that kills a process immediately
 	SignalKill Signal = iota
 )
 
 // CheckRoot checks if the current process is being run with root permissions.
 //
-// Returns:
+// **Returns:**
 //
 // error: An error if the process is not being run as root.
-//
-// Example:
-//
-// err := CheckRoot()
-//
-//	if err != nil {
-//	    fmt.Println("The process must be run as root.")
-//	}
 func CheckRoot() error {
 	uid := os.Geteuid()
 	if uid != 0 {
@@ -49,21 +49,13 @@ func CheckRoot() error {
 
 // Cd changes the current working directory to the specified path.
 //
-// Parameters:
+// **Parameters:**
 //
 // dst: A string specifying the path to the directory to switch to.
 //
-// Returns:
+// **Returns:**
 //
 // error: An error if the current directory cannot be changed.
-//
-// Example:
-//
-// err := Cd("/path/to/dir")
-//
-//	if err != nil {
-//	    fmt.Println("Failed to change directory.")
-//	}
 func Cd(path string) error {
 	if err := os.Chdir(path); err != nil {
 		return fmt.Errorf("failed to change directory to %s: %v", path, err)
@@ -74,19 +66,13 @@ func Cd(path string) error {
 
 // CmdExists checks if a given command is available in the $PATH.
 //
-// Parameters:
+// **Parameters:**
 //
 // cmd: A string specifying the name of the command to look for.
 //
-// Returns:
+// **Returns:**
 //
 // bool: True if the command exists in the $PATH, otherwise False.
-//
-// Example:
-//
-//	if !CmdExists("ls") {
-//	    fmt.Println("The 'ls' command is not available.")
-//	}
 func CmdExists(cmd string) bool {
 	if _, err := exec.LookPath(cmd); err != nil {
 		return false
@@ -96,22 +82,14 @@ func CmdExists(cmd string) bool {
 
 // Cp copies a file from the source path to the destination path.
 //
-// Parameters:
+// **Parameters:**
 //
 // src: A string specifying the path of the file to be copied.
 // dst: A string specifying the path to where the file should be copied.
 //
-// Returns:
+// **Returns:**
 //
 // error: An error if the file cannot be copied.
-//
-// Example:
-//
-// err := Cp("/path/to/src", "/path/to/dst")
-//
-//	if err != nil {
-//	    fmt.Println("Failed to copy the file.")
-//	}
 func Cp(src string, dst string) error {
 	if err := cp.Copy(src, dst); err != nil {
 		return fmt.Errorf("failed to copy %s to %s: %v", src, dst, err)
@@ -120,23 +98,15 @@ func Cp(src string, dst string) error {
 	return nil
 }
 
-// EnvVarSet checks if a given environment variable is set.
+// EnvVarSet checks whether a given environment variable is set.
 //
-// Parameters:
+// **Parameters:**
 //
-// key: A string specifying the name of the environment variable to check.
+// key: String specifying the name of the environment variable.
 //
-// Returns:
+// **Returns:**
 //
-// error: An error if the environment variable is not set.
-//
-// Example:
-//
-// err := EnvVarSet("HOME")
-//
-//	if err != nil {
-//	    fmt.Println("The HOME environment variable is not set.")
-//	}
+// error: Error if the environment variable is not set.
 func EnvVarSet(key string) error {
 	_, ok := os.LookupEnv(key)
 	if !ok {
@@ -146,22 +116,16 @@ func EnvVarSet(key string) error {
 	return nil
 }
 
-// ExpandHomeDir expands the tilde (~) in a given path to the current user's home directory.
+// ExpandHomeDir expands the tilde (~) in a path to the home
+// directory of the current user.
 //
-// Parameters:
+// **Parameters:**
 //
-// path: A string representing the path to be expanded.
+// path: String representing the path to be expanded.
 //
-// Returns:
+// **Returns:**
 //
 // string: The expanded path.
-//
-// Example:
-//
-// path := "~/Documents/project"
-// expandedPath := ExpandHomeDir(path)
-//
-// fmt.Println("Expanded Path:", expandedPath)
 func ExpandHomeDir(path string) string {
 	if len(path) == 0 || path[0] != '~' {
 		return path
@@ -179,56 +143,35 @@ func ExpandHomeDir(path string) string {
 	return filepath.Join(homeDir, path[1:])
 }
 
-// GetHomeDir returns the current user's home directory.
+// GetHomeDir fetches the home directory of the current user.
 //
-// Returns:
+// **Returns:**
 //
 // string: The home directory of the current user.
-// error: An error if there is a problem getting the home directory.
-//
-// Example:
-//
-// homeDir, err := GetHomeDir()
-//
-//	if err != nil {
-//	  log.Fatalf("failed to get home dir: %v", err)
-//	}
-//
-// fmt.Println("Home Directory:", homeDir)
+// error: Error if there is an issue fetching the home directory.
 func GetHomeDir() (string, error) {
-	out, err := os.UserHomeDir()
-
+	homeDir, err := os.UserHomeDir()
 	if err != nil {
+		if _, ok := err.(user.UnknownUserError); ok {
+			return "", fmt.Errorf("failed to get user's home directory: user unknown")
+		}
 		return "", fmt.Errorf("failed to get user's home directory: %v", err)
 	}
-
-	return out, nil
+	return homeDir, nil
 }
 
-// GetSSHPubKey retrieves the public SSH key for the given key name, decrypting the associated private key if a password
-// is provided. It returns a pointer to the public key object, or an error if one occurs.
+// GetSSHPubKey retrieves the public SSH key for the given key name,
+// decrypting the associated private key if a password is provided.
 //
-// Parameters:
+// **Parameters:**
 //
-// keyName: A string representing the name of the key to retrieve.
-// password: A string representing the password used to decrypt the private key.
+// keyName: String representing the name of the key to retrieve.
+// password: String for the password used to decrypt the private key.
 //
-// Returns:
+// **Returns:**
 //
-// *ssh.PublicKeys: A pointer to a PublicKeys object representing the retrieved public key.
-// error: An error if one occurs during key retrieval or decryption.
-//
-// Example:
-//
-// keyName := "id_rsa"
-// password := "mypassword"
-// publicKey, err := GetSSHPubKey(keyName, password)
-//
-//	if err != nil {
-//	  log.Fatalf("failed to get SSH public key: %v", err)
-//	}
-//
-// log.Printf("Retrieved public key: %v", publicKey)
+// *ssh.PublicKeys: Pointer to the PublicKeys object for the retrieved key.
+// error: Error if one occurs during key retrieval or decryption.
 func GetSSHPubKey(keyName string, password string) (*ssh.PublicKeys, error) {
 	var publicKey *ssh.PublicKeys
 
@@ -243,21 +186,12 @@ func GetSSHPubKey(keyName string, password string) (*ssh.PublicKeys, error) {
 	return publicKey, nil
 }
 
-// Gwd returns the current working directory (cwd). If it fails to get the cwd, it prints the error and returns an empty string.
+// Gwd gets the current working directory (cwd). In case of failure, it logs
+// the error and returns an empty string.
 //
-// Returns:
+// **Returns:**
 //
 // string: The current working directory or an empty string if an error occurs.
-//
-// Example:
-//
-// cwd := Gwd()
-//
-//	if cwd == "" {
-//	  log.Fatalf("failed to get cwd")
-//	}
-//
-// fmt.Println("Current Working Directory:", cwd)
 func Gwd() string {
 	dir, err := os.Getwd()
 	if err != nil {
@@ -268,49 +202,65 @@ func Gwd() string {
 	return dir
 }
 
-// GetFutureTime returns the date and time of the input
-// years, months, and days parameters from the current time.
+// GetFutureTime calculates the date and time after the input years, months, and
+// days from the current time.
 //
-// Parameters:
+// **Parameters:**
 //
-// years: An integer representing the number of years to add.
-// months: An integer representing the number of months to add.
-// days: An integer representing the number of days to add.
+// years: The number of years to add.
+// months: The number of months to add.
+// days: The number of days to add.
 //
-// Returns:
+// **Returns:**
 //
 // time.Time: The future date and time calculated from the current time.
-//
-// Example:
-//
-// futureTime := GetFutureTime(1, 2, 3)
-// fmt.Println("Future date and time:", futureTime)
 func GetFutureTime(years int, months int, days int) time.Time {
 	t := time.Now()
 	exp := t.AddDate(years, months, days)
 	return exp
 }
 
-// GetOSAndArch detects the current system's OS and architecture, and returns them as strings.
-// The function returns an error if the OS or architecture is not supported.
+// RuntimeInfoProvider is an interface for providing information about the
+// current runtime environment.
+type RuntimeInfoProvider interface {
+	GetOS() string
+	GetArch() string
+}
+
+// DefaultRuntimeInfoProvider is the default implementation of the
+// RuntimeInfoProvider interface.
+type DefaultRuntimeInfoProvider struct{}
+
+// GetOS returns the current operating system.
 //
-// Example usage:
+// **Returns:**
 //
-//	osName, archName, err := GetOSAndArch()
-//	if err != nil {
-//		fmt.Printf("Error detecting OS and architecture: %v\n", err)
-//	} else {
-//		fmt.Printf("Detected OS: %s, architecture: %s\n", osName, archName)
-//	}
+// string: The current operating system.
+func (p *DefaultRuntimeInfoProvider) GetOS() string {
+	return strings.ToLower(runtime.GOOS)
+}
+
+// GetArch returns the current architecture.
 //
-// Returns:
+// **Returns:**
 //
-//	string: The detected operating system name (i.e., "linux", "darwin", or "windows").
-//	string: The detected architecture name (i.e., "amd64", "arm64", or "armv").
-//	error: An error if the OS or architecture is not supported or cannot be detected.
-func GetOSAndArch() (string, string, error) {
-	osName := strings.ToLower(runtime.GOOS)
-	archName := runtime.GOARCH
+// string: The current architecture.
+func (p *DefaultRuntimeInfoProvider) GetArch() string {
+	return runtime.GOARCH
+}
+
+// GetOSAndArch identifies the current system's OS and architecture, and returns
+// them as strings. The function returns an error if the OS or architecture is
+// not supported.
+//
+// **Returns:**
+//
+// string: Detected operating system name (e.g., "linux", "darwin", "windows").
+// string: Detected architecture name (e.g., "amd64", "arm64", "armv").
+// error: An error if the OS or architecture is not supported or cannot be detected.
+func GetOSAndArch(provider RuntimeInfoProvider) (string, string, error) {
+	osName := provider.GetOS()
+	archName := provider.GetArch()
 
 	switch archName {
 	case "x86_64", "amd64":
@@ -326,58 +276,53 @@ func GetOSAndArch() (string, string, error) {
 	return osName, archName, nil
 }
 
-// IsDirEmpty checks if an input directory (name) is empty
+// IsDirEmpty checks whether the input directory (name) is empty.
 //
-// Parameters:
+// **Parameters:**
 //
-// name: A string representing the path to the directory to check.
+// name: The path to the directory to check.
 //
-// Returns:
+// **Returns:**
 //
-// bool: A boolean indicating whether the directory is empty or not.
-// error: An error if there was any problem reading the directory.
-//
-// Example:
-//
-// isEmpty, err := IsDirEmpty("/path/to/directory")
-//
-//	if err != nil {
-//	  log.Fatalf("Error checking directory: %v", err)
-//	}
-//
-// fmt.Println("Is directory empty:", isEmpty)
+// bool: A flag indicating whether the directory is empty.
+// error: An error if there's a problem reading the directory.
 func IsDirEmpty(name string) (bool, error) {
-	entries, err := os.ReadDir(name)
+	info, err := os.Stat(name)
+	if os.IsNotExist(err) {
+		return false, fmt.Errorf("%s does not exist", name)
+	}
 	if err != nil {
 		return false, fmt.Errorf("failed to determine if %s is empty: %v", name, err)
 	}
 
-	return len(entries) == 0, nil
+	if !info.IsDir() {
+		return false, fmt.Errorf("%s is not a directory", name)
+	}
 
+	entries, err := os.ReadDir(name)
+	if err != nil {
+		return false, fmt.Errorf("failed to read directory entries for %s: %v", name, err)
+	}
+
+	return len(entries) == 0, nil
 }
 
-// KillProcess sends a signal to the process with the specified PID.
+// KillProcess sends a signal to the process with the specified PID. On Windows,
+// it uses the taskkill command to terminate the process. On Unix-like systems,
+// it sends the specified signal to the process using the syscall.Kill function.
 //
-// On Windows, it uses the taskkill command to terminate the process.
-// On Unix-like systems, it sends the specified signal to the process using the syscall.Kill function.
+// Note that SignalKill may not work on all platforms. For more information,
+// see the documentation for the syscall package.
 //
-// Parameters:
-// - pid: The process ID of the process to kill.
-// - signal: The signal to send to the process. Currently, only SignalKill is supported, which will terminate the process.
+// **Parameters:**
 //
-// Returns:
-// - error: An error if the process could not be killed.
+// pid: The process ID to kill.
+// signal: The signal to send to the process. Currently, only SignalKill is
+// supported, which terminates the process.
 //
-// Example usage:
+// **Returns:**
 //
-// err := KillProcess(1234, SignalKill)
-// if err != nil {
-// fmt.Printf("failed to kill process: %v", err)
-// } else {
-// fmt.Println("Process terminated successfully")
-// }
-//
-// Note that SignalKill may not work on all platforms. For more information, see the documentation for the syscall package.
+// error: An error if the process couldn't be killed.
 func KillProcess(pid int, signal Signal) error {
 	if runtime.GOOS == "windows" {
 		cmd := exec.Command("taskkill", "/F", "/T", "/PID", fmt.Sprintf("%d", pid))
@@ -407,86 +352,71 @@ func KillProcess(pid int, signal Signal) error {
 	return nil
 }
 
-// RunCommand runs a specified system command
+// RunCommand executes a specified system command.
 //
-// Parameters:
+// **Parameters:**
 //
 // cmd: A string representing the command to run.
 // args: A variadic parameter representing any command line arguments to the command.
 //
-// Returns:
+// **Returns:**
 //
 // string: The output from the command.
 // error: An error if there was any problem running the command.
-//
-// Example:
-//
-// output, err := RunCommand("ls", "-l")
-//
-//	if err != nil {
-//	  log.Fatalf("Error running command: %v", err)
-//	}
-//
-// fmt.Println("Command output:", output)
 func RunCommand(cmd string, args ...string) (string, error) {
 	execCmd := exec.Command(cmd, args...)
 	execCmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true} // create new process group
 
-	out, err := execCmd.CombinedOutput()
+	var stdoutBuf, stderrBuf bytes.Buffer
+	multiStdout := io.MultiWriter(os.Stdout, &stdoutBuf) // write to both os.Stdout and stdoutBuf
+	multiStderr := io.MultiWriter(os.Stderr, &stderrBuf) // write to both os.Stderr and stderrBuf
 
-	if err != nil {
-		return "", fmt.Errorf("failed to run %s: args: %s, stdout: %s, err: %v", cmd, args, out, err)
+	// Attach to standard output and standard error
+	execCmd.Stdout = multiStdout
+	execCmd.Stderr = multiStderr
+
+	if err := execCmd.Run(); err != nil {
+		return "", fmt.Errorf("failed to run %s with args %v: stdout: %s, stderr: %s, err: %v",
+			cmd, args, stdoutBuf.String(), stderrBuf.String(), err)
 	}
 
-	return string(out), nil
+	return stdoutBuf.String(), nil
 }
 
-// RunCommandWithTimeout runs a command for a specified number of
+// RunCommandWithTimeout executes a command for a specified number of
 // seconds before timing out. The command will be run in its own
 // process group to allow for killing child processes if necessary.
 //
-// Parameters:
+// **Parameters:**
 //
-// to: A time.Duration representing the number of seconds to allow the command to run before timing out.
+// to: An int representing the number of seconds to allow
+// the command to run before timing out.
 // command: A string representing the command to run.
 // args: A variadic parameter representing any command line arguments to the command.
 //
-// Returns:
+// **Returns:**
 //
-// *exec.Cmd: The Cmd struct corresponding to the executed command.
-// error: An error if there was any problem running the command.
-//
-// Example:
-//
-// cmd, err := RunCommandWithTimeout(time.Second*5, "sleep", "10")
-//
-//	if err != nil {
-//	    log.Fatalf("Error running command: %v", err)
-//	}
-//
-// output, _ := cmd.Output()
-// fmt.Println("Command output:", string(output))
-func RunCommandWithTimeout(to int, command string, args ...string) ([]byte, error) {
+// string: The output from the command if it completes successfully
+// before the timeout. If the command does not complete before the
+// timeout or an error occurs, an empty string is returned.
+// error: An error if there was any problem running the command or if the
+// command does not complete before the timeout.
+func RunCommandWithTimeout(to int, cmd string, args ...string) (string, error) {
 	timeout := time.Duration(to) * time.Second
-	// Create a new context and add a timeout to it
+
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	// Create the command with our context
-	cmd := exec.CommandContext(ctx, command, args...)
-	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true} // create new process group
+	done := make(chan string, 1)
+	errCh := make(chan error, 1)
 
-	// Create a buffer to capture the output
-	var out bytes.Buffer
-	cmd.Stdout = &out
-
-	if err := cmd.Start(); err != nil {
-		return nil, fmt.Errorf("command start error: %w", err)
-	}
-
-	done := make(chan error, 1)
 	go func() {
-		done <- cmd.Wait()
+		output, err := RunCommand(cmd, args...)
+		if err != nil {
+			errCh <- err
+		} else {
+			done <- output
+		}
 	}()
 
 	select {
@@ -494,58 +424,44 @@ func RunCommandWithTimeout(to int, command string, args ...string) ([]byte, erro
 		// If the context is done, check the reason
 		if ctx.Err() == context.DeadlineExceeded {
 			// The command timed out, now force kill the process group
-			if err := syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL); err != nil {
-				// negative pid kills the process group
-				return nil, fmt.Errorf("command timed out")
-			}
+			return "", fmt.Errorf("command timed out")
 		}
-	case err := <-done:
+		// if ctx.Err() is not DeadlineExceeded, that means the context was cancelled
+		// for some other reason, which should not happen under normal circumstances.
+		return "", fmt.Errorf("unexpected context cancellation")
+	case output := <-done:
 		// The command completed before the timeout
-		if err != nil {
-			return nil, fmt.Errorf("command error: %w", err)
-		}
+		return output, nil
+	case err := <-errCh:
+		// There was an error running the command
+		return "", err
 	}
-
-	return out.Bytes(), nil
 }
 
-// RmRf removes an input path and everything in it.
+// RmRf deletes an input path and everything in it.
 // If the input path doesn't exist, an error is returned.
 //
-// Parameters:
+// **Parameters:**
 //
 // path: A string representing the path to remove.
 //
-// Returns:
+// **Returns:**
 //
 // error: An error if there was any problem removing the path.
-//
-// Example:
-//
-// err := RmRf("/path/to/remove")
-//
-//	if err != nil {
-//	  log.Fatalf("Error removing path: %v", err)
-//	}
-//
-// fmt.Println("Path successfully removed!")
-func RmRf(path string) error {
-	if _, err := os.Stat(path); err == nil {
-		if info, err := os.Stat(path); err == nil {
-			if info.IsDir() {
-				if err := os.RemoveAll(path); err != nil {
-					return fmt.Errorf("failed to run RmRf on %s: %v", path, err)
-				}
-			} else {
-				if err := os.Remove(path); err != nil {
-					return fmt.Errorf("failed to run RmRf on %s: %v", path, err)
-				}
-			}
-		} else {
-			return fmt.Errorf("failed to os.Stat on %s: %v", path, err)
+func RmRf(file fileutils.File) error {
+	info, err := file.Stat()
+	if err != nil {
+		return fmt.Errorf("failed to os.Stat: %v", err)
+	}
+
+	if info.IsDir() {
+		if err := file.RemoveAll(); err != nil {
+			return fmt.Errorf("failed to run RemoveAll: %v", err)
 		}
 	} else {
-		return fmt.Errorf("failed to os.Stat on %s: %v", path, err)
+		if err := file.Remove(); err != nil {
+			return fmt.Errorf("failed to run Remove: %v", err)
+		}
 	}
 
 	return nil
