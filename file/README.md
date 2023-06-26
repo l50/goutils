@@ -1,8 +1,16 @@
 # goutils/v2/file
 
-The `file` package is a part of `goutils` library.
+The `file` package is a collection of utility functions
+designed to simplify common file tasks.
 
-It provides utility functions for file manipulation in Go.
+Table of contents:
+
+- [Functions](#functions)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Tests](#tests)
+- [Contributing](#contributing)
+- [License](#license)
 
 ---
 
@@ -11,122 +19,307 @@ It provides utility functions for file manipulation in Go.
 ### Append
 
 ```go
-func Append(file string, text string) error
+Append(string) error
 ```
 
-Appends an input text string to the end of the input file.
+Append adds a string to the end of a file. If the file
+doesn't exist, it's created with the default permissions.
 
-### CreateEmpty
+**Parameters:**
 
-```go
-func CreateEmpty(name string) bool
-```
+text: String to append to the end of the file.
 
-Creates an empty file based on the name input. It returns true if the file was created,
-otherwise it returns false.
+**Returns:**
 
-### Create
+error: An error if the file can't be opened or the string can't be
+written to the file.
 
-```go
-func Create(filePath string, fileContents []byte) error
-```
-
-Creates a file at the input filePath with the specified fileContents.
-
-### CreateDirectory
-
-```go
-func CreateDirectory(path string) error
-```
-
-Creates a directory at the input path. If any part of the input path doesn't exist,
-create it. Return an error if the path already exists.
+---
 
 ### CSVToLines
 
 ```go
-func CSVToLines(filename string) ([][]string, error)
+CSVToLines(string) [][]string, error
 ```
 
-Reads the contents of the specified CSV file and returns its contents as a two-dimensional
-string slice.
+CSVToLines reads a CSV file and returns it as a 2D string slice. Each
+element in the outer slice represents a row in the CSV, each element in the
+inner slice represents a value in that row. The first row of the CSV,
+assumed to contain column headers, is skipped.
+
+**Parameters:**
+
+path: String representing the path to the CSV file.
+
+**Returns:**
+
+[][]string: 2D slice of strings representing the rows and values of the CSV.
+error: An error if the file cannot be read or parsed.
+
+---
+
+### Create
+
+```go
+Create(string, []byte, CreateType) error
+```
+
+Create makes a directory, an empty file, or a file with content at
+the specified path, depending on the createType argument.
+
+**Parameters:**
+
+path: Path to the directory or file.
+contents: Content to write to the file as a byte slice.
+createType: A CreateType value representing whether to create a
+directory, an empty file, or a file with content.
+
+**Returns:**
+
+error: An error if the directory or file can't be created, if it
+already exists, or if there's a problem writing to the file.
+
+---
 
 ### Delete
 
 ```go
-func Delete(file string) error
+Delete(string) error
 ```
 
-Deletes the input file.
+Delete removes the specified file.
+
+**Parameters:**
+
+path: String representing the path to the file.
+
+**Returns:**
+
+error: An error if the file cannot be deleted.
+
+---
 
 ### Exists
 
 ```go
-func Exists(fileLoc string) bool
+Exists(string) bool
 ```
 
-Returns true if a file specified with fileLoc exists. If the file does not exist,
-it returns false.
+Exists checks whether a file at the specified path exists.
 
-### ToSlice
+**Parameters:**
 
-```go
-func ToSlice(fileName string) ([]string, error)
-```
+fileLoc: String representing the path to the file.
 
-Reads an input file into a slice, removes blank strings, and returns it.
+**Returns:**
+
+bool: Returns true if the file exists, otherwise false.
+
+---
 
 ### Find
 
 ```go
-func Find(fileName string, dirs []string) (string, error)
+Find(string, []string) []string, error
 ```
 
-Looks for an input filename in the specified set of dirs. The filepath is returned
-if the filename is found.
+Find searches for a specified filename in a set of directories and returns
+all matches found as a slice of file paths. If no matches are found, it
+returns an error.
+
+**Parameters:**
+
+fileName: Name of the file to find.
+dirs: Slice of strings representing the directories to search in.
+
+**Returns:**
+
+[]string: Slice of file paths if the file is found.
+error: An error if the file cannot be found.
+
+---
+
+### HasStr
+
+```go
+HasStr(string, string) bool, error
+```
+
+HasStr checks for the presence of a string in a specified file.
+
+**Parameters:**
+
+path: String representing the path to the file.
+searchStr: String to look for in the file.
+
+**Returns:**
+
+bool: Returns true if the string is found, otherwise false.
+error: An error if the file cannot be read.
+
+---
 
 ### ListR
 
 ```go
-func ListR(path string) ([]string, error)
+ListR(string) []string, error
 ```
 
-Lists the files found recursively from the input path.
+ListR lists all files in a directory and its subdirectories.
 
-### FindStr
+**Parameters:**
+
+dirPath: String representing the path to the directory.
+
+**Returns:**
+
+[]string: Slice of strings representing the paths of the files found.
+error: An error if the files cannot be listed.
+
+---
+
+### Open
 
 ```go
-func FindStr(path string, searchStr string) (bool, error)
+Open() io.ReadCloser, error
 ```
 
-Searches for input searchStr in the input filepath.
+Open is a method for the RealFile type that opens the file and
+returns a io.ReadCloser and an error.
+
+**Returns:**
+
+io.ReadCloser: An object that allows reading from and closing the file.
+error: An error if any issue occurs while trying to open the file.
+
+---
+
+### Remove
+
+```go
+Remove() error
+```
+
+Remove is a method for the RealFile type that removes the specified file or directory.
+Note that it will not remove a directory unless it is empty.
+
+**Parameters:**
+
+name: A string representing the path to the file or directory to remove.
+
+**Returns:**
+
+error: An error if any issue occurs while trying to remove the file or directory.
+
+---
+
+### RemoveAll
+
+```go
+RemoveAll() error
+```
+
+RemoveAll is a method for the RealFile type that removes
+a file or directory at the specified path.
+If the path represents a directory, RemoveAll will remove
+the directory and all its content.
+
+**Parameters:**
+
+path: A string representing the path to the file or directory to remove.
+
+**Returns:**
+
+error: An error if any issue occurs while trying to remove the file or directory.
+
+---
+
+### Stat
+
+```go
+Stat() os.FileInfo, error
+```
+
+Stat is a method for the RealFile type that retrieves the
+FileInfo for the specified file or directory.
+
+**Parameters:**
+
+name: A string representing the path to the file or directory.
+
+**Returns:**
+
+os.FileInfo: FileInfo describing the named file.
+error: An error if any issue occurs while trying to get the FileInfo.
+
+---
+
+### ToSlice
+
+```go
+ToSlice(string) []string, error
+```
+
+ToSlice reads a file and returns its content as a slice of strings, each
+element represents a line in the file. Blank lines are omitted.
+
+**Parameters:**
+
+path: String representing the path to the file.
+
+**Returns:**
+
+[]string: Slice of strings where each element represents a line in the file.
+error: An error if the file cannot be read.
+
+---
+
+### Write
+
+```go
+Write([]byte, os.FileMode) error
+```
+
+Write is a method for the RealFile type that writes a slice of bytes
+to the file with specified file permissions.
+
+**Parameters:**
+
+contents: A slice of bytes that should be written to the file.
+mode: File permissions to use when creating the file.
+
+**Returns:**
+
+error: An error if any issue occurs while trying to write to the file.
 
 ---
 
 ## Installation
 
-To use the `goutils/v2/file` package, you need to install it via `go get`:
+To use the goutils/v2/file package, you first need to install it.
+Follow the steps below to install via go get.
 
 ```bash
-go get github.com/l50/goutils/v2/file
+go get github.com/goutils/v2/l50/file
 ```
 
 ---
 
 ## Usage
 
-After installation, you can import it in your project:
+After installation, you can import the package in your Go project
+using the following import statement:
 
 ```go
-import "github.com/l50/goutils/v2/file"
+import "github.com/goutils/v2/l50/file"
 ```
 
 ---
 
 ## Tests
 
-To run the tests for the `goutils/v2/file` package, navigate to
-your `$GOPATH/src/github.com/l50/goutils/v2/file` directory and run go test:
+To ensure the package is working correctly, run the following
+command to execute the tests for `goutils/v2/file`:
 
 ```bash
 go test -v

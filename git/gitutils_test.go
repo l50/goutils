@@ -2,7 +2,6 @@ package git_test
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -14,54 +13,187 @@ import (
 	"github.com/l50/goutils/v2/sys"
 
 	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/go-git/go-git/v5/plumbing/transport"
-	"github.com/go-git/go-git/v5/plumbing/transport/http"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 var (
-	currentTime time.Time
-	cloneDir    = "/tmp"
-	tag         = "v6.6.6"
-	repo        *git.Repository
-	testRepoURL                      = "https://github.com/l50/helloworld.git"
-	auth        transport.AuthMethod = &http.BasicAuth{
-		Username: "abc123",
-		Password: "notrealtoken",
-	}
+	testRepoPath string
+	testRepo     *git.Repository
 )
 
-func TestGetTags(t *testing.T) {
-	if err := sys.Cd(cloneDir); err != nil {
-		t.Fatalf("failed to cd to %s: %v", cloneDir, err)
-	}
-	if _, err := gitutils.GetTags(repo); err != nil {
-		t.Fatalf("failed to get tags: %v - GetTags() failed", err)
-	}
-}
-
-func TestPushAndPushTag(t *testing.T) {
+func TestAddFile(t *testing.T) {
 	tests := []struct {
-		name   string
-		fn     func(repo *git.Repository, auth transport.AuthMethod) error
-		isFail bool
+		name      string
+		filePath  string
+		expectErr bool
 	}{
 		{
-			name:   "Push",
-			fn:     gitutils.Push,
-			isFail: true,
+			name:      "valid file path",
+			filePath:  "validfile.txt",
+			expectErr: false,
 		},
 		{
-			name:   "PushTag",
-			fn:     func(r *git.Repository, auth transport.AuthMethod) error { return gitutils.PushTag(r, tag, auth) },
-			isFail: true,
+			name:      "invalid file path",
+			filePath:  "nonexistentfile.txt",
+			expectErr: true,
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			err := tc.fn(repo, auth)
-			if tc.isFail {
+			filename, err := str.GenRandom(10)
+			require.NoError(t, err)
+
+			// Create a temporary git repository
+			_, tmpDir, err := createGitRepoWithCommit(filename, "test commit")
+			require.NoError(t, err)
+			defer os.RemoveAll(tmpDir)
+
+			// Change working directory to the temporary git repository
+			err = os.Chdir(tmpDir)
+			require.NoError(t, err)
+
+			// If we don't expect an error, create the test file
+			if !tc.expectErr {
+				tc.filePath = createTestFile(t, tc.filePath)
+			}
+
+			err = gitutils.AddFile(tc.filePath)
+			if tc.expectErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestCommit(t *testing.T) {
+	tests := []struct {
+		name string
+		file string
+		msg  string
+	}{
+		{
+			name: "valid commit",
+			file: "commitfile.txt",
+			msg:  "test commit",
+		},
+		{
+			name: "empty commit message",
+			file: "anothercommitfile.txt",
+			msg:  "",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			testRepo, repoPath, err := createGitRepoWithCommit(tc.file, tc.msg)
+			require.NoError(t, err)
+			defer os.RemoveAll(repoPath)
+
+			err = gitutils.Commit(testRepo, tc.msg)
+			assert.NoError(t, err)
+
+			ref, err := testRepo.Head()
+			assert.NoError(t, err)
+
+			commit, err := testRepo.CommitObject(ref.Hash())
+			assert.NoError(t, err)
+
+			if commit.Message != tc.msg {
+				t.Errorf("got %q, want %q", commit.Message, tc.msg)
+			}
+		})
+	}
+}
+
+func TestCloneRepo(t *testing.T) {
+	tests := []struct {
+		name      string
+		url       string
+		clonePath string
+		auth      transport.AuthMethod
+		expectErr bool
+	}{
+		{
+			name:      "Valid Clone",
+			url:       "https://github.com/l50/goutils.git",
+			expectErr: false,
+		},
+		{
+			name:      "Invalid Clone URL",
+			url:       "https://github.com/user/nonexistent_repo.git",
+			auth:      nil,
+			expectErr: true,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+
+			testPath, err := os.MkdirTemp("", "test-temp")
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			// Change working directory to the temporary git repository
+			err = os.Chdir(testPath)
+			require.NoError(t, err)
+
+			repo, err := gitutils.CloneRepo(tc.url, testPath, tc.auth)
+			if tc.expectErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				assert.NotNil(t, repo)
+			}
+		})
+	}
+}
+
+func TestPush(t *testing.T) {
+	tests := []struct {
+		name      string
+		url       string
+		auth      transport.AuthMethod
+		expectErr bool
+	}{
+		{
+			name:      "Valid repository",
+			url:       "https://github.com/l50/goutils.git",
+			expectErr: true,
+		},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			testPath, err := os.MkdirTemp("", "test-temp")
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			// Change working directory to the temporary git repository
+			err = os.Chdir(testPath)
+			require.NoError(t, err)
+
+			// Clone the test repository
+			testRepo, err := gitutils.CloneRepo(tc.url, testPath, tc.auth)
+			if err != nil {
+				t.Fatalf("failed to clone test repository: %v", err)
+			}
+
+			// Only call gitutils.Push if there was no error when opening the repository.
+			err = gitutils.Push(testRepo, tc.auth)
+			if err != nil && err.Error() == "authentication required" {
+				// We do not want to do any pushing to anywhere in this test, so we'll call
+				// it good here.
+				t.Log("Success: hit authentication error when pushing to remote repository")
+				return
+			}
+			if tc.expectErr {
 				require.Error(t, err)
 			} else {
 				require.NoError(t, err)
@@ -73,11 +205,12 @@ func TestPushAndPushTag(t *testing.T) {
 func TestGetTagsAndGlobalUserCfg(t *testing.T) {
 	tests := []struct {
 		name string
+		file string
 		fn   interface{}
 	}{
 		{
 			name: "GetTags",
-			fn:   func() ([]string, error) { return gitutils.GetTags(repo) },
+			fn:   func() ([]string, error) { return gitutils.GetTags(testRepo) },
 		},
 		{
 			name: "GetGlobalUserCfg",
@@ -87,6 +220,17 @@ func TestGetTagsAndGlobalUserCfg(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
+			filename, err := str.GenRandom(10)
+			require.NoError(t, err)
+
+			// Create a temporary git repository
+			_, tmpDir, err := createGitRepoWithCommit(filename, "test commit")
+			require.NoError(t, err)
+			defer os.RemoveAll(tmpDir)
+
+			// Change working directory to the temporary git repository
+			err = os.Chdir(tmpDir)
+			require.NoError(t, err)
 			switch v := tc.fn.(type) {
 			case func() ([]string, error):
 				_, err := v()
@@ -99,30 +243,191 @@ func TestGetTagsAndGlobalUserCfg(t *testing.T) {
 	}
 }
 
+func TestCreateTag(t *testing.T) {
+	tests := []struct {
+		name string
+		tag  string
+		err  error
+	}{
+		{
+			name: "Valid Tag Creation",
+			tag:  "v1.0.0",
+			err:  nil,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			// Create a temporary git repository
+			filename, err := str.GenRandom(10)
+			require.NoError(t, err)
+
+			_, tmpDir, err := createGitRepoWithCommit(filename, "test commit")
+			require.NoError(t, err)
+			defer os.RemoveAll(tmpDir)
+
+			// Change working directory to the temporary git repository
+			err = os.Chdir(tmpDir)
+			require.NoError(t, err)
+
+			_ = gitutils.CreateTag(testRepo, tc.tag) // Ignore the error, as we want to test delete.
+			assert.Equal(t, tc.err, err)
+		})
+	}
+}
+
+func TestDeleteTag(t *testing.T) {
+	tests := []struct {
+		name      string
+		tag       string
+		expectErr bool
+	}{
+		{
+			name:      "Valid Tag Deletion",
+			tag:       "v1.0.0",
+			expectErr: false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			filename, err := str.GenRandom(10)
+			require.NoError(t, err)
+
+			// Create a temporary git repository
+			_, tmpDir, err := createGitRepoWithCommit(filename, "test commit")
+			require.NoError(t, err)
+			defer os.RemoveAll(tmpDir)
+
+			// Change working directory to the temporary git repository
+			err = os.Chdir(tmpDir)
+			require.NoError(t, err)
+
+			_ = gitutils.CreateTag(testRepo, tc.tag) // Ignore the error, as we want to test delete.
+			err = gitutils.DeleteTag(testRepo, tc.tag)
+			if tc.expectErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestPushTag(t *testing.T) {
+	tests := []struct {
+		name      string
+		url       string
+		tag       string
+		auth      transport.AuthMethod
+		expectErr bool
+	}{
+		{
+			name:      "Valid repository",
+			url:       "https://github.com/l50/goutils.git",
+			tag:       "v1.0.0",
+			expectErr: true,
+		},
+		{
+			name:      "Invalid repository",
+			url:       "https://github.com/l50/notrealrepo.git",
+			tag:       "v1.0.0",
+			expectErr: true,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			testPath, err := os.MkdirTemp("", "test-temp")
+			require.NoError(t, err)
+
+			err = os.Chdir(testPath)
+			require.NoError(t, err)
+
+			r, err := git.PlainClone(testPath, false, &git.CloneOptions{
+				URL:  tc.url,
+				Auth: tc.auth,
+			})
+			if err != nil {
+				if tc.expectErr {
+					return
+				}
+				t.Fatalf("did not expect an error but got one: %v", err)
+			}
+
+			if r != nil {
+				err = gitutils.PushTag(r, tc.tag, tc.auth)
+				if err != nil && err.Error() == "authentication required" {
+					t.Log("Success: hit authentication error when pushing to remote repository")
+					return
+				}
+
+				if tc.expectErr {
+					require.Error(t, err)
+				} else {
+					require.NoError(t, err)
+				}
+			}
+		})
+	}
+}
+
 func TestDeletePushedTag(t *testing.T) {
-	if err := gitutils.CreateTag(repo, tag); err != nil {
-		t.Fatalf("failed to create %s tag: %v", tag, err)
+	tests := []struct {
+		name      string
+		url       string
+		tag       string
+		auth      transport.AuthMethod
+		expectErr bool
+	}{
+		{
+			name:      "Valid repository",
+			url:       "https://github.com/l50/goutils.git",
+			tag:       "v1.0.0",
+			expectErr: true,
+		},
+		{
+			name:      "Invalid repository",
+			url:       "https://github.com/l50/notrealrepo.git",
+			tag:       "v1.0.0",
+			expectErr: true,
+		},
 	}
 
-	keyName := "github_rsa"
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			testPath, err := os.MkdirTemp("", "test-temp")
+			require.NoError(t, err)
 
-	if err := gitutils.DeleteTag(repo, tag); err != nil {
-		t.Fatalf("failed to delete %s tag: %v - DeleteTag() failed",
-			tag, err)
+			err = os.Chdir(testPath)
+			require.NoError(t, err)
+
+			r, err := git.PlainClone(testPath, false, &git.CloneOptions{
+				URL:  tc.url,
+				Auth: tc.auth,
+			})
+			if err != nil {
+				if tc.expectErr {
+					return
+				}
+				t.Fatalf("did not expect an error but got one: %v", err)
+			}
+
+			if r != nil {
+				err = gitutils.DeletePushedTag(r, tc.tag, tc.auth)
+				if err != nil && err.Error() == "authentication required" {
+					t.Log("Success: hit authentication error when pushing to remote repository")
+					return
+				}
+
+				if tc.expectErr {
+					require.Error(t, err)
+				} else {
+					require.NoError(t, err)
+				}
+			}
+		})
 	}
-
-	pubKey, err := sys.GetSSHPubKey(keyName, "")
-	if err == nil {
-		fmt.Printf("security concern: %s is not encrypted at rest", keyName)
-	}
-
-	if err := gitutils.DeletePushedTag(repo, tag, pubKey); err == nil {
-		t.Fatal("deleting any tag should not be possible " +
-			"in this test. There are not sufficient permissions " +
-			"from the previous steps to do so - " +
-			"DeletePushedTag() failed")
-	}
-
 }
 
 func TestPullRepos(t *testing.T) {
@@ -136,7 +441,13 @@ func TestPullRepos(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			tmpDirRemote, err := createGitRepoWithCommit(t, "test-remote", "file.txt", "test commit")
+
+			defer cleanup()
+			filename, err := str.GenRandom(10)
+			require.NoError(t, err)
+
+			// Create a temporary git repository
+			_, tmpDirRemote, err := createGitRepoWithCommit(filename, "test commit")
 			require.NoError(t, err)
 			defer os.RemoveAll(tmpDirRemote)
 
@@ -167,38 +478,106 @@ func TestPullRepos(t *testing.T) {
 	}
 }
 
-func createGitRepoWithCommit(t *testing.T, dirName string, fileName string, commitMsg string) (string, error) {
-	tmpDir, err := os.MkdirTemp("", dirName)
-	if err != nil {
-		return "", err
+func TestRepoRoot(t *testing.T) {
+	testCases := []struct {
+		name           string
+		expectedSubstr string
+	}{
+		{
+			name:           "Find root of temporary repo",
+			expectedSubstr: "test-temp",
+		},
 	}
 
-	_, err = sys.RunCommand("git", "-C", tmpDir, "init")
-	require.NoError(t, err)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			filename, err := str.GenRandom(10)
+			require.NoError(t, err)
 
-	filePath := filepath.Join(tmpDir, fileName)
-	err = os.WriteFile(filePath, []byte("test"), 0644)
-	require.NoError(t, err)
+			// Create a temporary git repository
+			_, tmpDir, err := createGitRepoWithCommit(filename, "test commit")
+			require.NoError(t, err)
+			defer os.RemoveAll(tmpDir)
 
-	_, err = sys.RunCommand("git", "-C", tmpDir, "add", filePath)
-	require.NoError(t, err)
+			// Change working directory to the temporary git repository
+			err = os.Chdir(tmpDir)
+			require.NoError(t, err)
 
-	_, err = sys.RunCommand("git", "-C", tmpDir, "commit", "-m", commitMsg)
-	require.NoError(t, err)
+			root, err := gitutils.RepoRoot()
+			if err != nil {
+				t.Fatalf("failed to retrieve root - RepoRoot() failed: %v", err)
+			}
 
-	return tmpDir, nil
+			if !strings.Contains(root, tc.expectedSubstr) {
+				t.Fatalf("Expected repo root to contain the word '%s', got '%s'", tc.expectedSubstr, root)
+			}
+		})
+	}
 }
 
-func cloneGitRepo(t *testing.T, sourceDir string, destDirName string) (string, error) {
-	tmpDir, err := os.MkdirTemp("", destDirName)
+func createGitRepoWithCommit(fileName string, commitMsg string) (*git.Repository, string, error) {
+	var err error
+	testRepoPath, err = os.MkdirTemp("", "test-temp")
 	if err != nil {
-		return "", err
+		return nil, "", err
 	}
 
-	_, err = sys.RunCommand("git", "clone", sourceDir, tmpDir)
+	testRepo, err = git.PlainInit(testRepoPath, false)
 	if err != nil {
-		os.RemoveAll(tmpDir)
-		return "", err
+		return nil, "", err
+	}
+
+	// Set local config for test repo
+	cfg, err := testRepo.Config()
+	if err != nil {
+		return nil, "", err
+	}
+
+	cfg.User.Name = "Your Name"
+	cfg.User.Email = "you@example.com"
+	if err := testRepo.SetConfig(cfg); err != nil {
+		return nil, "", err
+	}
+
+	filePath := filepath.Join(testRepoPath, fileName)
+	if err := os.WriteFile(filePath, []byte("test"), 0644); err != nil {
+		return nil, "", err
+	}
+
+	// Add the created file to the staging area
+	w, err := testRepo.Worktree()
+	if err != nil {
+		return nil, "", err
+	}
+	if _, err = w.Add(fileName); err != nil {
+		return nil, "", err
+	}
+
+	// Commit the file
+	_, err = w.Commit(commitMsg, &git.CommitOptions{
+		Author: &object.Signature{
+			Name:  cfg.User.Name,
+			Email: cfg.User.Email,
+			When:  time.Now(),
+		},
+	})
+	if err != nil {
+		return nil, "", err
+	}
+
+	return testRepo, testRepoPath, nil
+}
+
+func cloneGitRepo(t *testing.T, repo, dirname string) (string, error) {
+	// Create a temporary directory to clone the repository into.
+	tmpDir, err := os.MkdirTemp("", dirname)
+	if err != nil {
+		return "", fmt.Errorf("failed to create temporary directory: %w", err)
+	}
+
+	// Clone the repository into the temporary directory.
+	if _, err := gitutils.CloneRepo(repo, tmpDir, nil); err != nil {
+		return "", fmt.Errorf("failed to clone test repository: %w", err)
 	}
 
 	return tmpDir, nil
@@ -226,67 +605,17 @@ func commitChangesInRepo(t *testing.T, repoDir string, commitMsg string) error {
 	return nil
 }
 
-func TestRepoRoot(t *testing.T) {
-	testCases := []struct {
-		name           string
-		expectedSubstr string
-	}{
-		{
-			name:           "Find root of temporary repo",
-			expectedSubstr: "test-temp",
-		},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			// Create a temporary git repository
-			tmpDir, err := createGitRepoWithCommit(t, tc.expectedSubstr, "file.txt", "test commit")
-			require.NoError(t, err)
-			defer os.RemoveAll(tmpDir)
-
-			// Change working directory to the temporary git repository
-			err = os.Chdir(tmpDir)
-			require.NoError(t, err)
-
-			root, err := gitutils.RepoRoot()
-			if err != nil {
-				t.Fatalf("failed to retrieve root - RepoRoot() failed: %v", err)
-			}
-
-			if !strings.Contains(root, tc.expectedSubstr) {
-				t.Fatalf("Expected repo root to contain the word '%s', got '%s'", tc.expectedSubstr, root)
-			}
-		})
+func cleanup() {
+	err := os.RemoveAll(testRepoPath)
+	if err != nil {
+		panic(err)
 	}
 }
 
-func TestMain(m *testing.M) {
-	setup()
-	code := m.Run()
-	os.Exit(code)
-}
+// createTestFile is a helper function that creates a test file and returns its path.
+func createTestFile(t *testing.T, name string) string {
+	file, err := os.CreateTemp(testRepoPath, name)
+	require.NoError(t, err)
 
-func setup() {
-	// Create test repo and queue it for cleanup
-	tag = "v6.6.6"
-	var randStr string
-	var err error
-
-	randStr, err = str.GenRandom(6)
-	if err != nil {
-		log.Fatalf("failed to generate random string - GenRandom() failed: %v", err)
-	}
-	targetPath := filepath.Join(
-		cloneDir, fmt.Sprintf(
-			"%s-%s", fmt.Sprintf("gitutils-%s", randStr), currentTime.Format("2006-01-02-15-04-05"),
-		))
-
-	repo, err = gitutils.CloneRepo(testRepoURL, targetPath, nil)
-	if err != nil {
-		log.Fatalf(
-			"failed to clone to %s - CloneRepo() failed: %v",
-			targetPath,
-			err,
-		)
-	}
+	return file.Name()
 }

@@ -16,34 +16,23 @@ import (
 	"github.com/l50/goutils/v2/web"
 )
 
-// CheckElement checks if an element identified by a given XPath exists on the web page within a specified timeout.
-// The function uses chromedp package to find the element on the page.
-// If the element is found, it sends an error to a provided channel indicating that the account is locked out.
-// The function waits up to 10 seconds for the element to appear on the page before timing out.
-// It also introduces a random wait time between 2 to 6 seconds before navigating to the site.
+// CheckElement checks if a web page element, identified by the provided XPath,
+// exists within a specified timeout.
 //
-// Parameters:
+// **Note:** Ensure to handle the error sent to the "done" channel in a
+// separate goroutine or after calling this function to avoid deadlock.
 //
-// site: A web.Site struct representing the site to be checked.
-// elementXPath: A string representing the XPath of the element to be checked.
-// done: A channel to which the function sends an error if the element is found or another error occurs.
+// **Parameters:**
 //
-// Returns:
+// site: A web.Site struct representing the target site.
+// elementXPath: A string representing the XPath of the target element.
+// done: A channel through which the function sends an error if the
+// element is found or another error occurs.
 //
-// error: An error if the element is found, the web driver is not of type *Driver, failed to create random wait time, or another error occurs.
+// **Returns:**
 //
-// Example:
-//
-// site := web.NewSite("http://example.com")
-// done := make(chan error)
-//
-//	go func() {
-//		if err := web.CheckElement(site, "//input[@id='username']", done); err != nil {
-//			log.Fatalf("CheckElement failed: %v", err)
-//		}
-//	}()
-//
-// Note: Make sure to handle the error sent to the "done" channel in a separate goroutine or after calling this function to avoid deadlock.
+// error: An error if the element is found, the web driver is not of
+// type *Driver, failed to create a random wait time, or another error occurs.
 func CheckElement(site web.Site, elementXPath string, done chan error) error {
 	// Create a new context with a timeout
 	chromeDriver, ok := site.Session.Driver.(*Driver)
@@ -87,104 +76,49 @@ func CheckElement(site web.Site, elementXPath string, done chan error) error {
 	return Navigate(site, actions, randomWaitTime)
 }
 
-// Driver represents an interface to Google Chrome using go.
+// Driver is an interface to Google Chrome, containing a context.Context
+// associated with this Driver and Options for the execution of Google Chrome.
 //
-// It contains a context.Context associated with this Driver and Options for the execution of Google Chrome.
+// **Attributes:**
 //
-// Example:
-//
-// browser, err := cdpchrome.Init(true, true)
-//
-//	if err != nil {
-//	  log.Fatalf("failed to initialize a chrome browser: %v", err)
-//	}
-//
-// driver := browser.Driver
+// Context: The context associated with this Driver.
+// Options: The options for the execution of Google Chrome.
 type Driver struct {
 	Context context.Context
 	Options *[]chromedp.ExecAllocatorOption
 }
 
-// GetContext returns the context associated with the Driver instance.
+// GetContext retrieves the context associated with the Driver instance.
 //
-// This function retrieves the context that's linked with the current Driver.
+// **Returns:**
 //
-// Returns:
-//
-// context.Context: The context that's associated with this Driver.
-//
-// Example:
-//
-// ctx := driver.GetContext()
-//
-//	if ctx == nil {
-//	  log.Fatalf("Context is nil")
-//	}
+// context.Context: The context associated with this Driver.
 func (d *Driver) GetContext() context.Context {
 	return d.Context
 }
 
-// SetContext sets a new context for the Driver instance.
+// SetContext associates a new context with the Driver instance.
 //
-// This function sets a new context to be associated with the current Driver.
-//
-// Parameters:
+// **Parameters:**
 //
 // ctx (context.Context): The new context to be associated with this Driver.
-//
-// Example:
-//
-// newCtx := context.Background()
-// driver.SetContext(newCtx)
-//
-//	if driver.GetContext() != newCtx {
-//	  log.Fatalf("Failed to set new context")
-//	}
 func (d *Driver) SetContext(ctx context.Context) {
 	d.Context = ctx
 }
 
-// setChromeOptions is used to set the chrome
-// parameters required by ChromeDP.
-func setChromeOptions(browser *web.Browser, headless bool, ignoreCertErrors bool, options *[]chromedp.ExecAllocatorOption) {
-	*options = append(*options,
-		chromedp.DisableGPU,
-		chromedp.Flag("ignoreCertErrors", ignoreCertErrors),
-		// Uncomment to prevent navigation to a new tab
-		// chromedp.Flag("block-new-web-contents", true),
-		chromedp.NoDefaultBrowserCheck,
-		chromedp.NoFirstRun,
-		chromedp.Flag("headless", headless),
-	)
-	browser.Driver = &Driver{
-		Options: options,
-	}
-}
-
-// Init returns a chrome browser instance.
+// Init initializes a chrome browser instance with the specified headless mode and
+// SSL certificate error ignoring options, then returns the browser instance for
+// further operations.
 //
-// This function initializes a chrome browser instance with the specified headless mode and SSL certificate error ignoring options.
-// The browser instance is then returned for further operations.
-//
-// Parameters:
+// **Parameters:**
 //
 // headless (bool): Whether or not the browser should be in headless mode.
-//
 // ignoreCertErrors (bool): Whether or not SSL certificate errors should be ignored.
 //
-// Returns:
+// **Returns:**
 //
-// web.Browser: A Browser instance which has been initialized.
-//
-// error: Any encountered error during initialization.
-//
-// Example:
-//
-// browser, err := cdpchrome.Init(true, true)
-//
-//	if err != nil {
-//	  log.Fatalf("failed to initialize a chrome browser: %v", err)
-//	}
+// web.Browser: An initialized Browser instance.
+// error: Any error encountered during initialization.
 func Init(headless bool, ignoreCertErrors bool) (web.Browser, error) {
 	var cancels []func()
 
@@ -212,17 +146,17 @@ func Init(headless bool, ignoreCertErrors bool) (web.Browser, error) {
 	return browser, nil
 }
 
-// InputAction represents selectors and actions to run with chrome.
+// InputAction represents selectors and actions to run with Chrome. It
+// contains a description, a selector to find an element on the page, and
+// a chromedp.Action which defines the action to perform on the selected
+// element.
 //
-// It contains a description, a selector to find an element on the page, and an chromedp.Action which defines the action to perform on the selected element.
+// **Attributes:**
 //
-// Example:
-//
-//	action := cdpchrome.InputAction{
-//	  Description: "Type in search box",
-//	  Selector:    "#searchbox",
-//	  Action:      chromedp.SendKeys("#searchbox", "example search"),
-//	}
+// Description: A string that describes the action.
+// Selector: The CSS selector of the element to perform the action on.
+// Action: A chromedp.Action that defines what action to perform.
+// Context: The context in which to execute the action.
 type InputAction struct {
 	Description string
 	Selector    string
@@ -230,31 +164,17 @@ type InputAction struct {
 	Context     context.Context
 }
 
-// GetPageSource retrieves the source code of the web page currently loaded in the site session.
+// GetPageSource retrieves the HTML source code of the currently loaded
+// page in the provided Site's session.
 //
-// This function will return the HTML source code of the currently loaded page in the provided Site's session.
-//
-// Parameters:
+// **Parameters:**
 //
 // site (web.Site): The site whose source code is to be retrieved.
 //
-// Returns:
+// **Returns:**
 //
 // string: The source code of the currently loaded page.
-//
 // error: An error if any occurred during source code retrieval.
-//
-// Example:
-//
-//	site := web.Site{
-//	  // initialize site
-//	}
-//
-// source, err := cdpchrome.GetPageSource(site)
-//
-//	if err != nil {
-//	  log.Fatalf("failed to get page source: %v", err)
-//	}
 func GetPageSource(site web.Site) (string, error) {
 	// Convert the driver to a chrome-specific *Driver instance
 	chromeDriver, ok := site.Session.Driver.(*Driver)
@@ -269,63 +189,19 @@ func GetPageSource(site web.Site) (string, error) {
 	return pageSource, err
 }
 
-// enableNetwork enables network events
-func enableNetwork(chromeDriver *Driver) error {
-	return chromedp.Run(chromeDriver.Context, network.Enable())
-}
-
-// setUpRequestLogging sets up request logging
-func setUpRequestLogging(chromeDriver *Driver, site *web.Site) {
-	chromedp.ListenTarget(chromeDriver.Context, func(ev interface{}) {
-		switch msg := ev.(type) {
-		case *page.EventJavascriptDialogOpening:
-			go func() {
-				if err := chromedp.Run(chromeDriver.Context, page.HandleJavaScriptDialog(true)); err != nil {
-					log.Printf("Error handling JavaScript dialog: %v", err)
-				}
-			}()
-		case *network.EventRequestWillBeSent:
-			// Check if we have been redirected
-			// if so, change the URL that we are tracking.
-			if msg.RedirectResponse != nil && site.Debug {
-				fmt.Printf("Encountered redirect: %s\n", msg.RedirectResponse.URL)
-			}
-		case *network.EventResponseReceived:
-			if site.Debug {
-				fmt.Printf("Response URL: %s\n Response Headers: %s\n Response Status Code: %d\n",
-					msg.Response.URL, msg.Response.Headers, msg.Response.Status)
-			}
-		}
-	})
-}
-
-// Navigate navigates an input site using the provided InputActions.
+// Navigate performs the provided actions sequentially on the provided Site's
+// session. It enables network events and sets up request logging.
 //
-// This function will perform the provided actions sequentially on the provided Site's session. It enables network events and sets up request logging.
-//
-// Parameters:
+// **Parameters:**
 //
 // site (web.Site): The site on which the actions should be performed.
-//
-// actions ([]InputAction): A slice of InputAction objects which define the actions to be performed.
-//
+// actions ([]InputAction): A slice of InputAction objects which define
+// the actions to be performed.
 // waitTime (time.Duration): The time to wait between actions.
 //
-// Returns:
+// **Returns:**
 //
 // error: An error if any occurred during navigation.
-//
-// Example:
-//
-//	actions := []cdpchrome.InputAction{
-//	  // initialize actions
-//	}
-//
-// err := cdpchrome.Navigate(site, actions, 1000)
-//
-//	if err != nil {
-//	  log.Fatalf("failed to navigate site: %v", err)
-//	}
 func Navigate(site web.Site, actions []InputAction, waitTime time.Duration) error {
 	chromeDriver, ok := site.Session.Driver.(*Driver)
 	if !ok {
@@ -363,28 +239,17 @@ func Navigate(site web.Site, actions []InputAction, waitTime time.Duration) erro
 	return nil
 }
 
-// ScreenShot takes a screenshot of the input targetURL and saves it to imgPath.
-//
-// This function captures a screenshot of the currently loaded page in the
+// ScreenShot captures a screenshot of the currently loaded page in the
 // provided Site's session and writes the image data to the provided file path.
 //
-// Parameters:
+// **Parameters:**
 //
 // site (web.Site): The site whose page a screenshot should be taken of.
-//
 // imgPath (string): The path to which the screenshot should be saved.
 //
-// Returns:
+// **Returns:**
 //
 // error: An error if any occurred during screenshot capturing or saving.
-//
-// Example:
-//
-// err := cdpchrome.ScreenShot(site, "/path/to/save/image.png")
-//
-//	if err != nil {
-//	  log.Fatalf("failed to capture screenshot: %v", err)
-//	}
 func ScreenShot(site web.Site, imgPath string) error {
 	var screenshot []byte
 	// Convert the driver to a chrome-specific *Driver instance
@@ -402,7 +267,55 @@ func ScreenShot(site web.Site, imgPath string) error {
 	}
 
 	return nil
+}
 
+// enableNetwork enables network events
+func enableNetwork(chromeDriver *Driver) error {
+	return chromedp.Run(chromeDriver.Context, network.Enable())
+}
+
+// setChromeOptions is used to set the chrome
+// parameters required by ChromeDP.
+func setChromeOptions(browser *web.Browser, headless bool,
+	ignoreCertErrors bool, options *[]chromedp.ExecAllocatorOption) {
+	*options = append(*options,
+		chromedp.DisableGPU,
+		chromedp.Flag("ignoreCertErrors", ignoreCertErrors),
+		// Uncomment to prevent navigation to a new tab
+		// chromedp.Flag("block-new-web-contents", true),
+		chromedp.NoDefaultBrowserCheck,
+		chromedp.NoFirstRun,
+		chromedp.Flag("headless", headless),
+	)
+	browser.Driver = &Driver{
+		Options: options,
+	}
+}
+
+// setUpRequestLogging sets up request logging
+func setUpRequestLogging(chromeDriver *Driver, site *web.Site) {
+	chromedp.ListenTarget(chromeDriver.Context, func(ev interface{}) {
+		switch msg := ev.(type) {
+		case *page.EventJavascriptDialogOpening:
+			go func() {
+				if err := chromedp.Run(chromeDriver.Context,
+					page.HandleJavaScriptDialog(true)); err != nil {
+					fmt.Printf("error handling JavaScript dialog: %v", err)
+				}
+			}()
+		case *network.EventRequestWillBeSent:
+			// Check if we have been redirected
+			// if so, change the URL that we are tracking.
+			if msg.RedirectResponse != nil && site.Debug {
+				fmt.Printf("Encountered redirect: %s\n", msg.RedirectResponse.URL)
+			}
+		case *network.EventResponseReceived:
+			if site.Debug {
+				fmt.Printf("Response URL: %s\n Response Headers: %s\n Response Status Code: %d\n",
+					msg.Response.URL, msg.Response.Headers, msg.Response.Status)
+			}
+		}
+	})
 }
 
 func takeSS(quality int, res *[]byte) chromedp.Tasks {

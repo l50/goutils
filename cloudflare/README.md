@@ -1,7 +1,16 @@
 # goutils/v2/cloudflare
 
-The `cloudflare` package is a part of `goutils` library. It provides
-utility functions to interface with cloudflore using go.
+The `cloudflare` package is a collection of utility functions
+designed to simplify common cloudflare tasks.
+
+Table of contents:
+
+- [Functions](#functions)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Tests](#tests)
+- [Contributing](#contributing)
+- [License](#license)
 
 ---
 
@@ -10,39 +19,54 @@ utility functions to interface with cloudflore using go.
 ### GetDNSRecords
 
 ```go
-func GetDNSRecords(cf Cloudflare) error
+GetDNSRecords(Cloudflare) error
 ```
 
-Retrieve the DNS records from Cloudflare for a specified
-zone ID using the provided Cloudflare credentials.
+GetDNSRecords retrieves the DNS records from Cloudflare for a
+specified zone ID using the provided Cloudflare credentials.
+It makes a GET request to the Cloudflare API, reads the
+response, and prints the 'name' and 'content' fields of
+each DNS record.
+
+**Parameters:**
+
+cf: A Cloudflare struct containing the necessary credentials
+(email, API key) and the zone ID for which the DNS records
+should be retrieved.
+
+**Returns:**
+
+error: An error if any issue occurs while trying to
+get the DNS records.
 
 ---
 
 ## Installation
 
-To use the `goutils/v2/cloudflare` package, you need to install it via `go get`:
+To use the goutils/v2/cloudflare package, you first need to install it.
+Follow the steps below to install via go get.
 
 ```bash
-go get github.com/l50/goutils/v2/cloudflare
+go get github.com/goutils/v2/l50/cloudflare
 ```
 
 ---
 
 ## Usage
 
-After installation, you can import it in your project:
+After installation, you can import the package in your Go project
+using the following import statement:
 
 ```go
-import "github.com/l50/goutils/v2/cloudflare"
+import "github.com/goutils/v2/l50/cloudflare"
 ```
 
 ---
 
 ## Tests
 
-To run the tests for the `goutils/v2/cloudflare` package, navigate to
-your `$GOPATH/src/github.com/l50/goutils/v2/cloudflare` directory
-and run go test:
+To ensure the package is working correctly, run the following
+command to execute the tests for `goutils/v2/cloudflare`:
 
 ```bash
 go test -v
@@ -52,12 +76,14 @@ go test -v
 
 ## Contributing
 
-Pull requests are welcome. For major changes, please
-open an issue first to discuss what you would like to change.
+Pull requests are welcome. For major changes,
+please open an issue first to discuss what
+you would like to change.
 
 ---
 
 ## License
 
-This project is licensed under the MIT License - see
-the [LICENSE](../../LICENSE) file for details.
+This project is licensed under the MIT
+License - see the [LICENSE](../LICENSE)
+file for details.
