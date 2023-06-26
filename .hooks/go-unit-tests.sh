@@ -27,14 +27,14 @@ run_tests()
     echo "Running tests..." | tee -a "$LOGFILE"
 
     if [[ "${TESTS_TO_RUN}" == 'coverage' ]]; then
-        go test -v -race -failfast -tags=integration -coverprofile="${coverage_file}" ./... |& tee -a "$LOGFILE"
+        go test -v -race -failfast -tags=integration -coverprofile="${coverage_file}" ./... 2>&1 | tee -a "$LOGFILE"
     elif [[ "${TESTS_TO_RUN}" == 'all' ]]; then
-        go test -v -race -failfast ./... |& tee -a "$LOGFILE"
+        go test -v -race -failfast ./... 2>&1 | tee -a "$LOGFILE"
     elif [[ "${TESTS_TO_RUN}" == 'short' ]] && [[ "${GITHUB_ACTIONS}" != "true" ]]; then
-        go test -v -short -failfast -race ./... |& tee -a "$LOGFILE"
+        go test -v -short -failfast -race ./... 2>&1 | tee -a "$LOGFILE"
     else
         if [[ "${GITHUB_ACTIONS}" != 'true' ]]; then
-            go test -v -failfast -race "./.../${TESTS_TO_RUN}" |& tee -a "$LOGFILE"
+            go test -v -failfast -race "./.../${TESTS_TO_RUN}" 2>&1 | tee -a "$LOGFILE"
         fi
     fi
 
