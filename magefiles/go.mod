@@ -5,6 +5,7 @@ go 1.20
 require (
 	github.com/l50/goutils/v2 v2.0.3
 	github.com/magefile/mage v1.15.0
+	github.com/spf13/afero v1.9.5
 )
 
 require (
@@ -26,11 +27,10 @@ require (
 	github.com/kevinburke/ssh_config v1.2.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.19 // indirect
-	github.com/otiai10/copy v1.11.0 // indirect
+	github.com/otiai10/copy v1.12.0 // indirect
 	github.com/pjbgf/sha1cd v0.3.0 // indirect
 	github.com/sergi/go-diff v1.3.1 // indirect
 	github.com/skeema/knownhosts v1.1.1 // indirect
-	github.com/spf13/afero v1.9.5 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
 	golang.org/x/crypto v0.9.0 // indirect
 	golang.org/x/mod v0.10.0 // indirect
