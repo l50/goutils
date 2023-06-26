@@ -74,7 +74,8 @@ func GeneratePackageDocs() error {
 		Name:  "goutils/v2",
 	}
 
-	if err := docs.CreatePackageDocs(fs, repo); err != nil {
+	template := filepath.Join(repoRoot, "magefiles", "tmpl", "README.md.tmpl")
+	if err := docs.CreatePackageDocs(fs, repo, template); err != nil {
 		return fmt.Errorf("failed to create package docs: %v", err)
 	}
 
@@ -117,10 +118,10 @@ func RunTests() error {
 	return nil
 }
 
-// UpdateMirror updates pkg.go.goutils with the release associated with the input tag
+// UpdateMirror updates pkg.go.dev with the release associated with the input tag
 func UpdateMirror(tag string) error {
 	var err error
-	fmt.Printf("Updating pkg.go.goutils with the new tag %s.", tag)
+	fmt.Printf("Updating pkg.go.dev with the new tag %s.", tag)
 
 	err = sh.RunV("curl", "--silent", fmt.Sprintf(
 		"https://sum.golang.org/lookup/github.com/l50/goutils/v2@%s",
@@ -133,7 +134,7 @@ func UpdateMirror(tag string) error {
 		"https://proxy.golang.org/github.com/l50/goutils/v2/@v/%s.info",
 		tag))
 	if err != nil {
-		return fmt.Errorf("failed to update pkg.go.goutils: %w", err)
+		return fmt.Errorf("failed to update pkg.go.dev: %w", err)
 	}
 
 	return nil
@@ -149,8 +150,10 @@ func UpdateDocs() error {
 
 	fs := afero.NewOsFs()
 
+	templatePath := filepath.Join("magefiles", "tmpl", "README.md.tmpl")
+
 	fmt.Println("Updating docs.")
-	if err := docs.CreatePackageDocs(fs, repo); err != nil {
+	if err := docs.CreatePackageDocs(fs, repo, templatePath); err != nil {
 		return fmt.Errorf("failed to update docs: %v", err)
 	}
 

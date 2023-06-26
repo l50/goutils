@@ -148,7 +148,9 @@ func TestCreatePackageDocs(t *testing.T) {
 				Name:  "testrepo",
 			}
 
-			err = docs.CreatePackageDocs(aferoFs, repo)
+			templatePath := "dev/mage/templates/README.md.tmpl"
+
+			err = docs.CreatePackageDocs(aferoFs, repo, templatePath)
 			if (err != nil) != tc.expectErr {
 				t.Errorf("CreatePackageDocs() error = %v, wantErr %v", err, tc.expectErr)
 			}

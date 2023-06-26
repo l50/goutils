@@ -13,7 +13,6 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/l50/goutils/v2/git"
 	"github.com/spf13/afero"
 )
 
@@ -68,19 +67,24 @@ type FuncInfo struct {
 // CreatePackageDocs generates documentation for all Go packages in the current
 // directory and its subdirectories. It traverses the file tree using a provided
 // afero.Fs and Repo to create a new README.md file in each directory containing
-// a Go package.
+// a Go package. It uses a specified template file for generating the README files.
 //
 // **Parameters:**
 //
-// fs:   An afero.Fs instance for mocking the filesystem for testing.
-// repo: A Repo instance representing the GitHub repository containing the Go packages.
+// fs:            An afero.Fs instance for mocking the filesystem for testing.
+//
+// repo:          A Repo instance representing the GitHub repository
+// containing the Go packages.
+//
+// templatePath:  A string representing the path to the template file to be
+// used for generating README files.
 //
 // **Returns:**
 //
 // error: An error, if it encounters an issue while walking the file tree,
 // reading a directory, parsing Go files, or generating README.md files.
-func CreatePackageDocs(fs afero.Fs, repo Repo) error {
-	err := afero.Walk(fs, ".", handleDirectory(fs, repo))
+func CreatePackageDocs(fs afero.Fs, repo Repo, templatePath string) error {
+	err := afero.Walk(fs, ".", handleDirectory(fs, repo, templatePath))
 
 	if err != nil {
 		return fmt.Errorf("error walking directories: %w", err)
@@ -88,7 +92,7 @@ func CreatePackageDocs(fs afero.Fs, repo Repo) error {
 	return nil
 }
 
-func handleDirectory(fs afero.Fs, repo Repo) filepath.WalkFunc {
+func handleDirectory(fs afero.Fs, repo Repo, templatePath string) filepath.WalkFunc {
 	return func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -107,7 +111,7 @@ func handleDirectory(fs afero.Fs, repo Repo) filepath.WalkFunc {
 			return nil
 		}
 
-		return processGoFiles(fs, path, repo)
+		return processGoFiles(fs, path, repo, templatePath)
 	}
 }
 
@@ -131,7 +135,7 @@ func directoryContainsGoFiles(fs afero.Fs, path string) (bool, error) {
 	return false, nil
 }
 
-func processGoFiles(fs afero.Fs, path string, repo Repo) error {
+func processGoFiles(fs afero.Fs, path string, repo Repo, templatePath string) error {
 	fset := token.NewFileSet()
 	pkgs, err := parser.ParseDir(fset, path, nonTestFilter, parser.ParseComments)
 	if err != nil {
@@ -139,7 +143,7 @@ func processGoFiles(fs afero.Fs, path string, repo Repo) error {
 	}
 
 	for _, pkg := range pkgs {
-		err := generateReadmeForPackage(path, fset, pkg, repo)
+		err := generateReadmeForPackage(path, fset, pkg, repo, templatePath)
 		if err != nil {
 			return err
 		}
@@ -152,7 +156,7 @@ func nonTestFilter(info os.FileInfo) bool {
 	return !strings.HasSuffix(info.Name(), "_test.go")
 }
 
-func generateReadmeForPackage(path string, fset *token.FileSet, pkg *ast.Package, repo Repo) error {
+func generateReadmeForPackage(path string, fset *token.FileSet, pkg *ast.Package, repo Repo, templatePath string) error {
 	pkgDoc := &PackageDoc{
 		PackageName: pkg.Name,
 		GoGetPath:   fmt.Sprintf("github.com/%s/%s/%s", repo.Name, repo.Owner, pkg.Name),
@@ -171,7 +175,7 @@ func generateReadmeForPackage(path string, fset *token.FileSet, pkg *ast.Package
 		return pkgDoc.Functions[i].Name < pkgDoc.Functions[j].Name
 	})
 
-	return generateReadmeFromTemplate(pkgDoc, filepath.Join(path, "README.md"))
+	return generateReadmeFromTemplate(pkgDoc, filepath.Join(path, "README.md"), templatePath)
 }
 
 func processFileDeclarations(fset *token.FileSet, pkgDoc *PackageDoc, file *ast.File) error {
@@ -230,14 +234,9 @@ func splitLongSignature(signature string, maxLineLength int) string {
 	return strings.Join(parts, "")
 }
 
-func generateReadmeFromTemplate(pkgDoc *PackageDoc, path string) error {
-	repoRoot, err := git.RepoRoot()
-	if err != nil {
-		return err
-	}
-
+func generateReadmeFromTemplate(pkgDoc *PackageDoc, path string, templatePath string) error {
 	// Open the template file
-	tmpl, err := template.ParseFiles(filepath.Join(repoRoot, "dev", "mage", "templates", "README.md.tmpl"))
+	tmpl, err := template.ParseFiles(templatePath)
 	if err != nil {
 		return err
 	}

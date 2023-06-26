@@ -9,7 +9,7 @@
       "type": "go",
       "request": "launch",
       "mode": "auto",
-      "program": ".mage/mage_output_file.go",
+      "program": "magefiles/mage_output_file.go",
       // Pass magefile as a separate argument,
       // VSCode doesn't allow more than one file in "program".
       "buildFlags": "magefile.go",

@@ -19,18 +19,23 @@ Table of contents:
 ### CreatePackageDocs
 
 ```go
-CreatePackageDocs(afero.Fs, Repo) error
+CreatePackageDocs(afero.Fs, Repo, string) error
 ```
 
 CreatePackageDocs generates documentation for all Go packages in the current
 directory and its subdirectories. It traverses the file tree using a provided
 afero.Fs and Repo to create a new README.md file in each directory containing
-a Go package.
+a Go package. It uses a specified template file for generating the README files.
 
 **Parameters:**
 
-fs:   An afero.Fs instance for mocking the filesystem for testing.
-repo: A Repo instance representing the GitHub repository containing the Go packages.
+fs:            An afero.Fs instance for mocking the filesystem for testing.
+
+repo:          A Repo instance representing the GitHub repository
+containing the Go packages.
+
+templatePath:  A string representing the path to the template file to be
+used for generating README files.
 
 **Returns:**
 
