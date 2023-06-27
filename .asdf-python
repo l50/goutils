@@ -15,4 +15,4 @@ fi
 source "${setup_asdf_path}"
 
 # Define go version from local .tool-versions file
-setup_language "golang" "local"
+setup_language "python" "local"
