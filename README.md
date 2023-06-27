@@ -12,22 +12,29 @@ This repo is comprised of utilities that I use across various go projects.
 
 ## Dependencies
 
-- [Install gvm](https://github.com/moovweb/gvm):
-
+- [Install asdf](https://asdf-vm.com/):
+  
   ```bash
-  bash < <(curl -s -S -L https://raw.githubusercontent.com/moovweb/gvm/master/binscripts/gvm-installer)
+  git clone https://github.com/asdf-vm/asdf.git ~/.asdf
   ```
 
-- [Install golang](https://go.dev/):
+- Install Go plugin for asdf:
 
   ```bash
-  source .gvm
+  asdf plugin add golang https://github.com/kennyp/asdf-golang.git
+  ```
+
+- Install Ruby plugin with asdf (for the markdownlint pre-commit hook):
+
+  ```bash
+  asdf plugin add ruby https://github.com/asdf-vm/asdf-ruby.git
   ```
 
 - [Install pre-commit](https://pre-commit.com/):
 
   ```bash
-  brew install pre-commit
+  python3 -m pip install --upgrade pip
+  python3 -m pip install pre-commit
   ```
 
 - [Install Mage](https://magefile.org/):
@@ -36,44 +43,29 @@ This repo is comprised of utilities that I use across various go projects.
   go install github.com/magefile/mage@latest
   ```
 
----
-
-## Developer Environment Setup
-
-1. [Fork this project](https://docs.github.com/en/get-started/quickstart/fork-a-repo)
-
-1. (Optional) If you installed gvm:
-
-   ```bash
-   source "${HOME}/.gvm"
-   ```
-
-1. Install pre-commit hooks and dependencies:
-
-   ```bash
-   mage installPreCommitHooks
-   ```
-
-1. Update and run pre-commit hooks locally:
-
-   ```bash
-   mage runPreCommit
-   ```
-
-1. Install keeper commander:
+- [Install Keeper Commander](https://github.com/Keeper-Security/Commander):
 
    ```bash
    python3 -m pip install --upgrade pip
    python3 -m pip install keepercommander
    ```
 
-1. Install `rvm` and `ruby` (for markdownlint):
+---
+
+## For Contributors and Developers
+
+1. [Fork this project](https://docs.github.com/en/get-started/quickstart/fork-a-repo)
+
+1. Install dependencies:
 
    ```bash
-   gpg --keyserver keyserver.ubuntu.com \
-     --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB
-   \curl -sSL https://get.rvm.io | bash -s stable --ruby
-   rvm install ruby-3.2.1
+   mage installDeps
+   ```
+
+1. Update and run pre-commit hooks locally:
+
+   ```bash
+   mage runPreCommit
    ```
 
 ---

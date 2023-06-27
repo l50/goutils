@@ -1,0 +1,32 @@
+# Define Go version
+GO_VER='1.20.5'
+
+# Define path to asdf installation
+ASDF_PATH="${HOME}/.asdf"
+
+# If asdf is not installed, then install it
+if [[ ! -f "${ASDF_PATH}/asdf.sh" ]]; then
+    git clone https://github.com/asdf-vm/asdf.git "${ASDF_PATH}"
+fi
+
+# Source asdf
+. "${ASDF_PATH}/asdf.sh"
+
+# Add golang plugin if it isn't installed
+if ! asdf plugin list | grep -q 'golang'; then
+  asdf plugin add golang
+fi
+
+# Install Go version if it isn't installed
+if ! asdf list golang | grep -q "${GO_VER}"; then
+  ASDF_GOLANG_BUILD_ARCH="$(uname -m)" asdf install golang "${GO_VER}"
+fi
+
+# Set Go version
+asdf global golang "${GO_VER}"
+
+# Set GOROOT
+export GOROOT="${ASDF_PATH}/installs/golang/${GO_VER}/go"
+
+# Add go to PATH - so we can run executables from anywhere
+export PATH="${PATH}:$(go env GOPATH)/bin"
