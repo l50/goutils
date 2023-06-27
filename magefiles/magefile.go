@@ -86,8 +86,6 @@ func GeneratePackageDocs() error {
 
 // RunPreCommit runs all pre-commit hooks locally
 func RunPreCommit() error {
-	mg.Deps(InstallDeps)
-
 	fmt.Println("Updating pre-commit hooks.")
 	if err := lint.UpdatePCHooks(); err != nil {
 		return err

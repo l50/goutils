@@ -13,21 +13,15 @@ This repo is comprised of utilities that I use across various go projects.
 ## Dependencies
 
 - [Install asdf](https://asdf-vm.com/):
-  
+
   ```bash
   git clone https://github.com/asdf-vm/asdf.git ~/.asdf
   ```
 
-- Install Go plugin for asdf:
+- Install and use asdf plugins for go and ruby:
 
   ```bash
-  asdf plugin add golang https://github.com/kennyp/asdf-golang.git
-  ```
-
-- Install Ruby plugin with asdf (for the markdownlint pre-commit hook):
-
-  ```bash
-  asdf plugin add ruby https://github.com/asdf-vm/asdf-ruby.git
+  source .asdf-go .asdf-ruby
   ```
 
 - [Install pre-commit](https://pre-commit.com/):

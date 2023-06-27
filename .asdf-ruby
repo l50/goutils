@@ -1,14 +1,18 @@
-# .asdf-ruby file
-
 # Define Ruby version
 RB_VER='3.1.2'
 export RB_VER
 ASDF_PATH="${HOME}/.asdf"
 export ASDF_PATH
 
-# If asdf is installed, use it to manage Ruby versions
+# Install asdf if not installed
+if [[ ! "$(command -v asdf)" ]]; then
+  echo "Installing ASDF..."
+  git clone https://github.com/asdf-vm/asdf.git "${HOME}/.asdf"
+fi
+
+# If asdf is installed, use it to manage ruby versions
 if command -v asdf &> /dev/null; then
-    # Install the Ruby plugin for asdf if not installed
+    # Install the ruby plugin for asdf if not installed
     if ! asdf plugin list | grep -q 'ruby'; then
         echo "Installing ASDF ruby plugin..."
         asdf plugin add ruby
