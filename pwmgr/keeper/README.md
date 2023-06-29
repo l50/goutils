@@ -84,7 +84,15 @@ Keeper record to retrieve.
 
 **Returns:**
 
-pwmgr.Record: The retrieved Keeper record.
+pwmgr.Record: The retrieved Keeper record. This contains the following attributes:
+- UID: The unique identifier of the record.
+- Title: The title of the record.
+- Username: The username associated with the record.
+- Password: The password of the record.
+- URL: The URL associated with the record.
+- TOTP: The one-time password (if any) associated with the record.
+- Note: Any additional notes associated with the record.
+
 error: An error if the Keeper record cannot be retrieved.
 
 ---
@@ -105,7 +113,9 @@ searchTerm: A string representing the term to search for in the Keeper records.
 **Returns:**
 
 string: The unique identifier (UID) of the first Keeper record
-that matches the search term.
+that matches the search term. If multiple records match the
+search term, only the UID of the first record is returned.
+
 error: An error if the Keeper records cannot be searched or if
 the search term does not match any records.
 

@@ -6,21 +6,21 @@ import (
 	"github.com/l50/goutils/v2/pwmgr/keeper"
 )
 
-func ExampleCommanderInstalled() {
+func ExampleKeeper_CommanderInstalled() {
 	k := keeper.Keeper{}
 	if !k.CommanderInstalled() {
 		log.Fatal("keeper commander is not installed.")
 	}
 }
 
-func ExampleLoggedIn() {
+func ExampleKeeper_LoggedIn() {
 	k := keeper.Keeper{}
 	if !k.LoggedIn() {
 		log.Fatal("not logged into keeper vault.")
 	}
 }
 
-func ExampleRetrieveRecord() {
+func ExampleKeeper_RetrieveRecord() {
 	k := keeper.Keeper{}
 	record, err := k.RetrieveRecord("1234abcd")
 	if err != nil {
@@ -29,7 +29,7 @@ func ExampleRetrieveRecord() {
 	log.Printf("retrieved record: %+v\n", record)
 }
 
-func ExampleSearchRecords() {
+func ExampleKeeper_SearchRecords() {
 	k := keeper.Keeper{}
 	uid, err := k.SearchRecords("search term")
 	if err != nil {

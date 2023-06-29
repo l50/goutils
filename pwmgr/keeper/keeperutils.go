@@ -13,11 +13,7 @@ import (
 	"github.com/l50/goutils/v2/sys"
 )
 
-// Keeper represents a password manager that uses Keeper Security.
-//
-// **Attributes:**
-//
-// Config: KeeperConfig object containing information about the Keeper vault.
+// Keeper represents a connection with the Keeper password manager.
 type Keeper struct{}
 
 // configPath returns the path of the keeper config file.
@@ -132,7 +128,15 @@ func (k Keeper) AddRecord(fields map[string]string) error {
 //
 // **Returns:**
 //
-// pwmgr.Record: The retrieved Keeper record.
+// pwmgr.Record: The retrieved Keeper record. This contains the following attributes:
+// - UID: The unique identifier of the record.
+// - Title: The title of the record.
+// - Username: The username associated with the record.
+// - Password: The password of the record.
+// - URL: The URL associated with the record.
+// - TOTP: The one-time password (if any) associated with the record.
+// - Note: Any additional notes associated with the record.
+//
 // error: An error if the Keeper record cannot be retrieved.
 func (k Keeper) RetrieveRecord(uid string) (pwmgr.Record, error) {
 	var record pwmgr.Record
@@ -190,7 +194,9 @@ func (k Keeper) RetrieveRecord(uid string) (pwmgr.Record, error) {
 // **Returns:**
 //
 // string: The unique identifier (UID) of the first Keeper record
-// that matches the search term.
+// that matches the search term. If multiple records match the
+// search term, only the UID of the first record is returned.
+//
 // error: An error if the Keeper records cannot be searched or if
 // the search term does not match any records.
 func (k Keeper) SearchRecords(searchTerm string) (string, error) {

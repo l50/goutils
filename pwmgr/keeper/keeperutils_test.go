@@ -4,12 +4,13 @@ import (
 	"os"
 	"testing"
 
+	"github.com/l50/goutils/v2/pwmgr"
 	"github.com/l50/goutils/v2/pwmgr/keeper"
 	"github.com/stretchr/testify/assert"
 )
 
-var testRecord keeper.Record
-var note keeper.Record
+var testRecord pwmgr.Record
+var note pwmgr.Record
 
 func init() {
 	testRecord.UID = "hfLu-IbhTTVhE3DjWsS-Eg"
