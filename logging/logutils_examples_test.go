@@ -17,6 +17,11 @@ func ExampleConfigureLogger() {
 	}
 
 	logger.Println("This is a log message")
+	logger.Error("This is an error log message")
+	logger.Errorf("This is a formatted error log message: %s", "Error details")
+
+	// Since we can't predict the log message, print a static message instead.
+	fmt.Println("Logger configured successfully.")
 
 	// Unpredictable output due to timestamps and structured logging
 }

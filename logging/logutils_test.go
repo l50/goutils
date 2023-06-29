@@ -141,12 +141,16 @@ func TestLoggerImplementation(t *testing.T) {
 		name    string
 		logger  logging.Logger
 		logFunc func(l logging.Logger)
+		errFunc func(l logging.Logger)
 	}{
 		{
 			name:   "PlainLogger Println",
 			logger: &logging.PlainLogger{Info: logInfo},
 			logFunc: func(l logging.Logger) {
 				l.Println("test plain logger")
+			},
+			errFunc: func(l logging.Logger) {
+				l.Error("test plain logger error")
 			},
 		},
 		{
@@ -155,6 +159,9 @@ func TestLoggerImplementation(t *testing.T) {
 			logFunc: func(l logging.Logger) {
 				l.Printf("test %s logger", "plain")
 			},
+			errFunc: func(l logging.Logger) {
+				l.Errorf("test %s logger error", "plain")
+			},
 		},
 		{
 			name:   "Test ColoredLogger",
@@ -162,12 +169,18 @@ func TestLoggerImplementation(t *testing.T) {
 			logFunc: func(l logging.Logger) {
 				l.Printf("Test log message with format: %s", "Test")
 			},
+			errFunc: func(l logging.Logger) {
+				l.Errorf("test error message with format: %s", "Test")
+			},
 		},
 		{
 			name:   "Test ColoredLogger with Blue color",
 			logger: &logging.ColoredLogger{Info: logInfo, ColorAttribute: color.FgBlue},
 			logFunc: func(l logging.Logger) {
 				l.Printf("Test log message with format: %s", "Test")
+			},
+			errFunc: func(l logging.Logger) {
+				l.Errorf("test error message with format: %s", "Test")
 			},
 		},
 		{
@@ -183,6 +196,9 @@ func TestLoggerImplementation(t *testing.T) {
 			logFunc: func(l logging.Logger) {
 				l.Printf("Test log message with format: %s", "Test")
 			},
+			errFunc: func(l logging.Logger) {
+				l.Errorf("Test error message with format: %s", "Test")
+			},
 		},
 		{
 			name:   "Test SlogPlainLogger",
@@ -190,12 +206,18 @@ func TestLoggerImplementation(t *testing.T) {
 			logFunc: func(l logging.Logger) {
 				l.Printf("Test log message with format: %s", "Test")
 			},
+			errFunc: func(l logging.Logger) {
+				l.Errorf("Test error message with format: %s", "Test")
+			},
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			tc.logFunc(tc.logger)
+			if tc.errFunc != nil {
+				tc.errFunc(tc.logger)
+			}
 		})
 	}
 }

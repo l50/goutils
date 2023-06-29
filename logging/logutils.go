@@ -14,10 +14,12 @@ import (
 )
 
 // Logger defines the methods for a generic logging interface.
-// It consists of Println and Printf methods.
+// It consists of Println, Printf and Error methods.
 type Logger interface {
 	Println(v ...interface{})
 	Printf(format string, v ...interface{})
+	Error(v ...interface{})
+	Errorf(format string, v ...interface{})
 }
 
 // ColoredLogger represents a logger that outputs in cyan color.
@@ -51,6 +53,26 @@ func (l *ColoredLogger) Printf(format string, v ...interface{}) {
 	}
 }
 
+// Error for ColoredLogger logs the provided arguments as an error line
+// in the specified color. The arguments are handled in the manner
+// of fmt.Println.
+func (l *ColoredLogger) Error(v ...interface{}) {
+	log.SetOutput(l.Info.File)
+	log.Println(color.New(l.ColorAttribute).Add(color.Bold).Sprint(v...))
+}
+
+// Errorf for ColoredLogger logs the provided formatted string as an error line in
+// the specified color. The format and arguments are handled in the
+// manner of fmt.Printf.
+func (l *ColoredLogger) Errorf(format string, v ...interface{}) {
+	log.SetOutput(l.Info.File)
+	if len(v) > 0 {
+		log.Println(color.New(l.ColorAttribute).Add(color.Bold).Sprintf(format, v...))
+	} else {
+		log.Println(color.New(l.ColorAttribute).Add(color.Bold).Sprint(format))
+	}
+}
+
 // PlainLogger represents a logger that outputs in plain format.
 //
 // **Attributes:**
@@ -70,6 +92,20 @@ func (l *PlainLogger) Println(v ...interface{}) {
 // Printf for PlainLogger logs the provided formatted string in plain text.
 // The format and arguments are handled in the manner of fmt.Printf.
 func (l *PlainLogger) Printf(format string, v ...interface{}) {
+	log.SetOutput(l.Info.File)
+	log.Printf(format, v...)
+}
+
+// Error for PlainLogger logs the provided arguments as an error line in plain text.
+// The arguments are handled in the manner of fmt.Println.
+func (l *PlainLogger) Error(v ...interface{}) {
+	log.SetOutput(l.Info.File)
+	log.Println(v...)
+}
+
+// Errorf for PlainLogger logs the provided formatted string as an error line in plain text.
+// The format and arguments are handled in the manner of fmt.Printf.
+func (l *PlainLogger) Errorf(format string, v ...interface{}) {
 	log.SetOutput(l.Info.File)
 	log.Printf(format, v...)
 }
@@ -166,7 +202,19 @@ func (l *SlogLogger) Println(v ...interface{}) {
 // Printf for SlogLogger logs the provided formatted string using slog library.
 // The format and arguments are handled in the manner of fmt.Printf.
 func (l *SlogLogger) Printf(format string, v ...interface{}) {
-	l.Logger.Info(format, v...)
+	l.Logger.Info(fmt.Sprintf(format, v...))
+}
+
+// Error for SlogLogger logs the provided arguments as an error line using slog library.
+// The arguments are converted to a string using fmt.Sprint.
+func (l *SlogLogger) Error(v ...interface{}) {
+	l.Logger.Error(fmt.Sprint(v...))
+}
+
+// Errorf for SlogLogger logs the provided formatted string as an error line using slog library.
+// The format and arguments are handled in the manner of fmt.Printf.
+func (l *SlogLogger) Errorf(format string, v ...interface{}) {
+	l.Logger.Error(fmt.Sprintf(format, v...))
 }
 
 // SlogPlainLogger represents a plain logger using the slog library.
@@ -187,7 +235,19 @@ func (l *SlogPlainLogger) Println(v ...interface{}) {
 // Printf for SlogPlainLogger logs the provided formatted string using slog library.
 // The format and arguments are handled in the manner of fmt.Printf.
 func (l *SlogPlainLogger) Printf(format string, v ...interface{}) {
-	l.Logger.Info(format, v...)
+	l.Logger.Info(fmt.Sprintf(format, v...))
+}
+
+// Error for SlogPlainLogger logs the provided arguments as an error line using slog library.
+// The arguments are converted to a string using fmt.Sprint.
+func (l *SlogPlainLogger) Error(v ...interface{}) {
+	l.Logger.Error(fmt.Sprint(v...))
+}
+
+// Errorf for SlogPlainLogger logs the provided formatted string as an error line using slog library.
+// The format and arguments are handled in the manner of fmt.Printf.
+func (l *SlogPlainLogger) Errorf(format string, v ...interface{}) {
+	l.Logger.Error(fmt.Sprintf(format, v...))
 }
 
 // ConfigureLogger creates a logger based on the provided level.
