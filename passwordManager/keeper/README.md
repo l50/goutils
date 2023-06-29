@@ -16,6 +16,29 @@ Table of contents:
 
 ## Functions
 
+### AddRecord
+
+```go
+AddRecord(map[string]string) error
+```
+
+AddRecord adds a new record to the Keeper vault.
+
+**Parameters:**
+
+fields: A map containing the record fields.
+
+fields.title: The title of the record.
+fields.login: The username or login of the record.
+fields.password: The password of the record.
+fields.notes: Additional notes related to the record.
+
+**Returns:**
+
+error: An error if the record cannot be added.
+
+---
+
 ### CommanderInstalled
 
 ```go
@@ -48,20 +71,20 @@ bool: True if the user is logged into their Keeper vault, false otherwise.
 ### RetrieveRecord
 
 ```go
-RetrieveRecord(string) Record, error
+RetrieveRecord(string) pwmgr.Record, error
 ```
 
 RetrieveRecord retrieves a user's Keeper record using the
-provided unique identifier (keeperUID).
+provided unique identifier (uid).
 
 **Parameters:**
 
-keeperUID: A string representing the unique identifier of the
+uid: A string representing the unique identifier of the
 Keeper record to retrieve.
 
 **Returns:**
 
-Record: The retrieved Keeper record.
+pwmgr.Record: The retrieved Keeper record.
 error: An error if the Keeper record cannot be retrieved.
 
 ---

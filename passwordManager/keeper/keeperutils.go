@@ -9,29 +9,16 @@ import (
 	"strings"
 
 	"github.com/fatih/color"
+	"github.com/l50/goutils/v2/pwmgr"
 	"github.com/l50/goutils/v2/sys"
 )
 
-// Record represents a user's record in the Keeper application.
+// Keeper represents a password manager that uses Keeper Security.
 //
 // **Attributes:**
 //
-// UID: A unique identifier.
-// Title: Title of the record.
-// URL: The associated URL of the record.
-// Username: The username associated with the record.
-// Password: The password associated with the record.
-// TOTP: Time-based One-Time Password.
-// Note: Additional note associated with the record.
-type Record struct {
-	UID      string
-	Title    string
-	URL      string
-	Username string
-	Password string
-	TOTP     string
-	Note     string
-}
+// Config: KeeperConfig object containing information about the Keeper vault.
+type Keeper struct{}
 
 // configPath returns the path of the keeper config file.
 func configPath() (string, error) {
@@ -48,7 +35,7 @@ func configPath() (string, error) {
 // **Returns:**
 //
 // bool: True if the Keeper Commander tool is installed, false otherwise.
-func CommanderInstalled() bool {
+func (k Keeper) CommanderInstalled() bool {
 	return sys.CmdExists("keeper")
 }
 
@@ -57,8 +44,8 @@ func CommanderInstalled() bool {
 // **Returns:**
 //
 // bool: True if the user is logged into their Keeper vault, false otherwise.
-func LoggedIn() bool {
-	if !CommanderInstalled() {
+func (k Keeper) LoggedIn() bool {
+	if !k.CommanderInstalled() {
 		err := errors.New(color.RedString(
 			"keeper commander is not installed - please install and try again"))
 		fmt.Println(err)
@@ -97,24 +84,60 @@ type rawRecord struct {
 	} `json:"fields"`
 }
 
-// RetrieveRecord retrieves a user's Keeper record using the
-// provided unique identifier (keeperUID).
+// AddRecord adds a new record to the Keeper vault.
 //
 // **Parameters:**
 //
-// keeperUID: A string representing the unique identifier of the
+// fields: A map containing the record fields.
+//
+// fields.title: The title of the record.
+// fields.login: The username or login of the record.
+// fields.password: The password of the record.
+// fields.notes: Additional notes related to the record.
+//
+// **Returns:**
+//
+// error: An error if the record cannot be added.
+func (k Keeper) AddRecord(fields map[string]string) error {
+	// Ensure keeper commander is installed and
+	// there is a valid keeper session.
+	if !k.CommanderInstalled() || !k.LoggedIn() {
+		return errors.New("error: ensure keeper commander is installed " +
+			"and a valid keeper session is established")
+	}
+
+	configPath, err := configPath()
+	if err != nil {
+		return errors.New(color.RedString(
+			"failed to retrieve keeper config path"))
+	}
+
+	title := fields["title"]
+	login := fields["login"]
+	password := fields["password"]
+	notes := fields["notes"]
+
+	_, err = sys.RunCommand("keeper", "record-add", "--title", title, "--login", login, "--pass", password, "--notes", notes, "--config", configPath)
+
+	return err
+}
+
+// RetrieveRecord retrieves a user's Keeper record using the
+// provided unique identifier (uid).
+//
+// **Parameters:**
+//
+// uid: A string representing the unique identifier of the
 // Keeper record to retrieve.
 //
 // **Returns:**
 //
-// Record: The retrieved Keeper record.
+// pwmgr.Record: The retrieved Keeper record.
 // error: An error if the Keeper record cannot be retrieved.
-func RetrieveRecord(keeperUID string) (Record, error) {
-	var record Record
+func (k Keeper) RetrieveRecord(uid string) (pwmgr.Record, error) {
+	var record pwmgr.Record
 
-	// Ensure keeper commander is installed and
-	// there is a valid keeper session.
-	if !CommanderInstalled() || !LoggedIn() {
+	if !k.CommanderInstalled() || !k.LoggedIn() {
 		return record, errors.New("error: ensure keeper commander is installed and a valid keeper session is established")
 	}
 
@@ -125,7 +148,7 @@ func RetrieveRecord(keeperUID string) (Record, error) {
 		return record, err
 	}
 
-	jsonData, err := sys.RunCommand("keeper", "get", keeperUID, "--unmask", "--format", "json", "--config", configPath)
+	jsonData, err := sys.RunCommand("keeper", "get", uid, "--unmask", "--format", "json", "--config", configPath)
 	if err != nil {
 		return record, err
 	}
@@ -170,12 +193,10 @@ func RetrieveRecord(keeperUID string) (Record, error) {
 // that matches the search term.
 // error: An error if the Keeper records cannot be searched or if
 // the search term does not match any records.
-func SearchRecords(searchTerm string) (string, error) {
+func (k Keeper) SearchRecords(searchTerm string) (string, error) {
 	recordUID := ""
 
-	// Ensure keeper commander is installed and
-	// there is a valid keeper session.
-	if !CommanderInstalled() || !LoggedIn() {
+	if !k.CommanderInstalled() || !k.LoggedIn() {
 		return recordUID, errors.New("error: ensure keeper commander is installed and a valid keeper session is established")
 	}
 

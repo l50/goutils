@@ -3,23 +3,26 @@ package keeper_test
 import (
 	"log"
 
-	"github.com/l50/goutils/v2/keeper"
+	"github.com/l50/goutils/v2/pwmgr/keeper"
 )
 
 func ExampleCommanderInstalled() {
-	if !keeper.CommanderInstalled() {
+	k := keeper.Keeper{}
+	if !k.CommanderInstalled() {
 		log.Fatal("keeper commander is not installed.")
 	}
 }
 
 func ExampleLoggedIn() {
-	if !keeper.LoggedIn() {
+	k := keeper.Keeper{}
+	if !k.LoggedIn() {
 		log.Fatal("not logged into keeper vault.")
 	}
 }
 
 func ExampleRetrieveRecord() {
-	record, err := keeper.RetrieveRecord("1234abcd")
+	k := keeper.Keeper{}
+	record, err := k.RetrieveRecord("1234abcd")
 	if err != nil {
 		log.Fatalf("failed to retrieve record: %v", err)
 	}
@@ -27,7 +30,8 @@ func ExampleRetrieveRecord() {
 }
 
 func ExampleSearchRecords() {
-	uid, err := keeper.SearchRecords("search term")
+	k := keeper.Keeper{}
+	uid, err := k.SearchRecords("search term")
 	if err != nil {
 		log.Fatalf("failed to search records: %v", err)
 	}
