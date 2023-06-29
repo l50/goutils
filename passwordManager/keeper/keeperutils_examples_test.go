@@ -3,7 +3,7 @@ package keeper_test
 import (
 	"log"
 
-	"github.com/l50/goutils/v2/pwmgr/keeper"
+	"github.com/l50/goutils/v2/keeper"
 )
 
 func ExampleCommanderInstalled() {
