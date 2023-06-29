@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/l50/goutils/v2/keeper"
+	"github.com/l50/goutils/v2/pwmgr/keeper"
 	"github.com/stretchr/testify/assert"
 )
 
