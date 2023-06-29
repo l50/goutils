@@ -2,12 +2,77 @@ package logging
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/fatih/color"
+	slogmulti "github.com/samber/slog-multi"
 	"github.com/spf13/afero"
+	"golang.org/x/exp/slog"
 )
+
+// Logger defines the methods for a generic logging interface.
+// It consists of Println and Printf methods.
+type Logger interface {
+	Println(v ...interface{})
+	Printf(format string, v ...interface{})
+}
+
+// ColoredLogger represents a logger that outputs in cyan color.
+//
+// **Attributes:**
+//
+// Info: LogInfo object containing information about the log file.
+// ColorAttribute: A color.Attribute object representing the color
+type ColoredLogger struct {
+	Info           LogInfo
+	ColorAttribute color.Attribute
+}
+
+// Println for ColoredLogger logs the provided arguments as a line
+// in the specified color. The arguments are handled in the manner
+// of fmt.Println.
+func (l *ColoredLogger) Println(v ...interface{}) {
+	log.SetOutput(l.Info.File)
+	log.Println(color.New(l.ColorAttribute).Sprint(v...))
+}
+
+// Printf for ColoredLogger logs the provided formatted string in
+// the specified color. The format and arguments are handled in the
+// manner of fmt.Printf.
+func (l *ColoredLogger) Printf(format string, v ...interface{}) {
+	log.SetOutput(l.Info.File)
+	if len(v) > 0 {
+		log.Println(color.New(l.ColorAttribute).Sprintf(format, v...))
+	} else {
+		log.Println(color.New(l.ColorAttribute).Sprint(format))
+	}
+}
+
+// PlainLogger represents a logger that outputs in plain format.
+//
+// **Attributes:**
+//
+// Info: LogInfo object containing information about the log file.
+type PlainLogger struct {
+	Info LogInfo
+}
+
+// Println for PlainLogger logs the provided arguments as a line in plain text.
+// The arguments are handled in the manner of fmt.Println.
+func (l *PlainLogger) Println(v ...interface{}) {
+	log.SetOutput(l.Info.File)
+	log.Println(v...)
+}
+
+// Printf for PlainLogger logs the provided formatted string in plain text.
+// The format and arguments are handled in the manner of fmt.Printf.
+func (l *PlainLogger) Printf(format string, v ...interface{}) {
+	log.SetOutput(l.Info.File)
+	log.Printf(format, v...)
+}
 
 // LogInfo represents parameters used to manage logging throughout
 // a program.
@@ -81,4 +146,90 @@ func CreateLogFile(fs afero.Fs, logDir string, logName string) (LogInfo, error) 
 	}
 
 	return logInfo, nil
+}
+
+// SlogLogger represents a logger using the slog library.
+//
+// **Attributes:**
+//
+// Logger: Logger object from slog library.
+type SlogLogger struct {
+	Logger *slog.Logger
+}
+
+// Println for SlogLogger logs the provided arguments as a line using slog library.
+// The arguments are converted to a string using fmt.Sprint.
+func (l *SlogLogger) Println(v ...interface{}) {
+	l.Logger.Info(fmt.Sprint(v...))
+}
+
+// Printf for SlogLogger logs the provided formatted string using slog library.
+// The format and arguments are handled in the manner of fmt.Printf.
+func (l *SlogLogger) Printf(format string, v ...interface{}) {
+	l.Logger.Info(format, v...)
+}
+
+// SlogPlainLogger represents a plain logger using the slog library.
+//
+// **Attributes:**
+//
+// Logger: Logger object from slog library.
+type SlogPlainLogger struct {
+	Logger *slog.Logger
+}
+
+// Println for SlogPlainLogger logs the provided arguments as a line using slog library.
+// The arguments are converted to a string using fmt.Sprint.
+func (l *SlogPlainLogger) Println(v ...interface{}) {
+	l.Logger.Info(fmt.Sprint(v...))
+}
+
+// Printf for SlogPlainLogger logs the provided formatted string using slog library.
+// The format and arguments are handled in the manner of fmt.Printf.
+func (l *SlogPlainLogger) Printf(format string, v ...interface{}) {
+	l.Logger.Info(format, v...)
+}
+
+// ConfigureLogger creates a logger based on the provided level.
+// Depending on the level, it returns a colored or plain logger.
+//
+// **Parameters:**
+//
+// level: Logging level as a slog.Level.
+// path: Path to the log file.
+//
+// **Returns:**
+//
+// Logger: Logger object based on provided level.
+// error: An error, if an issue occurs while setting up the logger.
+func ConfigureLogger(level slog.Level, path string) (Logger, error) {
+	var err error
+
+	// Create log file handlers
+	logFile, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	if err != nil {
+		return nil, err
+	}
+
+	// Setup options for logging
+	opts := slog.HandlerOptions{
+		Level: level,
+	}
+
+	// File logger
+	fileHandler := slog.NewJSONHandler(logFile, &opts)
+
+	// Stdout logger
+	stdoutHandler := slog.NewJSONHandler(os.Stdout, &opts)
+
+	// Combining both handlers
+	handler := slogmulti.Fanout(fileHandler, stdoutHandler)
+
+	logger := slog.New(handler)
+
+	// Depending on the level, return colored or plain logger
+	if level == slog.LevelDebug {
+		return &SlogLogger{Logger: logger}, nil
+	}
+	return &SlogPlainLogger{Logger: logger}, nil
 }

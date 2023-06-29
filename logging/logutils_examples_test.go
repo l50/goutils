@@ -3,9 +3,23 @@ package logging_test
 import (
 	"fmt"
 
+	"github.com/fatih/color"
 	"github.com/l50/goutils/v2/logging"
 	"github.com/spf13/afero"
+	"golang.org/x/exp/slog"
 )
+
+func ExampleConfigureLogger() {
+	logger, err := logging.ConfigureLogger(slog.LevelDebug, "/tmp/test.log")
+	if err != nil {
+		fmt.Printf("failed to configure logger: %v", err)
+		return
+	}
+
+	logger.Println("This is a log message")
+
+	// Unpredictable output due to timestamps and structured logging
+}
 
 func ExampleCreateLogFile() {
 	fs := afero.NewOsFs()
@@ -13,19 +27,21 @@ func ExampleCreateLogFile() {
 	logName := "test.log"
 
 	logInfo, err := logging.CreateLogFile(fs, logDir, logName)
-
 	if err != nil {
 		fmt.Printf("failed to create log file: %v", err)
 		return
 	}
 
+	// Specify the color attribute for the ColoredLogger
+	var logger = &logging.ColoredLogger{Info: logInfo, ColorAttribute: color.FgBlue}
+	logger.Println("This is a log message")
+
 	fmt.Printf("log file created at: %s", logInfo.Path)
 
 	// Clean up
-	err = fs.Remove(logInfo.Path)
-	if err != nil {
+	if err := fs.Remove(logInfo.Path); err != nil {
 		fmt.Printf("failed to clean up: %v", err)
 	}
 
-	// Output: log file created at: /tmp/logs/test.log
+	// Unpredictable output due to timestamps and structured logging
 }

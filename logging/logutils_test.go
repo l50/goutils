@@ -7,8 +7,10 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/fatih/color"
 	"github.com/l50/goutils/v2/logging"
 	"github.com/spf13/afero"
+	"golang.org/x/exp/slog"
 )
 
 type errorFs struct {
@@ -120,6 +122,110 @@ func TestCreateLogFile(t *testing.T) {
 				if logInfo.Path != expectedPath {
 					t.Fatalf("expected path %s but got %s", expectedPath, logInfo.Path)
 				}
+			}
+		})
+	}
+}
+
+func TestLoggerImplementation(t *testing.T) {
+	// create an in-memory filesystem
+	fs := afero.NewMemMapFs()
+	logDir := "/tmp"
+	logName := "test.log"
+	logInfo, err := logging.CreateLogFile(fs, logDir, logName)
+	if err != nil {
+		t.Fatalf("unexpected error while creating log file: %v", err)
+	}
+
+	tests := []struct {
+		name    string
+		logger  logging.Logger
+		logFunc func(l logging.Logger)
+	}{
+		{
+			name:   "PlainLogger Println",
+			logger: &logging.PlainLogger{Info: logInfo},
+			logFunc: func(l logging.Logger) {
+				l.Println("test plain logger")
+			},
+		},
+		{
+			name:   "PlainLogger Printf",
+			logger: &logging.PlainLogger{Info: logInfo},
+			logFunc: func(l logging.Logger) {
+				l.Printf("test %s logger", "plain")
+			},
+		},
+		{
+			name:   "Test ColoredLogger",
+			logger: &logging.ColoredLogger{Info: logInfo},
+			logFunc: func(l logging.Logger) {
+				l.Printf("Test log message with format: %s", "Test")
+			},
+		},
+		{
+			name:   "Test ColoredLogger with Blue color",
+			logger: &logging.ColoredLogger{Info: logInfo, ColorAttribute: color.FgBlue},
+			logFunc: func(l logging.Logger) {
+				l.Printf("Test log message with format: %s", "Test")
+			},
+		},
+		{
+			name:   "Test PlainLogger",
+			logger: &logging.PlainLogger{Info: logInfo},
+			logFunc: func(l logging.Logger) {
+				l.Printf("Test log message with format: %s", "Test")
+			},
+		},
+		{
+			name:   "Test SlogLogger",
+			logger: &logging.SlogLogger{Logger: slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{}))},
+			logFunc: func(l logging.Logger) {
+				l.Printf("Test log message with format: %s", "Test")
+			},
+		},
+		{
+			name:   "Test SlogPlainLogger",
+			logger: &logging.SlogPlainLogger{Logger: slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{}))},
+			logFunc: func(l logging.Logger) {
+				l.Printf("Test log message with format: %s", "Test")
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			tc.logFunc(tc.logger)
+		})
+	}
+}
+
+func TestConfigureLogger(t *testing.T) {
+	tests := []struct {
+		name       string
+		level      slog.Level
+		loggerType string
+	}{
+		{
+			name:       "Test debug level",
+			level:      slog.LevelDebug,
+			loggerType: "*logging.SlogLogger",
+		},
+		{
+			name:       "Test non-debug level",
+			level:      slog.LevelInfo,
+			loggerType: "*logging.SlogPlainLogger",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			logger, err := logging.ConfigureLogger(tc.level, "/tmp/test.log")
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if strings.Compare(fmt.Sprintf("%T", logger), tc.loggerType) != 0 {
+				t.Fatalf("expected logger type: %s, got: %T", tc.loggerType, logger)
 			}
 		})
 	}
