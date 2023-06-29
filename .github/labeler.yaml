@@ -46,6 +46,10 @@ area/web:
 area/magefiles:
   - "magefiles/*"
 
+area/asdf:
+  - ".asdf"
+  - ".tool-versions"
+
 area/go-mod-sum:
   - "go.mod"
   - "go.sum"
