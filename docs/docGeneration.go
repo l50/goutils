@@ -48,10 +48,12 @@ type Repo struct {
 // Name:        The function name.
 // Signature:   The function signature, including parameters and return types.
 // Description: The documentation or description of the function.
+// Parameters:  The function parameters.
 type FunctionDoc struct {
-	Name        string // The function name.
-	Signature   string // The function signature, including parameters and return types.
-	Description string // The documentation or description of the function.
+	Name        string
+	Signature   string
+	Description string
+	Parameters  string
 }
 
 // FuncInfo holds information about an exported function within a Go package.
@@ -286,6 +288,7 @@ func createFunctionDoc(fset *token.FileSet, fn *ast.FuncDecl) (FunctionDoc, erro
 		Name:        fn.Name.Name,
 		Signature:   signature,
 		Description: fn.Doc.Text(),
+		Parameters:  params,
 	}, nil
 }
 
