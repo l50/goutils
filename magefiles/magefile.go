@@ -161,12 +161,14 @@ func UpdateDocs() error {
 // UseFixCodeBlocks fixes code blocks for the input filepath
 // using the input language.
 //
-// Parameters:
-//   - filepath: the path to the file or directory to fix
-//   - language: the language of the code blocks to fix
+// **Parameters:**
 //
-// Returns:
-//   - error: an error if one occurred
+// filepath: the path to the file or directory to fix
+// language: the language of the code blocks to fix
+//
+// **Returns:**
+//
+// error: an error if one occurred
 //
 // Example:
 //

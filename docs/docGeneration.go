@@ -120,9 +120,7 @@ func CreatePackageDocs(fs afero.Fs, repo Repo, templatePath string) error {
 		return fmt.Errorf("error loading ignore list: %w", err)
 	}
 
-	err = afero.Walk(fs, ".", func(path string, info os.FileInfo, err error) error {
-		path = filepath.Clean(path)
-
+	err = afero.Walk(fs, ".", func(path string, info os.FileInfo, walkErr error) error {
 		// Skip hidden directories or files
 		if strings.HasPrefix(filepath.Base(path), ".") {
 			if info.IsDir() {
@@ -136,14 +134,24 @@ func CreatePackageDocs(fs afero.Fs, repo Repo, templatePath string) error {
 			return nil
 		}
 
-		if _, ok := ignoreList[path]; ok {
+		absPath, absErr := filepath.Abs(path)
+		if absErr != nil {
+			return absErr
+		}
+
+		relPath, relErr := filepath.Rel(".", absPath)
+		if relErr != nil {
+			return relErr
+		}
+
+		if _, ok := ignoreList[relPath]; ok {
 			if info.IsDir() {
 				return filepath.SkipDir
 			}
 			return nil
 		}
 
-		return handleDirectory(fs, repo, templatePath)(path, info, err)
+		return handleDirectory(fs, repo, templatePath)(path, info, walkErr)
 	})
 
 	if err != nil {
