@@ -1,8 +1,8 @@
 package docs_test
 
 import (
+	"io"
 	"io/fs"
-	"os"
 	"path/filepath"
 	"testing"
 	"time"
@@ -15,33 +15,6 @@ type mockDirEntry struct {
 	name  string
 	isDir bool
 	info  fs.FileInfo
-}
-
-func createTestDirectoryAndFile(afs afero.Fs) (string, error) {
-	// Create a temporary directory for testing
-	dir, err := os.MkdirTemp("", "testdir")
-	if err != nil {
-		return "", err
-	}
-
-	// Create a test file inside the temporary directory
-	filePath := filepath.Join(dir, "testfile.txt")
-	file, err := afero.NewOsFs().Create(filePath)
-	if err != nil {
-		os.RemoveAll(dir) // Clean up the temporary directory if file creation fails
-		return "", err
-	}
-	defer file.Close()
-
-	// Write some content to the test file
-	content := []byte("Hello, Test File!")
-	_, err = file.Write(content)
-	if err != nil {
-		os.RemoveAll(dir) // Clean up the temporary directory if writing fails
-		return "", err
-	}
-
-	return dir, nil
 }
 
 func (d *mockDirEntry) Name() string {
@@ -90,13 +63,17 @@ func (m *mockFileInfo) Sys() interface{} {
 	return nil
 }
 
+type testCase struct {
+	name       string
+	walkFn     func(string, filepath.WalkFunc) error
+	setup      func(afero.Fs) error // Setup the filesystem for each test case
+	readDirErr error
+	verify     func(*testing.T, afero.Fs) error // Verify the filesystem after each test case
+	expectErr  bool
+}
+
 func TestCreatePackageDocs(t *testing.T) {
-	testCases := []struct {
-		name       string
-		walkFn     func(string, filepath.WalkFunc) error
-		readDirErr error
-		expectErr  bool
-	}{
+	testCases := []testCase{
 		{
 			name: "Test Successful Walk",
 			walkFn: func(root string, walkFn filepath.WalkFunc) error {
@@ -131,6 +108,56 @@ func TestCreatePackageDocs(t *testing.T) {
 			readDirErr: nil,
 			expectErr:  false,
 		},
+		{
+			name: "Test .docgenignore functionality",
+			setup: func(fs afero.Fs) error {
+				// Create a directory and file that should be ignored
+				if err := fs.MkdirAll("ignoredir", 0755); err != nil {
+					return err
+				}
+				file, err := fs.Create("ignoredir/README.md")
+				if err != nil {
+					return err
+				}
+				defer file.Close()
+				if _, err := file.WriteString("This should not be overwritten."); err != nil {
+					return err
+				}
+
+				// Create a .docgenignore file with the directory to be ignored
+				if file, err = fs.Create(".docgenignore"); err != nil {
+					return err
+				}
+
+				if _, err := file.WriteString("ignoredir"); err != nil {
+					return err
+				}
+
+				return nil
+			},
+			expectErr: false,
+			verify: func(t *testing.T, fs afero.Fs) error {
+				// Verify that the README.md file in the ignored directory was not modified
+				file, err := fs.Open("ignoredir/README.md")
+				if err != nil {
+					t.Errorf("error opening ignored file: %v", err)
+					return err
+				}
+				defer file.Close()
+
+				bytes, err := io.ReadAll(file)
+				if err != nil {
+					t.Errorf("error reading ignored file: %v", err)
+					return err
+				}
+
+				content := string(bytes)
+				if content != "This should not be overwritten." {
+					t.Errorf("ignored file was modified: got %q, want %q", content, "This should not be overwritten.")
+				}
+				return nil
+			},
+		},
 	}
 
 	for _, tc := range testCases {
@@ -138,9 +165,11 @@ func TestCreatePackageDocs(t *testing.T) {
 
 			aferoFs := afero.NewMemMapFs()
 
-			_, err := createTestDirectoryAndFile(aferoFs)
-			if err != nil {
-				t.Errorf("CreatePackageDocs() error = %v", err)
+			// Call setup function to prepare the filesystem for the test
+			if tc.setup != nil {
+				if err := tc.setup(aferoFs); err != nil {
+					t.Fatalf("error setting up filesystem: %v", err)
+				}
 			}
 
 			repo := docs.Repo{
@@ -148,11 +177,18 @@ func TestCreatePackageDocs(t *testing.T) {
 				Name:  "testrepo",
 			}
 
-			templatePath := "dev/mage/templates/README.md.tmpl"
+			templatePath := filepath.Join("dev", "mage", "templates", "README.md.tmpl")
 
-			err = docs.CreatePackageDocs(aferoFs, repo, templatePath)
+			err := docs.CreatePackageDocs(aferoFs, repo, templatePath)
 			if (err != nil) != tc.expectErr {
 				t.Errorf("CreatePackageDocs() error = %v, wantErr %v", err, tc.expectErr)
+			}
+
+			// Call the verify function if it is provided
+			if tc.verify != nil {
+				if err := tc.verify(t, aferoFs); err != nil {
+					t.Errorf("error verifying filesystem: %v", err)
+				}
 			}
 		})
 	}

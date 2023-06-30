@@ -1,7 +1,7 @@
 package docs_test
 
 import (
-	"log"
+	"fmt"
 
 	"github.com/l50/goutils/v2/docs"
 	"github.com/spf13/afero"
@@ -22,6 +22,6 @@ func ExampleCreatePackageDocs() {
 
 	// Run the function
 	if err := docs.CreatePackageDocs(fs, repo, templatePath); err != nil {
-		log.Printf("failed to create package docs: %v", err)
+		fmt.Printf("failed to create package docs: %v", err)
 	}
 }

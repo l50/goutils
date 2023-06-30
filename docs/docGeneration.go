@@ -1,6 +1,7 @@
 package docs
 
 import (
+	"bufio"
 	"bytes"
 	"fmt"
 	"go/ast"
@@ -64,16 +65,46 @@ type FuncInfo struct {
 	FuncName string // The name of the exported function.
 }
 
+func loadIgnoreList(fs afero.Fs, ignoreFilePath string) (map[string]struct{}, error) {
+	ignoreList := make(map[string]struct{})
+
+	ignoreFile, err := fs.Open(ignoreFilePath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return ignoreList, nil // If the ignore file doesn't exist, just return the empty list.
+		}
+		return nil, err
+	}
+	defer ignoreFile.Close()
+
+	scanner := bufio.NewScanner(ignoreFile)
+	for scanner.Scan() {
+		ignorePath := scanner.Text()
+		ignorePath = filepath.Clean(ignorePath)
+		ignoreList[ignorePath] = struct{}{}
+	}
+
+	if err := scanner.Err(); err != nil {
+		return nil, err
+	}
+
+	return ignoreList, nil
+}
+
 // CreatePackageDocs generates documentation for all Go packages in the current
 // directory and its subdirectories. It traverses the file tree using a provided
 // afero.Fs and Repo to create a new README.md file in each directory containing
 // a Go package. It uses a specified template file for generating the README files.
 //
+// It will ignore any files or directories listed in the .docgenignore file
+// found at the root of the repository. The .docgenignore file should contain
+// a list of files and directories to ignore, with each entry on a new line.
+//
 // **Parameters:**
 //
-// fs:            An afero.Fs instance for mocking the filesystem for testing.
+// fs: An afero.Fs instance for mocking the filesystem for testing.
 //
-// repo:          A Repo instance representing the GitHub repository
+// repo: A Repo instance representing the GitHub repository
 // containing the Go packages.
 //
 // templatePath:  A string representing the path to the template file to be
@@ -84,7 +115,36 @@ type FuncInfo struct {
 // error: An error, if it encounters an issue while walking the file tree,
 // reading a directory, parsing Go files, or generating README.md files.
 func CreatePackageDocs(fs afero.Fs, repo Repo, templatePath string) error {
-	err := afero.Walk(fs, ".", handleDirectory(fs, repo, templatePath))
+	ignoreList, err := loadIgnoreList(fs, ".docgenignore")
+	if err != nil {
+		return fmt.Errorf("error loading ignore list: %w", err)
+	}
+
+	err = afero.Walk(fs, ".", func(path string, info os.FileInfo, err error) error {
+		path = filepath.Clean(path)
+
+		// Skip hidden directories or files
+		if strings.HasPrefix(filepath.Base(path), ".") {
+			if info.IsDir() {
+				return filepath.SkipDir
+			}
+			return nil
+		}
+
+		// Skip the README file at the root of the repository
+		if path == "./README.md" {
+			return nil
+		}
+
+		if _, ok := ignoreList[path]; ok {
+			if info.IsDir() {
+				return filepath.SkipDir
+			}
+			return nil
+		}
+
+		return handleDirectory(fs, repo, templatePath)(path, info, err)
+	})
 
 	if err != nil {
 		return fmt.Errorf("error walking directories: %w", err)
@@ -222,8 +282,6 @@ func createFunctionDoc(fset *token.FileSet, fn *ast.FuncDecl) (FunctionDoc, erro
 }
 
 func splitLongSignature(signature string, maxLineLength int) string {
-	// This is a simple example of splitting the signature at the comma
-	// More complex scenarios may need a more sophisticated approach
 	parts := strings.Split(signature, ",")
 	for i := 1; i < len(parts); i++ {
 		if len(parts[i-1]) > maxLineLength {
@@ -262,8 +320,7 @@ func generateReadmeFromTemplate(pkgDoc *PackageDoc, path string, templatePath st
 	readmeContent = strings.ReplaceAll(readmeContent, "\t", "    ")
 
 	// Write the modified content to the README file
-	_, err = out.WriteString(readmeContent)
-	if err != nil {
+	if _, err := out.WriteString(readmeContent); err != nil {
 		return err
 	}
 

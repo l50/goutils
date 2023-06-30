@@ -27,11 +27,15 @@ directory and its subdirectories. It traverses the file tree using a provided
 afero.Fs and Repo to create a new README.md file in each directory containing
 a Go package. It uses a specified template file for generating the README files.
 
+It will ignore any files or directories listed in the .docgenignore file
+found at the root of the repository. The .docgenignore file should contain
+a list of files and directories to ignore, with each entry on a new line.
+
 **Parameters:**
 
-fs:            An afero.Fs instance for mocking the filesystem for testing.
+fs: An afero.Fs instance for mocking the filesystem for testing.
 
-repo:          A Repo instance representing the GitHub repository
+repo: A Repo instance representing the GitHub repository
 containing the Go packages.
 
 templatePath:  A string representing the path to the template file to be
