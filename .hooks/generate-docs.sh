@@ -19,7 +19,6 @@ bashutils_path="/tmp/bashutils"
 # Check if bashutils.sh exists locally
 if [[ ! -f "${bashutils_path}" ]]; then
     # bashutils.sh doesn't exist locally, so download it
-    mkdir -p "${HOME}/.dotfiles"
     curl -s "${bashutils_url}" -o "${bashutils_path}"
 fi
 
