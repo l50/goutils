@@ -150,7 +150,6 @@ func UpdateDocs() error {
 
 	templatePath := filepath.Join("magefiles", "tmpl", "README.md.tmpl")
 
-	fmt.Println("Updating docs.")
 	if err := docs.CreatePackageDocs(fs, repo, templatePath); err != nil {
 		return fmt.Errorf("failed to update docs: %v", err)
 	}

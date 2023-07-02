@@ -20,7 +20,6 @@ func ExampleCreatePackageDocs() {
 	// Set the path to the template file
 	templatePath := "dev/mage/templates/README.md.tmpl"
 
-	// Run the function
 	if err := docs.CreatePackageDocs(fs, repo, templatePath); err != nil {
 		fmt.Printf("failed to create package docs: %v", err)
 	}
