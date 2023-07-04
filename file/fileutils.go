@@ -410,7 +410,7 @@ func createFile(filePath string, fileContents []byte) error {
 	return nil
 }
 
-// SeekandDestroy walks through a directory and deletes all files that match the pattern
+// SeekAndDestroy walks through a directory and deletes all files that match the pattern
 //
 // **Parameters:**
 //

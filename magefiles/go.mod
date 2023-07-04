@@ -41,3 +41,5 @@ require (
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	mvdan.cc/sh/v3 v3.6.0 // indirect
 )
+
+replace "github.com/l50/goutils/v2" => "../"
