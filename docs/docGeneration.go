@@ -65,29 +65,35 @@ type FuncInfo struct {
 	FuncName string
 }
 
-// CreatePackageDocs generates documentation for all Go packages in the current
-// directory and its subdirectories. It traverses the file tree using a provided
-// afero.Fs and Repo to create a new README.md file in each directory containing
-// a Go package. It uses a specified template file for generating the README files.
-//
-// It will ignore any files or directories listed in the .docgenignore file
-// found at the root of the repository. The .docgenignore file should contain
-// a list of files and directories to ignore, with each entry on a new line.
+// CreatePackageDocs generates package documentation for a Go project using
+// a specified template file. It first checks if the template file exists in
+// the filesystem denoted by a provided afero.Fs instance. If it exists, the
+// function walks the project directory, excluding any specified packages,
+// and applies the template to each non-excluded package to generate its
+// documentation.
 //
 // **Parameters:**
 //
-// fs: An afero.Fs instance for mocking the filesystem for testing.
-// repo: A Repo instance representing the GitHub repository
-// containing the Go packages.
+// fs: An afero.Fs instance representing the filesystem.
 //
-// templatePath:  A string representing the path to the template file to be
-// used for generating README files.
+// repo: A Repo instance containing the Go project's repository details.
+//
+// templatePath: A string representing the path to the template file to be
+// used for generating the package documentation.
+//
+// excludedPackages: Zero or more strings representing the names of packages
+// to be excluded from documentation generation.
 //
 // **Returns:**
 //
-// error: An error, if it encounters an issue while walking the file tree,
-// reading a directory, parsing Go files, or generating README.md files.
-func CreatePackageDocs(fs afero.Fs, repo Repo, templatePath string) error {
+// error: An error, if it encounters an issue while checking if the template
+// file exists, walking the project directory, or generating the package
+// documentation.
+func CreatePackageDocs(fs afero.Fs, repo Repo, templatePath string, excludedPackages ...string) error {
+	excludedPackagesMap := make(map[string]struct{})
+	for _, pkg := range excludedPackages {
+		excludedPackagesMap[pkg] = struct{}{}
+	}
 
 	exists, err := afero.Exists(fs, templatePath)
 	if err != nil {
@@ -97,7 +103,7 @@ func CreatePackageDocs(fs afero.Fs, repo Repo, templatePath string) error {
 		return fmt.Errorf("template file does not exist")
 	}
 
-	err = afero.Walk(fs, ".", handleDirectory(fs, repo, templatePath))
+	err = afero.Walk(fs, ".", handleDirectory(fs, repo, templatePath, excludedPackagesMap))
 	if err != nil {
 		return fmt.Errorf("error walking directories: %w", err)
 	}
@@ -212,7 +218,7 @@ func loadIgnoreList(fs afero.Fs, ignoreFilePath string) (map[string]struct{}, er
 	return ignoreList, nil
 }
 
-func handleDirectory(fs afero.Fs, repo Repo, templatePath string) filepath.WalkFunc {
+func handleDirectory(fs afero.Fs, repo Repo, templatePath string, excludedPackagesMap map[string]struct{}) filepath.WalkFunc {
 	return func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -227,8 +233,6 @@ func handleDirectory(fs afero.Fs, repo Repo, templatePath string) filepath.WalkF
 			return fmt.Errorf("error loading ignore list: %w", err)
 		}
 
-		// Check if the current directory is in the ignore list.
-		// If it is, skip it.
 		_, ignored := ignoreList[filepath.Clean(path)]
 		if ignored {
 			return filepath.SkipDir
@@ -243,7 +247,7 @@ func handleDirectory(fs afero.Fs, repo Repo, templatePath string) filepath.WalkF
 			return nil
 		}
 
-		return processGoFiles(fs, path, repo, templatePath)
+		return processGoFiles(fs, path, repo, templatePath, excludedPackagesMap)
 	}
 }
 
@@ -267,7 +271,7 @@ func directoryContainsGoFiles(fs afero.Fs, path string) (bool, error) {
 	return false, nil
 }
 
-func processGoFiles(fs afero.Fs, path string, repo Repo, templatePath string) error {
+func processGoFiles(fs afero.Fs, path string, repo Repo, templatePath string, excludedPackagesMap map[string]struct{}) error {
 	fset := token.NewFileSet()
 	pkgs, err := parser.ParseDir(fset, path, nonTestFilter, parser.ParseComments)
 	if err != nil {
@@ -275,6 +279,11 @@ func processGoFiles(fs afero.Fs, path string, repo Repo, templatePath string) er
 	}
 
 	for _, pkg := range pkgs {
+		// check if the package name is in the excluded packages list
+		if _, exists := excludedPackagesMap[pkg.Name]; exists {
+			continue // skip this package
+		}
+
 		err := generateReadmeForPackage(fs, path, fset, pkg, repo, templatePath)
 		if err != nil {
 			return err
