@@ -16,7 +16,7 @@ Table of contents:
 
 ## Functions
 
-### AddFencedCB
+### AddFencedCB(string, string)
 
 ```go
 AddFencedCB(string, string) error
@@ -36,7 +36,7 @@ error: An error if the markdown file fails to be modified.
 
 ---
 
-### ClearPCCache
+### ClearPCCache()
 
 ```go
 ClearPCCache() error
@@ -50,7 +50,7 @@ error: An error if the cache fails to clear.
 
 ---
 
-### InstallGoPCDeps
+### InstallGoPCDeps()
 
 ```go
 InstallGoPCDeps() error
@@ -65,7 +65,7 @@ error: An error if the dependencies fail to install.
 
 ---
 
-### InstallPCHooks
+### InstallPCHooks()
 
 ```go
 InstallPCHooks() error
@@ -79,7 +79,7 @@ error: An error if the hooks fail to install.
 
 ---
 
-### RunPCHooks
+### RunPCHooks(...int)
 
 ```go
 RunPCHooks(...int) error
@@ -98,7 +98,7 @@ error: An error if the pre-commit hook execution fails.
 
 ---
 
-### UpdatePCHooks
+### UpdatePCHooks()
 
 ```go
 UpdatePCHooks() error

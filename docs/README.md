@@ -16,7 +16,7 @@ Table of contents:
 
 ## Functions
 
-## CreatePackageDocs(afero.Fs, Repo, string, ...string)
+### CreatePackageDocs(afero.Fs, Repo, string, ...string)
 
 ```go
 CreatePackageDocs(afero.Fs, Repo, string, ...string) error
@@ -49,7 +49,7 @@ documentation.
 
 ---
 
-## FixCodeBlocks(fileutils.RealFile, string)
+### FixCodeBlocks(fileutils.RealFile, string)
 
 ```go
 FixCodeBlocks(fileutils.RealFile, string) error

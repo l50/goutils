@@ -16,7 +16,7 @@ Table of contents:
 
 ## Functions
 
-### AddFile
+### AddFile(string)
 
 ```go
 AddFile(string) error
@@ -37,7 +37,7 @@ error: An error if any occurs during the staging process.
 
 ---
 
-### CloneRepo
+### CloneRepo(string, string, transport.AuthMethod)
 
 ```go
 CloneRepo(string, string, transport.AuthMethod) *git.Repository, error
@@ -65,7 +65,7 @@ exists at the target path.
 
 ---
 
-### Commit
+### Commit(*git.Repository, string)
 
 ```go
 Commit(*git.Repository, string) error
@@ -87,7 +87,7 @@ error: An error if the commit can't be created.
 
 ---
 
-### CreateTag
+### CreateTag(*git.Repository, string)
 
 ```go
 CreateTag(*git.Repository, string) error
@@ -107,7 +107,7 @@ user settings can't be retrieved.
 
 ---
 
-### DeletePushedTag
+### DeletePushedTag(*git.Repository, string, transport.AuthMethod)
 
 ```go
 DeletePushedTag(*git.Repository, string, transport.AuthMethod) error
@@ -127,7 +127,7 @@ error: Error if the tag cannot be deleted.
 
 ---
 
-### DeleteTag
+### DeleteTag(*git.Repository, string)
 
 ```go
 DeleteTag(*git.Repository, string) error
@@ -146,7 +146,7 @@ error: Error if the tag cannot be deleted.
 
 ---
 
-### GetGlobalUserCfg
+### GetGlobalUserCfg()
 
 ```go
 GetGlobalUserCfg() ConfigUserInfo, error
@@ -165,7 +165,7 @@ error: Error if the global git username or email can't be retrieved.
 
 ---
 
-### GetTags
+### GetTags(*git.Repository)
 
 ```go
 GetTags(*git.Repository) []string, error
@@ -185,7 +185,7 @@ error: An error if a problem occurs while retrieving the tags.
 
 ---
 
-### PullRepos
+### PullRepos(...string)
 
 ```go
 PullRepos(...string) error
@@ -203,7 +203,7 @@ error: Error if there's a problem with pulling the repositories.
 
 ---
 
-### Push
+### Push(*git.Repository, transport.AuthMethod)
 
 ```go
 Push(*git.Repository, transport.AuthMethod) error
@@ -224,7 +224,7 @@ error: Error if the push fails.
 
 ---
 
-### PushTag
+### PushTag(*git.Repository, string, transport.AuthMethod)
 
 ```go
 PushTag(*git.Repository, string, transport.AuthMethod) error
@@ -244,7 +244,7 @@ error: Error if the push fails.
 
 ---
 
-### RepoRoot
+### RepoRoot()
 
 ```go
 RepoRoot() string, error

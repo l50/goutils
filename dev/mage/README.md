@@ -16,7 +16,7 @@ Table of contents:
 
 ## Functions
 
-### Compile
+### Compile(string, string, string)
 
 ```go
 Compile(string, string, string) error
@@ -38,7 +38,7 @@ error: An error if the compilation process encounters one.
 
 ---
 
-### FindExportedFuncsWithoutTests
+### FindExportedFuncsWithoutTests(string)
 
 ```go
 FindExportedFuncsWithoutTests(string) []string, error
@@ -60,7 +60,7 @@ error: An error if there was a problem parsing the package or finding the tests.
 
 ---
 
-### FindExportedFunctionsInPackage
+### FindExportedFunctionsInPackage(string)
 
 ```go
 FindExportedFunctionsInPackage(string) []FuncInfo, error
@@ -85,7 +85,7 @@ error: An error if no exported functions are found.
 
 ---
 
-### GHRelease
+### GHRelease(string)
 
 ```go
 GHRelease(string) error
@@ -104,7 +104,7 @@ error: An error if the GHRelease function is not successful.
 
 ---
 
-### GoReleaser
+### GoReleaser()
 
 ```go
 GoReleaser() error
@@ -119,7 +119,7 @@ error: An error if the Goreleaser function is not successful.
 
 ---
 
-### InstallGoDeps
+### InstallGoDeps([]string)
 
 ```go
 InstallGoDeps([]string) error
@@ -138,7 +138,7 @@ error: An error if the InstallGoDeps function didn't run successfully.
 
 ---
 
-### InstallVSCodeModules
+### InstallVSCodeModules()
 
 ```go
 InstallVSCodeModules() error
@@ -153,7 +153,7 @@ error: An error if the InstallVSCodeModules function is not successful.
 
 ---
 
-### ModUpdate
+### ModUpdate(bool, bool)
 
 ```go
 ModUpdate(bool, bool) error
@@ -174,7 +174,7 @@ error: An error if the ModUpdate function is not successful.
 
 ---
 
-### Tidy
+### Tidy()
 
 ```go
 Tidy() error
@@ -188,7 +188,7 @@ error: An error if the Tidy function didn't run successfully.
 
 ---
 
-### UpdateMageDeps
+### UpdateMageDeps(string)
 
 ```go
 UpdateMageDeps(string) error

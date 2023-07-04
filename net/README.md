@@ -16,7 +16,7 @@ Table of contents:
 
 ## Functions
 
-### DownloadFile
+### DownloadFile(string, string)
 
 ```go
 DownloadFile(string, string) string, error
@@ -40,7 +40,7 @@ error: An error if the function fails to download the file.
 
 ---
 
-### PublicIP
+### PublicIP(uint)
 
 ```go
 PublicIP(uint) string, error

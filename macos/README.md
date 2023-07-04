@@ -16,7 +16,7 @@ Table of contents:
 
 ## Functions
 
-### InstallBrewDeps
+### InstallBrewDeps([]string)
 
 ```go
 InstallBrewDeps([]string) error
@@ -35,7 +35,7 @@ error: An error if any package fails to install.
 
 ---
 
-### InstallBrewTFDeps
+### InstallBrewTFDeps()
 
 ```go
 InstallBrewTFDeps() error

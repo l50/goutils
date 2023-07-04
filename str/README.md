@@ -16,7 +16,7 @@ Table of contents:
 
 ## Functions
 
-### GenRandom
+### GenRandom(int)
 
 ```go
 GenRandom(int) string, error
@@ -35,7 +35,7 @@ error: An error if random string generation fails.
 
 ---
 
-### InSlice
+### InSlice(string, []string)
 
 ```go
 InSlice(string, []string) bool
@@ -54,7 +54,7 @@ bool: true if string is found in the slice, false otherwise.
 
 ---
 
-### IsNumeric
+### IsNumeric(string)
 
 ```go
 IsNumeric(string) bool
@@ -72,7 +72,7 @@ bool: true if the string is numeric, false otherwise.
 
 ---
 
-### SlicesEqual
+### SlicesEqual([]string)
 
 ```go
 SlicesEqual([]string) bool
@@ -91,7 +91,7 @@ bool: true if slices are equal, false otherwise.
 
 ---
 
-### ToInt64
+### ToInt64(string)
 
 ```go
 ToInt64(string) int64, error
@@ -110,7 +110,7 @@ error: An error if the conversion fails.
 
 ---
 
-### ToSlice
+### ToSlice(string, string)
 
 ```go
 ToSlice(string, string) []string

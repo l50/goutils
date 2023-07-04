@@ -16,7 +16,7 @@ Table of contents:
 
 ## Functions
 
-### GetDNSRecords
+### GetDNSRecords(Cloudflare)
 
 ```go
 GetDNSRecords(Cloudflare) error

@@ -16,7 +16,55 @@ Table of contents:
 
 ## Functions
 
-### ConfigureLogger
+### ColoredLogger.Error(...interface{})
+
+```go
+Error(...interface{})
+```
+
+Error for ColoredLogger logs the provided arguments as an error line
+in the specified color. The arguments are handled in the manner
+of fmt.Println.
+
+---
+
+### ColoredLogger.Errorf(string, ...interface{})
+
+```go
+Errorf(string, ...interface{})
+```
+
+Errorf for ColoredLogger logs the provided formatted string as an error line in
+the specified color. The format and arguments are handled in the
+manner of fmt.Printf.
+
+---
+
+### ColoredLogger.Printf(string, ...interface{})
+
+```go
+Printf(string, ...interface{})
+```
+
+Printf for ColoredLogger logs the provided formatted string in
+the specified color. The format and arguments are handled in the
+manner of fmt.Printf.
+
+---
+
+### ColoredLogger.Println(...interface{})
+
+```go
+Println(...interface{})
+```
+
+Println for ColoredLogger logs the provided arguments as a line
+in the specified color. The arguments are handled in the manner
+of fmt.Println.
+
+---
+
+### ConfigureLogger(slog.Level, string)
 
 ```go
 ConfigureLogger(slog.Level, string) Logger, error
@@ -37,7 +85,7 @@ error: An error, if an issue occurs while setting up the logger.
 
 ---
 
-### CreateLogFile
+### CreateLogFile(afero.Fs, string, string)
 
 ```go
 CreateLogFile(afero.Fs, string, string) LogInfo, error
@@ -63,7 +111,7 @@ or the log file.
 
 ---
 
-### Error
+### PlainLogger.Error(...interface{})
 
 ```go
 Error(...interface{})
@@ -74,52 +122,7 @@ The arguments are handled in the manner of fmt.Println.
 
 ---
 
-### Error
-
-```go
-Error(...interface{})
-```
-
-Error for ColoredLogger logs the provided arguments as an error line
-in the specified color. The arguments are handled in the manner
-of fmt.Println.
-
----
-
-### Error
-
-```go
-Error(...interface{})
-```
-
-Error for SlogPlainLogger logs the provided arguments as an error line using slog library.
-The arguments are converted to a string using fmt.Sprint.
-
----
-
-### Error
-
-```go
-Error(...interface{})
-```
-
-Error for SlogLogger logs the provided arguments as an error line using slog library.
-The arguments are converted to a string using fmt.Sprint.
-
----
-
-### Errorf
-
-```go
-Errorf(string, ...interface{})
-```
-
-Errorf for SlogLogger logs the provided formatted string as an error line using slog library.
-The format and arguments are handled in the manner of fmt.Printf.
-
----
-
-### Errorf
+### PlainLogger.Errorf(string, ...interface{})
 
 ```go
 Errorf(string, ...interface{})
@@ -130,30 +133,7 @@ The format and arguments are handled in the manner of fmt.Printf.
 
 ---
 
-### Errorf
-
-```go
-Errorf(string, ...interface{})
-```
-
-Errorf for ColoredLogger logs the provided formatted string as an error line in
-the specified color. The format and arguments are handled in the
-manner of fmt.Printf.
-
----
-
-### Errorf
-
-```go
-Errorf(string, ...interface{})
-```
-
-Errorf for SlogPlainLogger logs the provided formatted string as an error line using slog library.
-The format and arguments are handled in the manner of fmt.Printf.
-
----
-
-### Printf
+### PlainLogger.Printf(string, ...interface{})
 
 ```go
 Printf(string, ...interface{})
@@ -164,52 +144,7 @@ The format and arguments are handled in the manner of fmt.Printf.
 
 ---
 
-### Printf
-
-```go
-Printf(string, ...interface{})
-```
-
-Printf for SlogLogger logs the provided formatted string using slog library.
-The format and arguments are handled in the manner of fmt.Printf.
-
----
-
-### Printf
-
-```go
-Printf(string, ...interface{})
-```
-
-Printf for SlogPlainLogger logs the provided formatted string using slog library.
-The format and arguments are handled in the manner of fmt.Printf.
-
----
-
-### Printf
-
-```go
-Printf(string, ...interface{})
-```
-
-Printf for ColoredLogger logs the provided formatted string in
-the specified color. The format and arguments are handled in the
-manner of fmt.Printf.
-
----
-
-### Println
-
-```go
-Println(...interface{})
-```
-
-Println for SlogLogger logs the provided arguments as a line using slog library.
-The arguments are converted to a string using fmt.Sprint.
-
----
-
-### Println
+### PlainLogger.Println(...interface{})
 
 ```go
 Println(...interface{})
@@ -220,19 +155,84 @@ The arguments are handled in the manner of fmt.Println.
 
 ---
 
-### Println
+### SlogLogger.Error(...interface{})
+
+```go
+Error(...interface{})
+```
+
+Error for SlogLogger logs the provided arguments as an error line using slog library.
+The arguments are converted to a string using fmt.Sprint.
+
+---
+
+### SlogLogger.Errorf(string, ...interface{})
+
+```go
+Errorf(string, ...interface{})
+```
+
+Errorf for SlogLogger logs the provided formatted string as an error line using slog library.
+The format and arguments are handled in the manner of fmt.Printf.
+
+---
+
+### SlogLogger.Printf(string, ...interface{})
+
+```go
+Printf(string, ...interface{})
+```
+
+Printf for SlogLogger logs the provided formatted string using slog library.
+The format and arguments are handled in the manner of fmt.Printf.
+
+---
+
+### SlogLogger.Println(...interface{})
 
 ```go
 Println(...interface{})
 ```
 
-Println for ColoredLogger logs the provided arguments as a line
-in the specified color. The arguments are handled in the manner
-of fmt.Println.
+Println for SlogLogger logs the provided arguments as a line using slog library.
+The arguments are converted to a string using fmt.Sprint.
 
 ---
 
-### Println
+### SlogPlainLogger.Error(...interface{})
+
+```go
+Error(...interface{})
+```
+
+Error for SlogPlainLogger logs the provided arguments as an error line using slog library.
+The arguments are converted to a string using fmt.Sprint.
+
+---
+
+### SlogPlainLogger.Errorf(string, ...interface{})
+
+```go
+Errorf(string, ...interface{})
+```
+
+Errorf for SlogPlainLogger logs the provided formatted string as an error line using slog library.
+The format and arguments are handled in the manner of fmt.Printf.
+
+---
+
+### SlogPlainLogger.Printf(string, ...interface{})
+
+```go
+Printf(string, ...interface{})
+```
+
+Printf for SlogPlainLogger logs the provided formatted string using slog library.
+The format and arguments are handled in the manner of fmt.Printf.
+
+---
+
+### SlogPlainLogger.Println(...interface{})
 
 ```go
 Println(...interface{})

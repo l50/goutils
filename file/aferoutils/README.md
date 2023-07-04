@@ -16,7 +16,7 @@ Table of contents:
 
 ## Functions
 
-### Tree
+### Tree(afero.Fs, string, io.Writer)
 
 ```go
 Tree(afero.Fs, string, io.Writer) error

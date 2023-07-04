@@ -16,7 +16,7 @@ Table of contents:
 
 ## Functions
 
-### CancelAll
+### CancelAll(...func())
 
 ```go
 CancelAll(...func())
@@ -36,7 +36,7 @@ way to cancel an operation.
 
 ---
 
-### GetRandomWait
+### GetRandomWait(int)
 
 ```go
 GetRandomWait(int) time.Duration, error
@@ -59,7 +59,7 @@ error: An error if the generation of the random wait time fails.
 
 ---
 
-### IsLogMeOutEnabled
+### IsLogMeOutEnabled(*LoginOptions)
 
 ```go
 IsLogMeOutEnabled(*LoginOptions) bool
@@ -78,7 +78,7 @@ bool: A boolean indicating whether the user is to be logged out after login.
 
 ---
 
-### IsTwoFacEnabled
+### IsTwoFacEnabled(*LoginOptions)
 
 ```go
 IsTwoFacEnabled(*LoginOptions) bool
@@ -97,7 +97,7 @@ bool: A boolean indicating whether two-factor authentication is enabled.
 
 ---
 
-### SetLoginOptions
+### SetLoginOptions(...LoginOption)
 
 ```go
 SetLoginOptions(...LoginOption) *LoginOptions
@@ -120,7 +120,7 @@ with the provided options.
 
 ---
 
-### Wait
+### Wait(float64)
 
 ```go
 Wait(float64) time.Duration, error
@@ -146,7 +146,7 @@ to a time duration in milliseconds and returned.
 
 ---
 
-### WithLogout
+### WithLogout(bool)
 
 ```go
 WithLogout(bool) LoginOption
@@ -166,7 +166,7 @@ option of a LoginOptions struct.
 
 ---
 
-### WithTwoFac
+### WithTwoFac(bool)
 
 ```go
 WithTwoFac(bool) LoginOption

@@ -16,7 +16,7 @@ Table of contents:
 
 ## Functions
 
-### Cd
+### Cd(string)
 
 ```go
 Cd(string) error
@@ -34,7 +34,7 @@ error: An error if the current directory cannot be changed.
 
 ---
 
-### CheckRoot
+### CheckRoot()
 
 ```go
 CheckRoot() error
@@ -48,7 +48,7 @@ error: An error if the process is not being run as root.
 
 ---
 
-### CmdExists
+### CmdExists(string)
 
 ```go
 CmdExists(string) bool
@@ -66,7 +66,7 @@ bool: True if the command exists in the $PATH, otherwise False.
 
 ---
 
-### Cp
+### Cp(string, string)
 
 ```go
 Cp(string, string) error
@@ -85,7 +85,35 @@ error: An error if the file cannot be copied.
 
 ---
 
-### EnvVarSet
+### DefaultRuntimeInfoProvider.GetArch()
+
+```go
+GetArch() string
+```
+
+GetArch returns the current architecture.
+
+**Returns:**
+
+string: The current architecture.
+
+---
+
+### DefaultRuntimeInfoProvider.GetOS()
+
+```go
+GetOS() string
+```
+
+GetOS returns the current operating system.
+
+**Returns:**
+
+string: The current operating system.
+
+---
+
+### EnvVarSet(string)
 
 ```go
 EnvVarSet(string) error
@@ -103,7 +131,7 @@ error: Error if the environment variable is not set.
 
 ---
 
-### ExpandHomeDir
+### ExpandHomeDir(string)
 
 ```go
 ExpandHomeDir(string) string
@@ -122,21 +150,7 @@ string: The expanded path.
 
 ---
 
-### GetArch
-
-```go
-GetArch() string
-```
-
-GetArch returns the current architecture.
-
-**Returns:**
-
-string: The current architecture.
-
----
-
-### GetFutureTime
+### GetFutureTime(int, int, int)
 
 ```go
 GetFutureTime(int, int, int) time.Time
@@ -157,7 +171,7 @@ time.Time: The future date and time calculated from the current time.
 
 ---
 
-### GetHomeDir
+### GetHomeDir()
 
 ```go
 GetHomeDir() string, error
@@ -172,21 +186,7 @@ error: Error if there is an issue fetching the home directory.
 
 ---
 
-### GetOS
-
-```go
-GetOS() string
-```
-
-GetOS returns the current operating system.
-
-**Returns:**
-
-string: The current operating system.
-
----
-
-### GetOSAndArch
+### GetOSAndArch(RuntimeInfoProvider)
 
 ```go
 GetOSAndArch(RuntimeInfoProvider) string, string, error
@@ -204,7 +204,7 @@ error: An error if the OS or architecture is not supported or cannot be detected
 
 ---
 
-### GetSSHPubKey
+### GetSSHPubKey(string, string)
 
 ```go
 GetSSHPubKey(string, string) *ssh.PublicKeys, error
@@ -225,7 +225,7 @@ error: Error if one occurs during key retrieval or decryption.
 
 ---
 
-### Gwd
+### Gwd()
 
 ```go
 Gwd() string
@@ -240,7 +240,7 @@ string: The current working directory or an empty string if an error occurs.
 
 ---
 
-### IsDirEmpty
+### IsDirEmpty(string)
 
 ```go
 IsDirEmpty(string) bool, error
@@ -259,7 +259,7 @@ error: An error if there's a problem reading the directory.
 
 ---
 
-### KillProcess
+### KillProcess(int, Signal)
 
 ```go
 KillProcess(int, Signal) error
@@ -284,7 +284,7 @@ error: An error if the process couldn't be killed.
 
 ---
 
-### RmRf
+### RmRf(fileutils.File)
 
 ```go
 RmRf(fileutils.File) error
@@ -303,7 +303,7 @@ error: An error if there was any problem removing the path.
 
 ---
 
-### RunCommand
+### RunCommand(string, ...string)
 
 ```go
 RunCommand(string, ...string) string, error
@@ -323,7 +323,7 @@ error: An error if there was any problem running the command.
 
 ---
 
-### RunCommandWithTimeout
+### RunCommandWithTimeout(int, string, ...string)
 
 ```go
 RunCommandWithTimeout(int, string, ...string) string, error

@@ -16,7 +16,7 @@ Table of contents:
 
 ## Functions
 
-### Ping
+### Ping(string)
 
 ```go
 Ping(string) error

@@ -16,27 +16,7 @@ Table of contents:
 
 ## Functions
 
-### Append
-
-```go
-Append(string) error
-```
-
-Append adds a string to the end of a file. If the file
-doesn't exist, it's created with the default permissions.
-
-**Parameters:**
-
-text: String to append to the end of the file.
-
-**Returns:**
-
-error: An error if the file can't be opened or the string can't be
-written to the file.
-
----
-
-### CSVToLines
+### CSVToLines(string)
 
 ```go
 CSVToLines(string) [][]string, error
@@ -58,7 +38,7 @@ error: An error if the file cannot be read or parsed.
 
 ---
 
-### Create
+### Create(string, []byte, CreateType)
 
 ```go
 Create(string, []byte, CreateType) error
@@ -81,7 +61,7 @@ already exists, or if there's a problem writing to the file.
 
 ---
 
-### Delete
+### Delete(string)
 
 ```go
 Delete(string) error
@@ -99,7 +79,7 @@ error: An error if the file cannot be deleted.
 
 ---
 
-### Exists
+### Exists(string)
 
 ```go
 Exists(string) bool
@@ -117,7 +97,7 @@ bool: Returns true if the file exists, otherwise false.
 
 ---
 
-### Find
+### Find(string, []string)
 
 ```go
 Find(string, []string) []string, error
@@ -139,7 +119,7 @@ error: An error if the file cannot be found.
 
 ---
 
-### HasStr
+### HasStr(string, string)
 
 ```go
 HasStr(string, string) bool, error
@@ -159,7 +139,7 @@ error: An error if the file cannot be read.
 
 ---
 
-### ListR
+### ListR(string)
 
 ```go
 ListR(string) []string, error
@@ -178,7 +158,27 @@ error: An error if the files cannot be listed.
 
 ---
 
-### Open
+### RealFile.Append(string)
+
+```go
+Append(string) error
+```
+
+Append adds a string to the end of a file. If the file
+doesn't exist, it's created with the default permissions.
+
+**Parameters:**
+
+text: String to append to the end of the file.
+
+**Returns:**
+
+error: An error if the file can't be opened or the string can't be
+written to the file.
+
+---
+
+### RealFile.Open()
 
 ```go
 Open() io.ReadCloser, error
@@ -194,7 +194,7 @@ error: An error if any issue occurs while trying to open the file.
 
 ---
 
-### Remove
+### RealFile.Remove()
 
 ```go
 Remove() error
@@ -213,7 +213,7 @@ error: An error if any issue occurs while trying to remove the file or directory
 
 ---
 
-### RemoveAll
+### RealFile.RemoveAll()
 
 ```go
 RemoveAll() error
@@ -234,26 +234,7 @@ error: An error if any issue occurs while trying to remove the file or directory
 
 ---
 
-### SeekAndDestroy
-
-```go
-SeekAndDestroy(string, string) error
-```
-
-SeekAndDestroy walks through a directory and deletes all files that match the pattern
-
-**Parameters:**
-
-path: String representing the path to the directory.
-pattern: String representing the pattern to match.
-
-**Returns:**
-
-error: An error if the files cannot be deleted.
-
----
-
-### Stat
+### RealFile.Stat()
 
 ```go
 Stat() os.FileInfo, error
@@ -273,27 +254,7 @@ error: An error if any issue occurs while trying to get the FileInfo.
 
 ---
 
-### ToSlice
-
-```go
-ToSlice(string) []string, error
-```
-
-ToSlice reads a file and returns its content as a slice of strings, each
-element represents a line in the file. Blank lines are omitted.
-
-**Parameters:**
-
-path: String representing the path to the file.
-
-**Returns:**
-
-[]string: Slice of strings where each element represents a line in the file.
-error: An error if the file cannot be read.
-
----
-
-### Write
+### RealFile.Write([]byte, os.FileMode)
 
 ```go
 Write([]byte, os.FileMode) error
@@ -310,6 +271,45 @@ mode: File permissions to use when creating the file.
 **Returns:**
 
 error: An error if any issue occurs while trying to write to the file.
+
+---
+
+### SeekAndDestroy(string, string)
+
+```go
+SeekAndDestroy(string, string) error
+```
+
+SeekAndDestroy walks through a directory and deletes all files that match the pattern
+
+**Parameters:**
+
+path: String representing the path to the directory.
+pattern: String representing the pattern to match.
+
+**Returns:**
+
+error: An error if the files cannot be deleted.
+
+---
+
+### ToSlice(string)
+
+```go
+ToSlice(string) []string, error
+```
+
+ToSlice reads a file and returns its content as a slice of strings, each
+element represents a line in the file. Blank lines are omitted.
+
+**Parameters:**
+
+path: String representing the path to the file.
+
+**Returns:**
+
+[]string: Slice of strings where each element represents a line in the file.
+error: An error if the file cannot be read.
 
 ---
 

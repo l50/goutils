@@ -16,7 +16,7 @@ Table of contents:
 
 ## Functions
 
-### CheckElement
+### CheckElement(web.Site, string, chan error)
 
 ```go
 CheckElement(web.Site, string, chan error) error
@@ -42,7 +42,7 @@ type *Driver, failed to create a random wait time, or another error occurs.
 
 ---
 
-### GetContext
+### Driver.GetContext()
 
 ```go
 GetContext() context.Context
@@ -56,7 +56,21 @@ context.Context: The context associated with this Driver.
 
 ---
 
-### GetPageSource
+### Driver.SetContext(context.Context)
+
+```go
+SetContext(context.Context)
+```
+
+SetContext associates a new context with the Driver instance.
+
+**Parameters:**
+
+ctx (context.Context): The new context to be associated with this Driver.
+
+---
+
+### GetPageSource(web.Site)
 
 ```go
 GetPageSource(web.Site) string, error
@@ -76,7 +90,7 @@ error: An error if any occurred during source code retrieval.
 
 ---
 
-### Init
+### Init(bool, bool)
 
 ```go
 Init(bool, bool) web.Browser, error
@@ -98,7 +112,7 @@ error: Any error encountered during initialization.
 
 ---
 
-### Navigate
+### Navigate(web.Site, []InputAction, time.Duration)
 
 ```go
 Navigate(web.Site, []InputAction, time.Duration) error
@@ -120,7 +134,7 @@ error: An error if any occurred during navigation.
 
 ---
 
-### ScreenShot
+### ScreenShot(web.Site, string)
 
 ```go
 ScreenShot(web.Site, string) error
@@ -137,20 +151,6 @@ imgPath (string): The path to which the screenshot should be saved.
 **Returns:**
 
 error: An error if any occurred during screenshot capturing or saving.
-
----
-
-### SetContext
-
-```go
-SetContext(context.Context)
-```
-
-SetContext associates a new context with the Driver instance.
-
-**Parameters:**
-
-ctx (context.Context): The new context to be associated with this Driver.
 
 ---
 

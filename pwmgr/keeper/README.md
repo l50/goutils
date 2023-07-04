@@ -16,7 +16,7 @@ Table of contents:
 
 ## Functions
 
-### AddRecord
+### Keeper.AddRecord(map[string]string)
 
 ```go
 AddRecord(map[string]string) error
@@ -39,7 +39,7 @@ error: An error if the record cannot be added.
 
 ---
 
-### CommanderInstalled
+### Keeper.CommanderInstalled()
 
 ```go
 CommanderInstalled() bool
@@ -54,7 +54,7 @@ bool: True if the Keeper Commander tool is installed, false otherwise.
 
 ---
 
-### LoggedIn
+### Keeper.LoggedIn()
 
 ```go
 LoggedIn() bool
@@ -68,7 +68,7 @@ bool: True if the user is logged into their Keeper vault, false otherwise.
 
 ---
 
-### RetrieveRecord
+### Keeper.RetrieveRecord(string)
 
 ```go
 RetrieveRecord(string) pwmgr.Record, error
@@ -97,7 +97,7 @@ error: An error if the Keeper record cannot be retrieved.
 
 ---
 
-### SearchRecords
+### Keeper.SearchRecords(string)
 
 ```go
 SearchRecords(string) string, error
