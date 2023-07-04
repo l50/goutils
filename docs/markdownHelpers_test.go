@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/l50/goutils/v2/docs"
-	fileutils "github.com/l50/goutils/v2/file"
+	fileutils "github.com/l50/goutils/v2/file/fileutils"
 )
 
 func TestFixCodeBlocks(t *testing.T) {

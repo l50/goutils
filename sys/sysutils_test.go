@@ -12,7 +12,7 @@ import (
 	"testing"
 	"time"
 
-	fileutils "github.com/l50/goutils/v2/file"
+	fileutils "github.com/l50/goutils/v2/file/fileutils"
 	"github.com/l50/goutils/v2/sys"
 	"github.com/stretchr/testify/assert"
 )

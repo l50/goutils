@@ -13,7 +13,7 @@ import (
 	"github.com/fatih/color"
 	"github.com/magefile/mage/sh"
 
-	fileutils "github.com/l50/goutils/v2/file"
+	fileutils "github.com/l50/goutils/v2/file/fileutils"
 	"github.com/l50/goutils/v2/sys"
 )
 

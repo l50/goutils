@@ -11,7 +11,7 @@ import (
 	"github.com/l50/goutils/v2/dev/lint"
 	mageutils "github.com/l50/goutils/v2/dev/mage"
 	"github.com/l50/goutils/v2/docs"
-	fileutils "github.com/l50/goutils/v2/file"
+	fileutils "github.com/l50/goutils/v2/file/fileutils"
 	"github.com/l50/goutils/v2/git"
 	"github.com/l50/goutils/v2/sys"
 	"github.com/magefile/mage/mg"

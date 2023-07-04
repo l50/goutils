@@ -11,7 +11,7 @@ import (
 	"strings"
 	"testing"
 
-	fileutils "github.com/l50/goutils/v2/file"
+	fileutils "github.com/l50/goutils/v2/file/fileutils"
 	"github.com/l50/goutils/v2/str"
 	"github.com/stretchr/testify/require"
 )

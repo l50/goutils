@@ -14,7 +14,7 @@ import (
 	"time"
 
 	mageutils "github.com/l50/goutils/v2/dev/mage"
-	fileutils "github.com/l50/goutils/v2/file"
+	fileutils "github.com/l50/goutils/v2/file/fileutils"
 	"github.com/l50/goutils/v2/git"
 	"github.com/l50/goutils/v2/str"
 	"github.com/l50/goutils/v2/sys"

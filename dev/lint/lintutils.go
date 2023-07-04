@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	mageutils "github.com/l50/goutils/v2/dev/mage"
-	"github.com/l50/goutils/v2/file"
+	fileutils "github.com/l50/goutils/v2/file/fileutils"
 	"github.com/l50/goutils/v2/sys"
 	"github.com/magefile/mage/sh"
 )
@@ -24,7 +24,7 @@ func checkPCProject() error {
 		pcFile = filepath.Join("..", pcFile)
 	}
 
-	if !file.Exists(pcFile) {
+	if !fileutils.Exists(pcFile) {
 		return errors.New("pre-commit is not configured for the current project")
 	}
 

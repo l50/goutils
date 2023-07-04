@@ -5,7 +5,7 @@ import (
 	"io"
 	"strings"
 
-	fileutils "github.com/l50/goutils/v2/file"
+	fileutils "github.com/l50/goutils/v2/file/fileutils"
 )
 
 // FixCodeBlocks processes a provided file to ensure that all code

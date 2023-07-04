@@ -16,7 +16,7 @@ import (
 	"time"
 
 	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
-	fileutils "github.com/l50/goutils/v2/file"
+	fileutils "github.com/l50/goutils/v2/file/fileutils"
 	cp "github.com/otiai10/copy"
 )
 

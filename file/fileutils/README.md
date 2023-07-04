@@ -240,7 +240,7 @@ error: An error if any issue occurs while trying to remove the file or directory
 SeekAndDestroy(string, string) error
 ```
 
-SeekandDestroy walks through a directory and deletes all files that match the pattern
+SeekAndDestroy walks through a directory and deletes all files that match the pattern
 
 **Parameters:**
 
