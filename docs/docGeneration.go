@@ -25,9 +25,9 @@ import (
 // Functions:   A slice of FunctionDoc instances representing the functions.
 // GoGetPath:   The 'go get' path for the package.
 type PackageDoc struct {
-	PackageName string        // The package name.
-	Functions   []FunctionDoc // A slice of FunctionDoc representing the functions.
-	GoGetPath   string        // The 'go get' path for the package.
+	PackageName string
+	Functions   []FunctionDoc
+	GoGetPath   string
 }
 
 // Repo represents a GitHub repository.
@@ -37,8 +37,8 @@ type PackageDoc struct {
 // Owner: The repository owner's name.
 // Name:  The repository's name.
 type Repo struct {
-	Owner string // The repository owner's name.
-	Name  string // The repository's name.
+	Owner string
+	Name  string
 }
 
 // FunctionDoc contains the documentation for a function within a Go package.
@@ -49,9 +49,9 @@ type Repo struct {
 // Signature:   The function signature, including parameters and return types.
 // Description: The documentation or description of the function.
 type FunctionDoc struct {
-	Name        string // The function name.
-	Signature   string // The function signature, including parameters and return types.
-	Description string // The documentation or description of the function.
+	Name        string
+	Signature   string
+	Description string
 }
 
 // FuncInfo holds information about an exported function within a Go package.
@@ -61,8 +61,39 @@ type FunctionDoc struct {
 // FilePath: The path to the source file with the function declaration.
 // FuncName: The name of the exported function.
 type FuncInfo struct {
-	FilePath string // The path to the source file with the function declaration.
-	FuncName string // The name of the exported function.
+	FilePath string
+	FuncName string
+}
+
+// CreatePackageDocs generates documentation for all Go packages in the current
+// directory and its subdirectories. It traverses the file tree using a provided
+// afero.Fs and Repo to create a new README.md file in each directory containing
+// a Go package. It uses a specified template file for generating the README files.
+//
+// It will ignore any files or directories listed in the .docgenignore file
+// found at the root of the repository. The .docgenignore file should contain
+// a list of files and directories to ignore, with each entry on a new line.
+//
+// **Parameters:**
+//
+// fs: An afero.Fs instance for mocking the filesystem for testing.
+// repo: A Repo instance representing the GitHub repository
+// containing the Go packages.
+//
+// templatePath:  A string representing the path to the template file to be
+// used for generating README files.
+//
+// **Returns:**
+//
+// error: An error, if it encounters an issue while walking the file tree,
+// reading a directory, parsing Go files, or generating README.md files.
+func CreatePackageDocs(fs afero.Fs, repo Repo, templatePath string) error {
+	err := afero.Walk(fs, ".", handleDirectory(fs, repo, templatePath))
+	if err != nil {
+		return fmt.Errorf("error walking directories: %w", err)
+	}
+
+	return nil
 }
 
 func loadIgnoreList(fs afero.Fs, ignoreFilePath string) (map[string]struct{}, error) {
@@ -91,75 +122,6 @@ func loadIgnoreList(fs afero.Fs, ignoreFilePath string) (map[string]struct{}, er
 	return ignoreList, nil
 }
 
-// CreatePackageDocs generates documentation for all Go packages in the current
-// directory and its subdirectories. It traverses the file tree using a provided
-// afero.Fs and Repo to create a new README.md file in each directory containing
-// a Go package. It uses a specified template file for generating the README files.
-//
-// It will ignore any files or directories listed in the .docgenignore file
-// found at the root of the repository. The .docgenignore file should contain
-// a list of files and directories to ignore, with each entry on a new line.
-//
-// **Parameters:**
-//
-// fs: An afero.Fs instance for mocking the filesystem for testing.
-//
-// repo: A Repo instance representing the GitHub repository
-// containing the Go packages.
-//
-// templatePath:  A string representing the path to the template file to be
-// used for generating README files.
-//
-// **Returns:**
-//
-// error: An error, if it encounters an issue while walking the file tree,
-// reading a directory, parsing Go files, or generating README.md files.
-func CreatePackageDocs(fs afero.Fs, repo Repo, templatePath string) error {
-	ignoreList, err := loadIgnoreList(fs, ".docgenignore")
-	if err != nil {
-		return fmt.Errorf("error loading ignore list: %w", err)
-	}
-
-	err = afero.Walk(fs, ".", func(path string, info os.FileInfo, walkErr error) error {
-		// Skip hidden directories or files
-		if strings.HasPrefix(filepath.Base(path), ".") {
-			if info.IsDir() {
-				return filepath.SkipDir
-			}
-			return nil
-		}
-
-		// Skip the README file at the root of the repository
-		if path == "./README.md" {
-			return nil
-		}
-
-		absPath, absErr := filepath.Abs(path)
-		if absErr != nil {
-			return absErr
-		}
-
-		relPath, relErr := filepath.Rel(".", absPath)
-		if relErr != nil {
-			return relErr
-		}
-
-		if _, ok := ignoreList[relPath]; ok {
-			if info.IsDir() {
-				return filepath.SkipDir
-			}
-			return nil
-		}
-
-		return handleDirectory(fs, repo, templatePath)(path, info, walkErr)
-	})
-
-	if err != nil {
-		return fmt.Errorf("error walking directories: %w", err)
-	}
-	return nil
-}
-
 func handleDirectory(fs afero.Fs, repo Repo, templatePath string) filepath.WalkFunc {
 	return func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -168,6 +130,18 @@ func handleDirectory(fs afero.Fs, repo Repo, templatePath string) filepath.WalkF
 
 		if !info.IsDir() {
 			return nil
+		}
+
+		ignoreList, err := loadIgnoreList(fs, ".docgenignore")
+		if err != nil {
+			return fmt.Errorf("error loading ignore list: %w", err)
+		}
+
+		// Check if the current directory is in the ignore list.
+		// If it is, skip it.
+		_, ignored := ignoreList[filepath.Clean(path)]
+		if ignored {
+			return filepath.SkipDir
 		}
 
 		hasGoFiles, err := directoryContainsGoFiles(fs, path)

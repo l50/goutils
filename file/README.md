@@ -234,6 +234,25 @@ error: An error if any issue occurs while trying to remove the file or directory
 
 ---
 
+### SeekAndDestroy
+
+```go
+SeekAndDestroy(string, string) error
+```
+
+SeekandDestroy walks through a directory and deletes all files that match the pattern
+
+**Parameters:**
+
+path: String representing the path to the directory.
+pattern: String representing the pattern to match.
+
+**Returns:**
+
+error: An error if the files cannot be deleted.
+
+---
+
 ### Stat
 
 ```go

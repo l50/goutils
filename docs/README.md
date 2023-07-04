@@ -34,7 +34,6 @@ a list of files and directories to ignore, with each entry on a new line.
 **Parameters:**
 
 fs: An afero.Fs instance for mocking the filesystem for testing.
-
 repo: A Repo instance representing the GitHub repository
 containing the Go packages.
 
