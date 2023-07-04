@@ -34,9 +34,9 @@ of fmt.Println.
 Errorf(string, ...interface{})
 ```
 
-Errorf for ColoredLogger logs the provided formatted string as an error line in
-the specified color. The format and arguments are handled in the
-manner of fmt.Printf.
+Errorf for ColoredLogger logs the provided formatted string as an
+error line in the specified color. The format and arguments are handled
+in the manner of fmt.Printf.
 
 ---
 
@@ -117,7 +117,8 @@ or the log file.
 Error(...interface{})
 ```
 
-Error for PlainLogger logs the provided arguments as an error line in plain text.
+Error for PlainLogger logs the provided arguments as an error line
+in plain text.
 The arguments are handled in the manner of fmt.Println.
 
 ---
@@ -128,7 +129,8 @@ The arguments are handled in the manner of fmt.Println.
 Errorf(string, ...interface{})
 ```
 
-Errorf for PlainLogger logs the provided formatted string as an error line in plain text.
+Errorf for PlainLogger logs the provided formatted string as an error
+line in plain text.
 The format and arguments are handled in the manner of fmt.Printf.
 
 ---
@@ -161,7 +163,8 @@ The arguments are handled in the manner of fmt.Println.
 Error(...interface{})
 ```
 
-Error for SlogLogger logs the provided arguments as an error line using slog library.
+Error for SlogLogger logs the provided arguments as an error line
+using slog library.
 The arguments are converted to a string using fmt.Sprint.
 
 ---
@@ -172,7 +175,8 @@ The arguments are converted to a string using fmt.Sprint.
 Errorf(string, ...interface{})
 ```
 
-Errorf for SlogLogger logs the provided formatted string as an error line using slog library.
+Errorf for SlogLogger logs the provided formatted string as an error
+line using slog library.
 The format and arguments are handled in the manner of fmt.Printf.
 
 ---
@@ -194,7 +198,8 @@ The format and arguments are handled in the manner of fmt.Printf.
 Println(...interface{})
 ```
 
-Println for SlogLogger logs the provided arguments as a line using slog library.
+Println for SlogLogger logs the provided arguments as a line using
+slog library.
 The arguments are converted to a string using fmt.Sprint.
 
 ---
@@ -205,7 +210,8 @@ The arguments are converted to a string using fmt.Sprint.
 Error(...interface{})
 ```
 
-Error for SlogPlainLogger logs the provided arguments as an error line using slog library.
+Error for SlogPlainLogger logs the provided arguments as an error line
+using slog library.
 The arguments are converted to a string using fmt.Sprint.
 
 ---
@@ -216,7 +222,8 @@ The arguments are converted to a string using fmt.Sprint.
 Errorf(string, ...interface{})
 ```
 
-Errorf for SlogPlainLogger logs the provided formatted string as an error line using slog library.
+Errorf for SlogPlainLogger logs the provided formatted string as an
+error line using slog library.
 The format and arguments are handled in the manner of fmt.Printf.
 
 ---
@@ -227,7 +234,8 @@ The format and arguments are handled in the manner of fmt.Printf.
 Printf(string, ...interface{})
 ```
 
-Printf for SlogPlainLogger logs the provided formatted string using slog library.
+Printf for SlogPlainLogger logs the provided formatted string
+using slog library.
 The format and arguments are handled in the manner of fmt.Printf.
 
 ---
@@ -238,7 +246,8 @@ The format and arguments are handled in the manner of fmt.Printf.
 Println(...interface{})
 ```
 
-Println for SlogPlainLogger logs the provided arguments as a line using slog library.
+Println for SlogPlainLogger logs the provided arguments as a line
+using slog library.
 The arguments are converted to a string using fmt.Sprint.
 
 ---

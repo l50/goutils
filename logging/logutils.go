@@ -61,9 +61,9 @@ func (l *ColoredLogger) Error(v ...interface{}) {
 	log.Println(color.New(l.ColorAttribute).Add(color.Bold).Sprint(v...))
 }
 
-// Errorf for ColoredLogger logs the provided formatted string as an error line in
-// the specified color. The format and arguments are handled in the
-// manner of fmt.Printf.
+// Errorf for ColoredLogger logs the provided formatted string as an
+// error line in the specified color. The format and arguments are handled
+// in the manner of fmt.Printf.
 func (l *ColoredLogger) Errorf(format string, v ...interface{}) {
 	log.SetOutput(l.Info.File)
 	if len(v) > 0 {
@@ -96,14 +96,16 @@ func (l *PlainLogger) Printf(format string, v ...interface{}) {
 	log.Printf(format, v...)
 }
 
-// Error for PlainLogger logs the provided arguments as an error line in plain text.
+// Error for PlainLogger logs the provided arguments as an error line
+// in plain text.
 // The arguments are handled in the manner of fmt.Println.
 func (l *PlainLogger) Error(v ...interface{}) {
 	log.SetOutput(l.Info.File)
 	log.Println(v...)
 }
 
-// Errorf for PlainLogger logs the provided formatted string as an error line in plain text.
+// Errorf for PlainLogger logs the provided formatted string as an error
+// line in plain text.
 // The format and arguments are handled in the manner of fmt.Printf.
 func (l *PlainLogger) Errorf(format string, v ...interface{}) {
 	log.SetOutput(l.Info.File)
@@ -193,7 +195,8 @@ type SlogLogger struct {
 	Logger *slog.Logger
 }
 
-// Println for SlogLogger logs the provided arguments as a line using slog library.
+// Println for SlogLogger logs the provided arguments as a line using
+// slog library.
 // The arguments are converted to a string using fmt.Sprint.
 func (l *SlogLogger) Println(v ...interface{}) {
 	l.Logger.Info(fmt.Sprint(v...))
@@ -205,13 +208,15 @@ func (l *SlogLogger) Printf(format string, v ...interface{}) {
 	l.Logger.Info(fmt.Sprintf(format, v...))
 }
 
-// Error for SlogLogger logs the provided arguments as an error line using slog library.
+// Error for SlogLogger logs the provided arguments as an error line
+// using slog library.
 // The arguments are converted to a string using fmt.Sprint.
 func (l *SlogLogger) Error(v ...interface{}) {
 	l.Logger.Error(fmt.Sprint(v...))
 }
 
-// Errorf for SlogLogger logs the provided formatted string as an error line using slog library.
+// Errorf for SlogLogger logs the provided formatted string as an error
+// line using slog library.
 // The format and arguments are handled in the manner of fmt.Printf.
 func (l *SlogLogger) Errorf(format string, v ...interface{}) {
 	l.Logger.Error(fmt.Sprintf(format, v...))
@@ -226,25 +231,29 @@ type SlogPlainLogger struct {
 	Logger *slog.Logger
 }
 
-// Println for SlogPlainLogger logs the provided arguments as a line using slog library.
+// Println for SlogPlainLogger logs the provided arguments as a line
+// using slog library.
 // The arguments are converted to a string using fmt.Sprint.
 func (l *SlogPlainLogger) Println(v ...interface{}) {
 	l.Logger.Info(fmt.Sprint(v...))
 }
 
-// Printf for SlogPlainLogger logs the provided formatted string using slog library.
+// Printf for SlogPlainLogger logs the provided formatted string
+// using slog library.
 // The format and arguments are handled in the manner of fmt.Printf.
 func (l *SlogPlainLogger) Printf(format string, v ...interface{}) {
 	l.Logger.Info(fmt.Sprintf(format, v...))
 }
 
-// Error for SlogPlainLogger logs the provided arguments as an error line using slog library.
+// Error for SlogPlainLogger logs the provided arguments as an error line
+// using slog library.
 // The arguments are converted to a string using fmt.Sprint.
 func (l *SlogPlainLogger) Error(v ...interface{}) {
 	l.Logger.Error(fmt.Sprint(v...))
 }
 
-// Errorf for SlogPlainLogger logs the provided formatted string as an error line using slog library.
+// Errorf for SlogPlainLogger logs the provided formatted string as an
+// error line using slog library.
 // The format and arguments are handled in the manner of fmt.Printf.
 func (l *SlogPlainLogger) Errorf(format string, v ...interface{}) {
 	l.Logger.Error(fmt.Sprintf(format, v...))
