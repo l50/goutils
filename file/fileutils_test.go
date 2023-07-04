@@ -622,3 +622,55 @@ func TestWrite(t *testing.T) {
 		})
 	}
 }
+
+func TestSeekAndDestroy(t *testing.T) {
+	// Setup a temporary directory for testing
+	tmpDir, err := os.MkdirTemp("", "test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	// Create a few test files in the temporary directory
+	testFiles := []string{"file1.txt", "file2.log", "file3.txt", "file4.doc"}
+	for _, file := range testFiles {
+		_, err := os.Create(filepath.Join(tmpDir, file))
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	tests := []struct {
+		name      string
+		path      string
+		pattern   string
+		expectErr bool
+	}{
+		{
+			name:      "existing file",
+			path:      tmpDir,
+			pattern:   "*.txt",
+			expectErr: false,
+		},
+		{
+			name:      "non-existent file",
+			path:      tmpDir,
+			pattern:   "*.jpg",
+			expectErr: false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := fileutils.SeekAndDestroy(tc.path, tc.pattern)
+
+			if tc.expectErr {
+				if err == nil {
+					t.Fatalf("expected an error but got none")
+				}
+			} else if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+		})
+	}
+}

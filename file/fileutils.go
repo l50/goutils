@@ -409,3 +409,34 @@ func createFile(filePath string, fileContents []byte) error {
 
 	return nil
 }
+
+// SeekandDestroy walks through a directory and deletes all files that match the pattern
+//
+// **Parameters:**
+//
+// path: String representing the path to the directory.
+// pattern: String representing the pattern to match.
+//
+// **Returns:**
+//
+// error: An error if the files cannot be deleted.
+func SeekAndDestroy(path string, pattern string) error {
+	return filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		matched, err := filepath.Match(pattern, info.Name())
+		if err != nil {
+			return err
+		}
+
+		if matched {
+			if err := os.RemoveAll(path); err != nil {
+				return fmt.Errorf("failed to delete file or directory: %v", err)
+			}
+		}
+
+		return nil
+	})
+}

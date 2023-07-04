@@ -1,6 +1,7 @@
 package file_test
 
 import (
+	"fmt"
 	"log"
 	"os"
 
@@ -285,4 +286,19 @@ func ExampleListR() {
 	for _, file := range files {
 		log.Println(file)
 	}
+}
+
+func ExampleSeekAndDestroy() {
+	dir := "/tmp"      // choose a directory that should exist on the testing machine
+	pattern := "*.txt" // choose a pattern that should match files in the directory
+
+	err := fileutils.SeekAndDestroy(dir, pattern)
+
+	if err != nil {
+		fmt.Printf("failed to delete files matching pattern %s in directory %s: %v\n", pattern, dir, err)
+	} else {
+		fmt.Println("Files matching pattern deleted successfully!")
+	}
+
+	// Output: Files matching pattern deleted successfully!
 }
