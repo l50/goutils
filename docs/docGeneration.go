@@ -88,9 +88,99 @@ type FuncInfo struct {
 // error: An error, if it encounters an issue while walking the file tree,
 // reading a directory, parsing Go files, or generating README.md files.
 func CreatePackageDocs(fs afero.Fs, repo Repo, templatePath string) error {
-	err := afero.Walk(fs, ".", handleDirectory(fs, repo, templatePath))
+
+	exists, err := afero.Exists(fs, templatePath)
+	if err != nil {
+		return fmt.Errorf("error checking if template file exists: %w", err)
+	}
+	if !exists {
+		return fmt.Errorf("template file does not exist")
+	}
+
+	err = afero.Walk(fs, ".", handleDirectory(fs, repo, templatePath))
 	if err != nil {
 		return fmt.Errorf("error walking directories: %w", err)
+	}
+
+	return nil
+}
+
+// generateReadmeFromTemplate generates a README.md file for a Go package using
+// a specified template file. It first checks if the template file exists in
+// the filesystem denoted by a provided afero.Fs instance. If it exists, the
+// function reads its contents, parses it as a template, and applies it to the
+// provided PackageDoc to generate the README.md content.
+//
+// **Parameters:**
+//
+// fs: An afero.Fs instance for mocking the filesystem for testing.
+//
+// pkgDoc: A pointer to a PackageDoc instance containing the Go package
+// documentation that will be used to generate the README.md file.
+//
+// path: A string representing the path where the README.md file should be
+// created.
+//
+// templatePath: A string representing the path to the template file to be
+// used for generating the README.md file.
+//
+// **Returns:**
+//
+// error: An error, if it encounters an issue while checking if the template
+// file exists, reading the template file, parsing the template, creating the
+// README.md file, or writing to the README.md file.
+func generateReadmeFromTemplate(fs afero.Fs, pkgDoc *PackageDoc, path string, templatePath string) error {
+	// Check if the template file exists
+	exists, err := afero.Exists(fs, templatePath)
+	if err != nil {
+		return fmt.Errorf("error checking if template file exists: %w", err)
+	}
+	if !exists {
+		return fmt.Errorf("template file does not exist")
+	}
+
+	// Open the template file
+	templateFile, err := fs.Open(templatePath)
+	if err != nil {
+		return fmt.Errorf("error opening template file: %w", err)
+	}
+	defer templateFile.Close()
+
+	// Read the contents of the file into a string
+	templateBytes, err := afero.ReadAll(templateFile)
+	if err != nil {
+		return fmt.Errorf("error reading template file: %w", err)
+	}
+
+	// Parse the template file
+	tmpl, err := template.New("").Parse(string(templateBytes))
+	if err != nil {
+		return err
+	}
+
+	// Open the output file
+	out, err := fs.Create(path)
+	if err != nil {
+		return err
+	}
+	defer out.Close()
+
+	// Execute the template with the package documentation
+	var buf bytes.Buffer
+	err = tmpl.Execute(&buf, pkgDoc)
+	if err != nil {
+		return err
+	}
+
+	// Replace &#34; with "
+	readmeContent := strings.ReplaceAll(buf.String(), "&#34;", "\"")
+
+	// Replace hard tabs with spaces
+	readmeContent = strings.ReplaceAll(readmeContent, "\t", "    ")
+
+	// Write the modified content to the README file
+	if _, err := out.WriteString(readmeContent); err != nil {
+		return err
 	}
 
 	return nil
@@ -185,7 +275,7 @@ func processGoFiles(fs afero.Fs, path string, repo Repo, templatePath string) er
 	}
 
 	for _, pkg := range pkgs {
-		err := generateReadmeForPackage(path, fset, pkg, repo, templatePath)
+		err := generateReadmeForPackage(fs, path, fset, pkg, repo, templatePath)
 		if err != nil {
 			return err
 		}
@@ -198,7 +288,7 @@ func nonTestFilter(info os.FileInfo) bool {
 	return !strings.HasSuffix(info.Name(), "_test.go")
 }
 
-func generateReadmeForPackage(path string, fset *token.FileSet, pkg *ast.Package, repo Repo, templatePath string) error {
+func generateReadmeForPackage(fs afero.Fs, path string, fset *token.FileSet, pkg *ast.Package, repo Repo, templatePath string) error {
 	pkgDoc := &PackageDoc{
 		PackageName: pkg.Name,
 		GoGetPath:   fmt.Sprintf("github.com/%s/%s/%s", repo.Name, repo.Owner, pkg.Name),
@@ -217,7 +307,8 @@ func generateReadmeForPackage(path string, fset *token.FileSet, pkg *ast.Package
 		return pkgDoc.Functions[i].Name < pkgDoc.Functions[j].Name
 	})
 
-	return generateReadmeFromTemplate(pkgDoc, filepath.Join(path, "README.md"), templatePath)
+	return generateReadmeFromTemplate(fs, pkgDoc, filepath.Join(path, "README.md"), templatePath)
+
 }
 
 func processFileDeclarations(fset *token.FileSet, pkgDoc *PackageDoc, file *ast.File) error {
@@ -272,41 +363,6 @@ func splitLongSignature(signature string, maxLineLength int) string {
 		}
 	}
 	return strings.Join(parts, "")
-}
-
-func generateReadmeFromTemplate(pkgDoc *PackageDoc, path string, templatePath string) error {
-	// Open the template file
-	tmpl, err := template.ParseFiles(templatePath)
-	if err != nil {
-		return err
-	}
-
-	// Open the output file
-	out, err := os.Create(path)
-	if err != nil {
-		return err
-	}
-	defer out.Close()
-
-	// Execute the template with the package documentation
-	var buf bytes.Buffer
-	err = tmpl.Execute(&buf, pkgDoc)
-	if err != nil {
-		return err
-	}
-
-	// Replace &#34; with "
-	readmeContent := strings.ReplaceAll(buf.String(), "&#34;", "\"")
-
-	// Replace hard tabs with spaces
-	readmeContent = strings.ReplaceAll(readmeContent, "\t", "    ")
-
-	// Write the modified content to the README file
-	if _, err := out.WriteString(readmeContent); err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func formatNode(fset *token.FileSet, node interface{}) string {
