@@ -16,7 +16,7 @@ Table of contents:
 
 ## Functions
 {{range .Functions}}
-### {{.Name}} ({{.Params}})
+### {{if .StructName}}{{.StructName}}{{end}}{{.Name}}{{if .Params}}({{.Params}}){{end}}
 
 ```go
 {{.Signature}}

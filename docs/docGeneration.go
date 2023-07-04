@@ -54,6 +54,7 @@ type FunctionDoc struct {
 	Signature   string
 	Description string
 	Params      string
+	StructName  string
 }
 
 // FuncInfo holds information about an exported function within a Go package.
@@ -334,6 +335,8 @@ func processFileDeclarations(fset *token.FileSet, pkgDoc *PackageDoc, file *ast.
 				return err
 			}
 
+			// Using fnDoc.Name instead of fn.Name.Name
+			// fnDoc.Name will be a unique identifier for each method or function
 			pkgDoc.Functions = append(pkgDoc.Functions, fnDoc)
 		}
 	}
@@ -341,12 +344,22 @@ func processFileDeclarations(fset *token.FileSet, pkgDoc *PackageDoc, file *ast.
 }
 
 func createFunctionDoc(fset *token.FileSet, fn *ast.FuncDecl) (FunctionDoc, error) {
-	var params, results string
+	var params, results, structName string
 	if fn.Type.Params != nil {
 		params = formatNode(fset, fn.Type.Params)
 	}
 	if fn.Type.Results != nil {
 		results = formatNode(fset, fn.Type.Results)
+	}
+
+	// Extract receiver (struct) name
+	if fn.Recv != nil && len(fn.Recv.List) > 0 {
+		// The receiver expression is of type *ast.StarExpr when it's a pointer
+		if se, ok := fn.Recv.List[0].Type.(*ast.StarExpr); ok {
+			structName = fmt.Sprintf("%s.", se.X)
+		} else {
+			structName = fmt.Sprintf("%s.", fn.Recv.List[0].Type)
+		}
 	}
 
 	signature := fmt.Sprintf("%s(%s) %s", fn.Name.Name, params, results)
@@ -358,11 +371,13 @@ func createFunctionDoc(fset *token.FileSet, fn *ast.FuncDecl) (FunctionDoc, erro
 		signature = splitLongSignature(signature, maxLineLength)
 	}
 
+	// Include struct and parameters in function name to distinguish functions
+	funcName := fmt.Sprintf("%s%s(%s)", structName, fn.Name.Name, params)
+
 	return FunctionDoc{
-		Name:        fn.Name.Name,
+		Name:        funcName,
 		Signature:   signature,
 		Description: fn.Doc.Text(),
-		Params:      params,
 	}, nil
 }
 
