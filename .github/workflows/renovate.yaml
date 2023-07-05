@@ -41,6 +41,15 @@ jobs:
           echo "RENOVATE_DRY_RUN=${{ github.event.inputs.dryRun || env.RENOVATE_DRY_RUN }}" >> "${GITHUB_ENV}"
           echo "LOG_LEVEL=${{ github.event.inputs.logLevel || env.LOG_LEVEL }}" >> "${GITHUB_ENV}"
 
+      - name: Delete old dashboard
+        run: |
+          ISSUE_NUMBER=$(gh issue list -S 'Renovate Dashboard 🤖' --json number -q '.[0].number')
+          if [ "$ISSUE_NUMBER" != "null" ]; then
+            gh issue close $ISSUE_NUMBER
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
+
       - name: Renovate
         uses: renovatebot/github-action@2a87d1192eaa0cac92b6566233afedf68fd3472a # v38.1.8
         with:
