@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/bitfield/script v0.22.0
 	github.com/cavaliergopher/grab/v3 v3.0.1
-	github.com/chromedp/cdproto v0.0.0-20230605001715-1e95ea08ffe6
+	github.com/chromedp/cdproto v0.0.0-20230625224106-7fafe342e117
 	github.com/chromedp/chromedp v0.9.1
 	github.com/fatih/color v1.15.0
 	github.com/glendc/go-external-ip v0.1.0
