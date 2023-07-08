@@ -84,7 +84,9 @@ Keeper record to retrieve.
 
 **Returns:**
 
-pwmgr.Record: The retrieved Keeper record. This contains the following attributes:
+pwmgr.Record: The retrieved Keeper record. This contains the following
+attributes:
+
 - UID: The unique identifier of the record.
 - Title: The title of the record.
 - Username: The username associated with the record.
@@ -127,7 +129,7 @@ To use the goutils/v2/keeper package, you first need to install it.
 Follow the steps below to install via go get.
 
 ```bash
-go get github.com/goutils/v2/l50/keeper
+go get github.com/l50/goutils/v2/keeper
 ```
 
 ---
@@ -138,7 +140,7 @@ After installation, you can import the package in your Go project
 using the following import statement:
 
 ```go
-import "github.com/goutils/v2/l50/keeper"
+import "github.com/l50/goutils/v2/keeper"
 ```
 
 ---

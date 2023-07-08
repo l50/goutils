@@ -265,7 +265,7 @@ To use the goutils/v2/git package, you first need to install it.
 Follow the steps below to install via go get.
 
 ```bash
-go get github.com/goutils/v2/l50/git
+go get github.com/l50/goutils/v2/git
 ```
 
 ---
@@ -276,7 +276,7 @@ After installation, you can import the package in your Go project
 using the following import statement:
 
 ```go
-import "github.com/goutils/v2/l50/git"
+import "github.com/l50/goutils/v2/git"
 ```
 
 ---

@@ -303,7 +303,7 @@ func nonTestFilter(info os.FileInfo) bool {
 func generateReadmeForPackage(fs afero.Fs, path string, fset *token.FileSet, pkg *ast.Package, repo Repo, templatePath string) error {
 	pkgDoc := &PackageDoc{
 		PackageName: pkg.Name,
-		GoGetPath:   fmt.Sprintf("github.com/%s/%s/%s", repo.Name, repo.Owner, pkg.Name),
+		GoGetPath:   fmt.Sprintf("github.com/%s/%s/%s", repo.Owner, repo.Name, pkg.Name),
 		Functions:   []FunctionDoc{},
 	}
 

@@ -128,7 +128,9 @@ func (k Keeper) AddRecord(fields map[string]string) error {
 //
 // **Returns:**
 //
-// pwmgr.Record: The retrieved Keeper record. This contains the following attributes:
+// pwmgr.Record: The retrieved Keeper record. This contains the following
+// attributes:
+//
 // - UID: The unique identifier of the record.
 // - Title: The title of the record.
 // - Username: The username associated with the record.
