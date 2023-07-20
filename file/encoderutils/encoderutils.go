@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 // Unzip unzips the specified zip file and extracts the contents of the
@@ -28,15 +29,24 @@ func Unzip(src, dest string) error {
 
 	for _, file := range reader.File {
 		path := filepath.Join(dest, file.Name)
+
+		// sanitize the file name
+		cleanPath := filepath.Clean(path)
+
+		// if the path is not within the destination directory, skip it
+		if !strings.HasPrefix(cleanPath, dest) {
+			continue
+		}
+
 		if file.FileInfo().IsDir() {
-			err := os.MkdirAll(path, os.ModePerm)
+			err := os.MkdirAll(cleanPath, os.ModePerm)
 			if err != nil {
 				return err
 			}
 			continue
 		}
 
-		err := os.MkdirAll(filepath.Dir(path), os.ModePerm)
+		err := os.MkdirAll(filepath.Dir(cleanPath), os.ModePerm)
 		if err != nil {
 			return err
 		}
@@ -47,7 +57,7 @@ func Unzip(src, dest string) error {
 		}
 		defer srcFile.Close()
 
-		destFile, err := os.Create(path)
+		destFile, err := os.Create(cleanPath)
 		if err != nil {
 			return err
 		}
