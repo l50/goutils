@@ -9,7 +9,7 @@ require (
 	github.com/chromedp/chromedp v0.9.1
 	github.com/fatih/color v1.15.0
 	github.com/glendc/go-external-ip v0.1.0
-	github.com/go-git/go-git/v5 v5.7.0
+	github.com/go-git/go-git/v5 v5.8.0
 	github.com/magefile/mage v1.15.0
 	github.com/otiai10/copy v1.12.0
 	github.com/samber/slog-multi v0.6.1
