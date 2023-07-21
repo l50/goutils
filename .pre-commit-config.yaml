@@ -64,6 +64,11 @@ repos:
         entry: .hooks/go-vet.sh
         files: '\.go$'
 
+      - id: go-licenses
+        name: Run go-licenses
+        language: script
+        entry: .hooks/go-licenses.sh check_forbidden
+
   - repo: https://github.com/jumanjihouse/pre-commit-hooks
     rev: 3.0.0
     hooks:
