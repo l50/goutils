@@ -6,8 +6,8 @@
       "matchManagers": ["github-actions"],
       "matchDatasources": ["github-tags"],
       "automerge": true,
-      "automergeType": "pr",
-      "matchUpdateTypes": ["minor", "patch", "digest"]
+      "automergeType": "branch",
+      "matchUpdateTypes": ["area/*"]
     }
   ]
 }

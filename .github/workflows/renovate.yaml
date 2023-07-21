@@ -14,6 +14,8 @@ on:
   schedule:
     # Run once per week - at 00:00 on Sunday
     - cron: "0 0 * * 0"
+  pull_request:
+  merge_group:
   push:
     branches: ["main"]
     paths:
