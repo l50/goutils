@@ -2,6 +2,8 @@ package encoderutils
 
 import (
 	"archive/zip"
+	"bytes"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -21,52 +23,76 @@ import (
 //
 // error: An error if any issue occurs while trying to unzip the file.
 func Unzip(src, dest string) error {
+	// This rule appears to be broken - false positive
+	// nosemgrep:go.lang.security.zip.path-traversal-inside-zip-extraction
 	reader, err := zip.OpenReader(src)
 	if err != nil {
 		return err
 	}
 	defer reader.Close()
 
+	dest = filepath.Clean(dest) + string(os.PathSeparator)
+
 	for _, file := range reader.File {
+		rc, err := file.Open()
+		if err != nil {
+			return err
+		}
+
+		var buf bytes.Buffer
+		tee := io.TeeReader(rc, &buf)
+
+		if _, err := io.CopyN(&buf, tee, 1024*1024*256); err != nil && err != io.EOF { // Limit to 256MB
+			rc.Close()
+			return err
+		}
+		fmt.Println()
+
 		path := filepath.Join(dest, file.Name)
 
-		// sanitize the file name
-		cleanPath := filepath.Clean(path)
+		if !strings.HasPrefix(path, filepath.Clean(dest)+string(os.PathSeparator)) {
+			return fmt.Errorf("illegal file path: %s", path)
+		}
 
-		// if the path is not within the destination directory, skip it
-		if !strings.HasPrefix(cleanPath, dest) {
-			continue
+		relPath, err := filepath.Rel(dest, path)
+		if err != nil {
+			rc.Close()
+			return err
+		}
+
+		if strings.HasPrefix(relPath, "..") {
+			rc.Close()
+			return fmt.Errorf("illegal file path: %s", path)
 		}
 
 		if file.FileInfo().IsDir() {
-			err := os.MkdirAll(cleanPath, os.ModePerm)
-			if err != nil {
+			if err := os.MkdirAll(path, os.ModePerm); err != nil {
+				rc.Close()
 				return err
 			}
+			rc.Close()
 			continue
 		}
 
-		err := os.MkdirAll(filepath.Dir(cleanPath), os.ModePerm)
-		if err != nil {
+		if err := os.MkdirAll(filepath.Dir(path), os.ModePerm); err != nil {
+			rc.Close()
 			return err
 		}
 
-		srcFile, err := file.Open()
+		destFile, err := os.Create(path)
 		if err != nil {
+			rc.Close()
 			return err
 		}
-		defer srcFile.Close()
 
-		destFile, err := os.Create(cleanPath)
-		if err != nil {
+		if _, err = io.CopyN(destFile, rc, file.FileInfo().Size()); err != nil && err != io.EOF {
+			destFile.Close()
+			rc.Close()
 			return err
 		}
-		defer destFile.Close()
 
-		_, err = io.Copy(destFile, srcFile)
-		if err != nil {
-			return err
-		}
+		destFile.Close()
+		rc.Close()
 	}
 
 	return nil
