@@ -16,7 +16,6 @@ This repo is comprised of utilities that I use across various go projects.
 
   ```bash
   git clone https://github.com/asdf-vm/asdf.git ~/.asdf
-
   ```
 
 - Install and use asdf plugins to manage go, python, and ruby for this project:
