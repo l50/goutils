@@ -75,6 +75,7 @@ repos:
       - id: script-must-have-extension
         name: Ensure shell scripts end with .sh
         types: [shell]
+        exclude: .bats
       - id: shellcheck
       - id: shfmt
       # Configuration in .mdlrc and .hooks/linters/mdstyle.rb
