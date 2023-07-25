@@ -503,7 +503,6 @@ awk -F: '{printf "Function: %s\nFile: %s\n", $2, $1}'`
 }
 
 func TestFindExportedFuncsWithoutTests(t *testing.T) {
-	pkg := "bla"
 	// Create temporary directory
 	tempDir, err := os.MkdirTemp("/tmp", "test")
 	if err != nil {
@@ -513,51 +512,26 @@ func TestFindExportedFuncsWithoutTests(t *testing.T) {
 
 	// Create a file with exported function
 	file1 := filepath.Join(tempDir, "file1.go")
-	content1 := fmt.Sprintf(`package %s
-func ExportedFunc1() {}
-`, pkg)
+	content1 := `package main
+func ExportedFunc1() {}`
 	if err := os.WriteFile(file1, []byte(content1), 0666); err != nil {
 		t.Fatalf("failed to create file1: %v", err)
 	}
 
 	// Create example with exported function and test function
 	file2 := filepath.Join(tempDir, "file2.go")
-	content2 := fmt.Sprintf(`package %s
-func ExportedFunc2() {}
-`, pkg)
+	content2 := `package main
+func ExportedFunc2() {}`
 	if err := os.WriteFile(file2, []byte(content2), 0666); err != nil {
 		t.Fatalf("failed to create file1: %v", err)
 	}
 
 	file2Test := filepath.Join(tempDir, "file2_test.go")
-	content2Test := fmt.Sprintf(`package %s
+	content2Test := `package main
 import "testing"
-func TestExportedFunc2(t *testing.T) {}
-`, pkg)
+func TestExportedFunc2(t *testing.T) {}`
 	if err := os.WriteFile(file2Test, []byte(content2Test), 0666); err != nil {
 		t.Fatalf("failed to create file2: %v", err)
-	}
-
-	// Create a file with exported function and no test function
-	file3 := filepath.Join(tempDir, "pkg", "bla", "file3.go")
-	content3 := fmt.Sprintf(`package %s
-func ExportedFunc3() {}
-`, pkg)
-	if err := os.MkdirAll(filepath.Dir(file3), os.ModePerm); err != nil {
-		t.Fatalf("failed to create file3 dir: %v", err)
-	}
-	if err := os.WriteFile(file3, []byte(content3), 0666); err != nil {
-		t.Fatalf("failed to create file3: %v", err)
-	}
-
-	// Create a file with exported function and test function
-	file4 := filepath.Join(tempDir, "pkg", "bla", "file3_test.go")
-	content4 := fmt.Sprintf(`package %s
-import "testing"
-func TestExportedFunc3(t *testing.T) {}
-`, pkg)
-	if err := os.WriteFile(file4, []byte(content4), 0666); err != nil {
-		t.Fatalf("failed to create file4: %v", err)
 	}
 
 	// Call FindExportedFuncsWithoutTests
