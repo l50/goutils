@@ -503,46 +503,60 @@ awk -F: '{printf "Function: %s\nFile: %s\n", $2, $1}'`
 }
 
 func TestFindExportedFuncsWithoutTests(t *testing.T) {
-	// Create temporary directory
-	tempDir, err := os.MkdirTemp("/tmp", "test")
-	if err != nil {
-		t.Fatalf("failed to create temp dir: %v", err)
-	}
-	defer os.RemoveAll(tempDir)
-
-	// Create a file with exported function
-	file1 := filepath.Join(tempDir, "file1.go")
-	content1 := `package main
-func ExportedFunc1() {}`
-	if err := os.WriteFile(file1, []byte(content1), 0666); err != nil {
-		t.Fatalf("failed to create file1: %v", err)
-	}
-
-	// Create example with exported function and test function
-	file2 := filepath.Join(tempDir, "file2.go")
-	content2 := `package main
-func ExportedFunc2() {}`
-	if err := os.WriteFile(file2, []byte(content2), 0666); err != nil {
-		t.Fatalf("failed to create file1: %v", err)
-	}
-
-	file2Test := filepath.Join(tempDir, "file2_test.go")
-	content2Test := `package main
-import "testing"
-func TestExportedFunc2(t *testing.T) {}`
-	if err := os.WriteFile(file2Test, []byte(content2Test), 0666); err != nil {
-		t.Fatalf("failed to create file2: %v", err)
+	tests := []struct {
+		name           string
+		sourceContent  string
+		testContent    string
+		expectedOutput []string
+	}{
+		{
+			name: "Exported function without tests",
+			sourceContent: `package main
+                            func ExportedFunc1() {}`,
+			testContent:    "",
+			expectedOutput: []string{"ExportedFunc1"},
+		},
+		{
+			name: "Exported function with tests",
+			sourceContent: `package main
+                            func ExportedFunc2() {}`,
+			testContent: `package main
+                          import "testing"
+                          func TestExportedFunc2(t *testing.T) {}`,
+			expectedOutput: []string{},
+		},
 	}
 
-	// Call FindExportedFuncsWithoutTests
-	exportedFuncs, err := mageutils.FindExportedFuncsWithoutTests(tempDir)
-	if err != nil {
-		t.Fatalf("failed to find exported funcs: %v", err)
-	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			tempDir, err := os.MkdirTemp("", "test")
+			if err != nil {
+				t.Fatalf("failed to create temp dir: %v", err)
+			}
+			defer os.RemoveAll(tempDir)
 
-	// Assert the result
-	expectedFuncs := []string{"ExportedFunc1"}
-	if !reflect.DeepEqual(exportedFuncs, expectedFuncs) {
-		t.Errorf("expected funcs: %v, got: %v", expectedFuncs, exportedFuncs)
+			// Create source file with exported function
+			sourceFile := filepath.Join(tempDir, "source.go")
+			if err := os.WriteFile(sourceFile, []byte(tc.sourceContent), 0666); err != nil {
+				t.Fatalf("failed to create source file: %v", err)
+			}
+
+			// Create test file if provided
+			if tc.testContent != "" {
+				testFile := filepath.Join(tempDir, "source_test.go")
+				if err := os.WriteFile(testFile, []byte(tc.testContent), 0666); err != nil {
+					t.Fatalf("failed to create test file: %v", err)
+				}
+			}
+
+			exportedFuncs, err := mageutils.FindExportedFuncsWithoutTests(tempDir)
+			if err != nil {
+				t.Fatalf("failed to find exported funcs: %v", err)
+			}
+
+			if !reflect.DeepEqual(exportedFuncs, tc.expectedOutput) {
+				t.Errorf("expected funcs: %v, got: %v", tc.expectedOutput, exportedFuncs)
+			}
+		})
 	}
 }
