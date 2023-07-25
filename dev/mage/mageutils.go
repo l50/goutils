@@ -272,14 +272,38 @@ func FindExportedFunctionsInPackage(pkgPath string) ([]FuncInfo, error) {
 		for _, file := range pkg.Files {
 			for _, decl := range file.Decls {
 				funcDecl, ok := decl.(*ast.FuncDecl)
-				if !ok || funcDecl.Recv != nil || !funcDecl.Name.IsExported() {
-					continue
+				if ok {
+					if funcDecl.Name.IsExported() {
+						// If this is a method, the Recv will not be nil.
+						if funcDecl.Recv != nil {
+							// We have to check the type of Recv.List[0].Type because it can be *ast.StarExpr for
+							// pointer receivers, in which case we need to get the X field, or it can be *ast.Ident
+							// for value receivers, which we can use directly.
+							var typeName string
+							switch t := funcDecl.Recv.List[0].Type.(type) {
+							case *ast.StarExpr:
+								typeName = t.X.(*ast.Ident).Name
+							case *ast.Ident:
+								typeName = t.Name
+							default:
+								continue
+							}
+
+							info := FuncInfo{
+								FilePath: fset.Position(file.Pos()).Filename,
+								FuncName: fmt.Sprintf("%s.%s", typeName, funcDecl.Name.Name),
+							}
+							funcs = append(funcs, info)
+						} else {
+							// This is an ordinary function, not a method
+							info := FuncInfo{
+								FilePath: fset.Position(file.Pos()).Filename,
+								FuncName: funcDecl.Name.Name,
+							}
+							funcs = append(funcs, info)
+						}
+					}
 				}
-				info := FuncInfo{
-					FilePath: fset.Position(file.Package).Filename,
-					FuncName: funcDecl.Name.Name,
-				}
-				funcs = append(funcs, info)
 			}
 		}
 	}
