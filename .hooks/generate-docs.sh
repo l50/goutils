@@ -8,7 +8,7 @@
 # traversing the file tree and creating a new README.md file in each
 # directory containing a Go package. If the command fails, the commit
 # is stopped and an error message is shown.
-# set -e
+set -e
 
 # Define the URL of bashutils.sh
 bashutils_url="https://raw.githubusercontent.com/l50/dotfiles/main/bashutils"
@@ -38,7 +38,7 @@ fi
 repo_root
 
 # Run the mage generatepackagedocs command
-$(which mage) generatepackagedocs
+$(command -v mage) generatepackagedocs
 
 # Catch the exit code of the last command
 exit_status=$?
