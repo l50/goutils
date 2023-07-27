@@ -114,7 +114,7 @@ func ClearPCCache() error {
 //
 // **Parameters:**
 //
-// timeout (optional): An integer specifying the timeout duration.
+// timeout (optional): An integer specifying the timeout duration in seconds.
 //
 // **Returns:**
 //
@@ -124,7 +124,7 @@ func RunPCHooks(timeout ...int) error {
 	if len(timeout) > 0 {
 		timeoutValue = timeout[0] // use provided value if it was provided
 	} else {
-		timeoutValue = 600 // default timeout value of 30 minutes
+		timeoutValue = 1800 // default timeout value of 30 minutes
 	}
 
 	_, err := sys.RunCommandWithTimeout(timeoutValue, "pre-commit", "run", "--all-files", "--show-diff-on-failure")
