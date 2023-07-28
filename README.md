@@ -73,24 +73,27 @@ This repo is comprised of utilities that I use across various go projects.
 
 ## Create New Release
 
-This requires the [GitHub CLI](https://github.com/cli/cli#installation)
-and [gh-changelog GitHub CLI extension](https://github.com/chelnak/gh-changelog).
+- Download and install the [gh cli tool](https://cli.github.com/):
 
-Install changelog extension:
+   - [macOS](https://github.com/cli/cli#macos)
+   - [Linux](https://github.com/cli/cli/blob/trunk/docs/install_linux.md)
+   - [Windows](https://github.com/cli/cli#windows)
 
-```bash
-gh extension install chelnak/gh-changelog
-```
+- Install changelog extension:
 
-Generate changelog:
+  ```bash
+  gh extension install chelnak/gh-changelog
+  ```
 
-```bash
-NEXT_VERSION=v1.1.3
-gh changelog new --next-version "${NEXT_VERSION}"
-```
+- Generate changelog:
 
-Create release:
+  ```bash
+  NEXT_VERSION=v1.1.3
+  gh changelog new --next-version "${NEXT_VERSION}"
+  ```
 
-```bash
-gh release create "${NEXT_VERSION}" -F CHANGELOG.md
-```
+- Create release:
+
+  ```bash
+  gh release create "${NEXT_VERSION}" -F CHANGELOG.md
+  ```
