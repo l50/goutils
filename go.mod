@@ -15,8 +15,8 @@ require (
 	github.com/samber/slog-multi v0.6.1
 	github.com/spf13/afero v1.9.5
 	github.com/stretchr/testify v1.8.4
-	github.com/tidwall/gjson v1.14.4
-	golang.org/x/exp v0.0.0-20230807204917-050eac23e9de
+	github.com/tidwall/gjson v1.15.0
+	golang.org/x/exp v0.0.0-20230725093048-515e97ebf090
 )
 
 require (
