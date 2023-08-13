@@ -1,6 +1,8 @@
 module github.com/l50/goutils/v2
 
-go 1.20
+go 1.21
+
+toolchain go1.21.0
 
 require (
 	github.com/bitfield/script v0.22.0
@@ -12,7 +14,7 @@ require (
 	github.com/go-git/go-git/v5 v5.8.1
 	github.com/magefile/mage v1.15.0
 	github.com/otiai10/copy v1.12.0
-	github.com/samber/slog-multi v0.6.1
+	github.com/samber/slog-multi v1.0.0
 	github.com/spf13/afero v1.9.5
 	github.com/stretchr/testify v1.8.4
 	github.com/tidwall/gjson v1.15.0
