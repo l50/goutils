@@ -55,7 +55,7 @@ repos:
       - id: go-unit-tests
         name: Go unit tests
         language: script
-        entry: .hooks/go-unit-tests.sh coverage
+        entry: .hooks/run-go-tests.sh coverage
         files: '\.go$'
 
       - id: go-vet

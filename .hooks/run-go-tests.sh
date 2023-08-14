@@ -10,9 +10,9 @@ LOGFILE="/tmp/goutils-unit-test-results-$TIMESTAMP.log"
 
 if [[ -z "${TESTS_TO_RUN}" ]]; then
     echo "No tests input" | tee -a "$LOGFILE"
-    echo "Example - Run all shorter collection of tests: bash go-unit-tests.sh short" | tee -a "$LOGFILE"
-    echo "Example - Run all tests: bash go-unit-tests.sh all" | tee -a "$LOGFILE"
-    echo "Example - Run coverage for a specific version: bash go-unit-tests.sh coverage" | tee -a "$LOGFILE"
+    echo "Example - Run all shorter collection of tests: bash run-go-tests.sh short" | tee -a "$LOGFILE"
+    echo "Example - Run all tests: bash run-go-tests.sh all" | tee -a "$LOGFILE"
+    echo "Example - Run coverage for a specific version: bash run-go-tests.sh coverage" | tee -a "$LOGFILE"
     exit 1
 fi
 
