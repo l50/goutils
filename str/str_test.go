@@ -18,6 +18,11 @@ func TestGenRandom(t *testing.T) {
 			length:  10,
 			wantErr: false,
 		},
+		{
+			name:    "Zero length",
+			length:  0,
+			wantErr: false,
+		},
 	}
 
 	for _, tc := range tests {
@@ -47,13 +52,31 @@ func TestInSlice(t *testing.T) {
 			inputSlice: []string{"sky", "falcon", "rock", "hawk"},
 			expected:   true,
 		},
+		{
+			name:       "String not found in slice",
+			strToFind:  "cloud",
+			inputSlice: []string{"sky", "falcon", "rock", "hawk"},
+			expected:   false,
+		},
+		{
+			name:       "Empty slice",
+			strToFind:  "sky",
+			inputSlice: []string{},
+			expected:   false,
+		},
+		{
+			name:       "Partial string match in slice",
+			strToFind:  "hawk",
+			inputSlice: []string{"skyhawk", "falcon", "rock"},
+			expected:   true,
+		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			result := str.InSlice(tc.strToFind, tc.inputSlice)
 			if result != tc.expected {
-				t.Errorf("StringInSlice() = %v, want %v", result, tc.expected)
+				t.Errorf("InSlice() = %v, want %v", result, tc.expected)
 			}
 		})
 	}
