@@ -56,5 +56,5 @@ jobs:
         working-directory: ${{ github.workspace }}
 
       - name: Run pre-commit
-        run: mage runPreCommit
+        run: pre-commit run -a
         working-directory: ${{ github.workspace }}
