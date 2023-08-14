@@ -73,8 +73,7 @@ repos:
         name: Update package docs
         language: script
         entry: .hooks/generate-docs.sh
-        files: '\.go$'
-        stages: [commit]
+        require_serial: true
 
   - repo: https://github.com/jumanjihouse/pre-commit-hooks
     rev: 3.0.0
