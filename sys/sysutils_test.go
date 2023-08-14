@@ -188,16 +188,42 @@ func TestCp(t *testing.T) {
 }
 
 func TestEnvVarSet(t *testing.T) {
-	key := "TEST_KEY"
-	os.Setenv(key, "test_value")
-	if err := sys.EnvVarSet(key); err != nil {
-		t.Fatalf("failed to run EnvVarSet(): %v", err)
+	const (
+		key      = "TEST_KEY"
+		emptykey = "EMPTY_TEST_KEY"
+	)
+
+	testCases := []struct {
+		name    string
+		key     string
+		setenv  bool
+		wantErr bool
+	}{
+		{
+			name:    "KeyIsSet",
+			key:     key,
+			setenv:  true,
+			wantErr: false,
+		},
+		{
+			name:    "KeyIsNotSet",
+			key:     emptykey,
+			setenv:  false,
+			wantErr: true,
+		},
 	}
 
-	emptykey := "EMPTY_TEST_KEY"
-
-	if err := sys.EnvVarSet(emptykey); err == nil {
-		t.Fatalf("failed to run EnvVarSet(): %v", err)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			if tc.setenv {
+				os.Setenv(tc.key, "test_value")
+			}
+			err := sys.EnvVarSet(tc.key)
+			gotErr := err != nil
+			if gotErr != tc.wantErr {
+				t.Errorf("EnvVarSet(%q) returned error: %v, wantErr: %v", tc.key, gotErr, tc.wantErr)
+			}
+		})
 	}
 }
 
@@ -237,6 +263,41 @@ func TestExpandHomeDir(t *testing.T) {
 			input:    "~path/without/slash",
 			expected: filepath.Join(homeDir, "path/without/slash"),
 		},
+		{
+			name:     "TildeWithExtraSlash",
+			input:    "~/path//with//slash",
+			expected: filepath.Join(homeDir, "path//with//slash"),
+		},
+		{
+			name:     "TildeWithDot",
+			input:    "~./path/with/dot",
+			expected: filepath.Join(homeDir, "./path/with/dot"),
+		},
+		{
+			name:     "TildeWithMultipleDots",
+			input:    "~../path/with/dots",
+			expected: filepath.Join(homeDir, "../path/with/dots"),
+		},
+		{
+			name:     "TildeWithSpace",
+			input:    "~ path/with/space",
+			expected: filepath.Join(homeDir, " path/with/space"),
+		},
+		{
+			name:     "TildeWithSpecialCharacters",
+			input:    "~@#$/path/with/special",
+			expected: filepath.Join(homeDir, "@#$/path/with/special"),
+		},
+		{
+			name:     "MultipleTildes",
+			input:    "~~~/path/with/tildes",
+			expected: filepath.Join(homeDir, "~~/path/with/tildes"),
+		},
+		{
+			name:     "TildeInMiddle",
+			input:    "/path/with/~tilde/in/middle",
+			expected: "/path/with/~tilde/in/middle",
+		},
 	}
 
 	for _, tc := range testCases {
@@ -250,9 +311,23 @@ func TestExpandHomeDir(t *testing.T) {
 }
 
 func TestGetHomeDir(t *testing.T) {
-	_, err := sys.GetHomeDir()
-	if err != nil {
-		t.Fatalf("failed to get the user's home directory - GetHomeDir() failed")
+	tests := []struct {
+		name    string
+		wantErr bool
+	}{
+		{
+			name:    "Successful fetch of user's home directory",
+			wantErr: false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := sys.GetHomeDir()
+			if (err != nil) != tc.wantErr {
+				t.Fatalf("GetHomeDir() error = %v, wantErr %v", err, tc.wantErr)
+			}
+		})
 	}
 }
 
@@ -481,6 +556,20 @@ func TestIsDirEmpty(t *testing.T) {
 			isEmpty:    false,
 			expectErr:  true,
 			errMessage: "not a directory",
+		},
+		{
+			name: "failed to read directory entries",
+			setup: func(tmpDir string) (string, error) {
+				// Create a directory without read permissions
+				dirPath := filepath.Join(tmpDir, "unreadable")
+				if err := os.Mkdir(dirPath, 0111); err != nil {
+					return "", err
+				}
+				return dirPath, nil
+			},
+			isEmpty:    false,
+			expectErr:  true,
+			errMessage: "failed to read directory entries",
 		},
 	}
 
