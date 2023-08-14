@@ -575,6 +575,13 @@ func TestRunCommand(t *testing.T) {
 			args:      []string{},
 			wantError: true,
 		},
+		{
+			name:       "ColorTest",
+			cmd:        "echo",
+			args:       []string{"\033[31mRed\033[0m"},
+			wantError:  false,
+			wantOutput: "\033[31mRed\033[0m\n",
+		},
 	}
 
 	for _, tc := range tests {
