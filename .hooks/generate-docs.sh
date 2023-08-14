@@ -8,6 +8,22 @@
 # traversing the file tree and creating a new README.md file in each
 # directory containing a Go package. If the command fails, the commit
 # is stopped and an error message is shown.
+
+# Define the lock file
+lockfile="/tmp/mage_generatepackagedocs.lock"
+
+# Check if lock file exists, exit if true
+if [ -f "${lockfile}" ]; then
+    echo "Another instance of this script is running. Exiting."
+    exit 1
+fi
+
+# Create the lock file
+touch "${lockfile}"
+
+# Trap to remove the lock file in case of termination or exit
+trap 'rm -f '"${lockfile}" EXIT
+
 set -e
 
 # Define the URL of bashutils.sh
@@ -26,7 +42,12 @@ fi
 # shellcheck source=/dev/null
 source "${bashutils_path}"
 
-if command -v mage &> /dev/null; then
+repo_root
+
+mage_bin=$(go env GOPATH)/bin/mage
+
+# Check if mage is installed
+if [[ -x "${mage_bin}" ]]; then
     echo "mage is installed"
 else
     echo -e "mage is not installed\n"
@@ -35,11 +56,8 @@ else
     exit 1
 fi
 
-repo_root
-
 # Run the mage generatepackagedocs command
-$(command -v mage) generatepackagedocs
-
+"${mage_bin}" generatepackagedocs
 # Catch the exit code of the last command
 exit_status=$?
 

@@ -90,7 +90,7 @@ If no timeout is provided, it defaults to 600.
 
 **Parameters:**
 
-timeout (optional): An integer specifying the timeout duration.
+timeout (optional): An integer specifying the timeout duration in seconds.
 
 **Returns:**
 

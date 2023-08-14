@@ -1,8 +1,8 @@
 ---
 name: Pre-Commit
 on:
-  pull_request:
   push:
+  pull_request:
   # Run once a week (see https://crontab.guru)
   schedule:
     - cron: "0 0 * * 0"
@@ -43,13 +43,17 @@ jobs:
           git config --global user.email "action@github.com"
           git config --global user.name "GitHub Action"
           git add go.mod go.sum magefiles/go.mod magefiles/go.sum
-          git diff --quiet && git diff --staged --quiet || git commit -m "Update go.mod and go.sum"
+          git diff --quiet && git diff --staged --quiet || \
+            git commit -m "Update go.mod and go.sum"
 
       - name: Make sure docs have been generated prior to push
         run: bash .hooks/generate-docs.sh
+        working-directory: ${{ github.workspace }}
 
       - name: Install pre-commit dependencies
         run: mage installDeps
+        working-directory: ${{ github.workspace }}
 
       - name: Run pre-commit
         run: mage runPreCommit
+        working-directory: ${{ github.workspace }}
