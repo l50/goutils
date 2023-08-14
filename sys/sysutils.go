@@ -131,7 +131,7 @@ func ExpandHomeDir(path string) string {
 		return path
 	}
 
-	homeDir, err := os.UserHomeDir()
+	homeDir, err := GetHomeDir()
 	if err != nil {
 		return path
 	}

@@ -134,21 +134,56 @@ func TestCmdExists(t *testing.T) {
 }
 
 func TestCp(t *testing.T) {
-	file := "test.txt"
-	copyLoc := "testing.txt"
-	if err := fileutils.Create(file, nil, fileutils.CreateEmptyFile); err != nil {
-		t.Fatalf("failed to create %s - Create() failed", file)
+	tests := []struct {
+		name    string
+		src     string
+		dst     string
+		setup   func() error
+		cleanup func()
+		err     error
+	}{
+		{
+			name: "FailedToCopy",
+			src:  "nonexistentfile",
+			dst:  "destinationfile",
+			err:  fmt.Errorf("failed to copy nonexistentfile to destinationfile: lstat nonexistentfile: no such file or directory"), // Updated error message
+		},
+		{
+			name: "SuccessfulCopy",
+			src:  "test.txt",
+			dst:  "testing.txt",
+			setup: func() error {
+				return fileutils.Create("test.txt", nil, fileutils.CreateEmptyFile)
+			},
+			cleanup: func() {
+				remove := []string{"test.txt", "testing.txt"}
+				for _, f := range remove {
+					if err := fileutils.Delete(f); err != nil {
+						t.Errorf("unable to delete %s, DeleteFile() failed", f)
+					}
+				}
+			},
+		},
 	}
-	if err := sys.Cp(file, copyLoc); err != nil {
-		t.Fatalf("failed to copy %s to %s - Cp() failed", file, copyLoc)
-	}
-	if fileutils.Exists(copyLoc) {
-		remove := []string{file, copyLoc}
-		for _, f := range remove {
-			if err := fileutils.Delete(f); err != nil {
-				t.Errorf("unable to delete %s, DeleteFile() failed", f)
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			if tc.setup != nil {
+				if err := tc.setup(); err != nil {
+					t.Fatalf("setup failed: %v", err)
+				}
 			}
-		}
+
+			err := sys.Cp(tc.src, tc.dst)
+
+			if (err != nil && tc.err == nil) || (err == nil && tc.err != nil) || (err != nil && tc.err != nil && err.Error() != tc.err.Error()) {
+				t.Fatalf("unexpected error: got %v, want %v", err, tc.err)
+			}
+
+			if tc.cleanup != nil {
+				tc.cleanup()
+			}
+		})
 	}
 }
 
