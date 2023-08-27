@@ -3,7 +3,7 @@ module magefile
 go 1.21
 
 require (
-	github.com/l50/goutils/v2 v2.0.10-0.20230814095307-dd2527a0c8fc
+	github.com/l50/goutils/v2 v2.0.10-0.20230822002416-8aadd9ca1322
 	github.com/magefile/mage v1.15.0
 	github.com/spf13/afero v1.9.5
 )
@@ -33,11 +33,11 @@ require (
 	github.com/skeema/knownhosts v1.2.0 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
 	golang.org/x/crypto v0.12.0 // indirect
-	golang.org/x/mod v0.11.0 // indirect
+	golang.org/x/mod v0.12.0 // indirect
 	golang.org/x/net v0.14.0 // indirect
 	golang.org/x/sys v0.11.0 // indirect
 	golang.org/x/text v0.12.0 // indirect
-	golang.org/x/tools v0.9.3 // indirect
+	golang.org/x/tools v0.12.1-0.20230815132531-74c255bcf846 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	mvdan.cc/sh/v3 v3.6.0 // indirect
 )
