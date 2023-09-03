@@ -184,6 +184,7 @@ github.com/l50/goutils/v2 v2.0.10-0.20230808124347-9df4ba920e6d h1:KFwmz1sQs/pjF
 github.com/l50/goutils/v2 v2.0.10-0.20230808124347-9df4ba920e6d/go.mod h1:rFxHc21tZEzI4sr3dn7zXFeJk5Zc6VFPNMtrdiGepnQ=
 github.com/l50/goutils/v2 v2.0.10-0.20230814095307-dd2527a0c8fc/go.mod h1:1JxCB5tGlsKs9liporXoWjouBs1Ru+B3gCVZcDgR3fw=
 github.com/l50/goutils/v2 v2.0.10-0.20230822002416-8aadd9ca1322/go.mod h1:5OtMD929t2OGDaEZ7cGrJbVDyjEjkc8MCZEfgfbbg5E=
+github.com/l50/goutils/v2 v2.0.10-0.20230831014101-ce12eb7e85a5/go.mod h1:YLuPZOCuyG7yC/WL6EERLiNLPI+uF3wy3AVVriA/fdc=
 github.com/magefile/mage v1.15.0 h1:BvGheCMAsG3bWUDbZ8AyXXpCNwU9u5CB6sM+HNb9HYg=
 github.com/magefile/mage v1.15.0/go.mod h1:z5UZb/iS3GoOSn0JgWuiw7dxlurVYTu+/jHXqQg881A=
 github.com/matryer/is v1.2.0 h1:92UTHpy8CDwaJ08GqLDzhhuixiBUUD1p3AU6PHddz4A=
