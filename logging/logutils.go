@@ -7,10 +7,11 @@ import (
 	"path/filepath"
 	"strings"
 
+	"log/slog"
+
 	"github.com/fatih/color"
 	slogmulti "github.com/samber/slog-multi"
 	"github.com/spf13/afero"
-	"golang.org/x/exp/slog"
 )
 
 // Logger defines the methods for a generic logging interface.

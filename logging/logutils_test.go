@@ -7,10 +7,11 @@ import (
 	"strings"
 	"testing"
 
+	"log/slog"
+
 	"github.com/fatih/color"
 	"github.com/l50/goutils/v2/logging"
 	"github.com/spf13/afero"
-	"golang.org/x/exp/slog"
 )
 
 type errorFs struct {
