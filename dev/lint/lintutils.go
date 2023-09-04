@@ -68,7 +68,7 @@ func InstallPCHooks() error {
 		return err
 	}
 
-	if err := pc("install"); err != nil {
+	if err := pc("install", "--hook-type", "commit-msg"); err != nil {
 		return fmt.Errorf("failed to install pre-commit hooks: %v", err)
 	}
 
