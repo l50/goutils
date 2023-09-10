@@ -3,7 +3,7 @@ module magefile
 go 1.21
 
 require (
-	github.com/l50/goutils/v2 v2.0.10-0.20230831014101-ce12eb7e85a5
+	github.com/l50/goutils/v2 v2.1.0
 	github.com/magefile/mage v1.15.0
 	github.com/spf13/afero v1.9.5
 )
