@@ -15,7 +15,7 @@ require (
 	github.com/samber/slog-multi v1.0.1
 	github.com/spf13/afero v1.9.5
 	github.com/stretchr/testify v1.8.4
-	github.com/tidwall/gjson v1.16.0
+	github.com/tidwall/gjson v1.17.0
 )
 
 require (
