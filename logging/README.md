@@ -16,6 +16,30 @@ Table of contents:
 
 ## Functions
 
+### ColoredLogger.Debug(...interface{})
+
+```go
+Debug(...interface{})
+```
+
+Debug for ColoredLogger logs the provided arguments as a debug line
+in the specified color. The arguments are handled in the manner
+of fmt.Println.
+
+---
+
+### ColoredLogger.Debugf(string, ...interface{})
+
+```go
+Debugf(string, ...interface{})
+```
+
+Debugf for ColoredLogger logs the provided formatted string as a debug
+line in the specified color. The format and arguments are handled
+in the manner of fmt.Printf.
+
+---
+
 ### ColoredLogger.Error(...interface{})
 
 ```go
@@ -111,6 +135,30 @@ or the log file.
 
 ---
 
+### PlainLogger.Debug(...interface{})
+
+```go
+Debug(...interface{})
+```
+
+Debug for PlainLogger logs the provided arguments as a debug line
+in plain text.
+The arguments are handled in the manner of fmt.Println.
+
+---
+
+### PlainLogger.Debugf(string, ...interface{})
+
+```go
+Debugf(string, ...interface{})
+```
+
+Debugf for PlainLogger logs the provided formatted string as a debug
+line in plain text.
+The format and arguments are handled in the manner of fmt.Printf.
+
+---
+
 ### PlainLogger.Error(...interface{})
 
 ```go
@@ -154,6 +202,30 @@ Println(...interface{})
 
 Println for PlainLogger logs the provided arguments as a line in plain text.
 The arguments are handled in the manner of fmt.Println.
+
+---
+
+### SlogLogger.Debug(...interface{})
+
+```go
+Debug(...interface{})
+```
+
+Debug for SlogLogger logs the provided arguments as a debug line
+using slog library.
+The arguments are converted to a string using fmt.Sprint.
+
+---
+
+### SlogLogger.Debugf(string, ...interface{})
+
+```go
+Debugf(string, ...interface{})
+```
+
+Debugf for SlogLogger logs the provided formatted string as a debug
+line using slog library.
+The format and arguments are handled in the manner of fmt.Printf.
 
 ---
 
@@ -201,6 +273,30 @@ Println(...interface{})
 Println for SlogLogger logs the provided arguments as a line using
 slog library.
 The arguments are converted to a string using fmt.Sprint.
+
+---
+
+### SlogPlainLogger.Debug(...interface{})
+
+```go
+Debug(...interface{})
+```
+
+Debug for SlogPlainLogger logs the provided arguments as a debug line
+using slog library.
+The arguments are converted to a string using fmt.Sprint.
+
+---
+
+### SlogPlainLogger.Debugf(string, ...interface{})
+
+```go
+Debugf(string, ...interface{})
+```
+
+Debugf for SlogPlainLogger logs the provided formatted string as a
+debug line using slog library.
+The format and arguments are handled in the manner of fmt.Printf.
 
 ---
 

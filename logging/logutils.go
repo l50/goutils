@@ -21,6 +21,8 @@ type Logger interface {
 	Printf(format string, v ...interface{})
 	Error(v ...interface{})
 	Errorf(format string, v ...interface{})
+	Debug(v ...interface{})
+	Debugf(format string, v ...interface{})
 }
 
 // ColoredLogger represents a logger that outputs in cyan color.
@@ -74,6 +76,20 @@ func (l *ColoredLogger) Errorf(format string, v ...interface{}) {
 	}
 }
 
+// Debug for ColoredLogger logs the provided arguments as a debug line
+// in the specified color. The arguments are handled in the manner
+// of fmt.Println.
+func (l *ColoredLogger) Debug(v ...interface{}) {
+	color.New(l.ColorAttribute).Println(fmt.Sprint(v...))
+}
+
+// Debugf for ColoredLogger logs the provided formatted string as a debug
+// line in the specified color. The format and arguments are handled
+// in the manner of fmt.Printf.
+func (l *ColoredLogger) Debugf(format string, v ...interface{}) {
+	color.New(l.ColorAttribute).Printf(format, v...)
+}
+
 // PlainLogger represents a logger that outputs in plain format.
 //
 // **Attributes:**
@@ -111,6 +127,20 @@ func (l *PlainLogger) Error(v ...interface{}) {
 func (l *PlainLogger) Errorf(format string, v ...interface{}) {
 	log.SetOutput(l.Info.File)
 	log.Printf(format, v...)
+}
+
+// Debug for PlainLogger logs the provided arguments as a debug line
+// in plain text.
+// The arguments are handled in the manner of fmt.Println.
+func (l *PlainLogger) Debug(v ...interface{}) {
+	fmt.Println(v...)
+}
+
+// Debugf for PlainLogger logs the provided formatted string as a debug
+// line in plain text.
+// The format and arguments are handled in the manner of fmt.Printf.
+func (l *PlainLogger) Debugf(format string, v ...interface{}) {
+	fmt.Printf(format, v...)
 }
 
 // LogInfo represents parameters used to manage logging throughout
@@ -223,6 +253,20 @@ func (l *SlogLogger) Errorf(format string, v ...interface{}) {
 	l.Logger.Error(fmt.Sprintf(format, v...))
 }
 
+// Debug for SlogLogger logs the provided arguments as a debug line
+// using slog library.
+// The arguments are converted to a string using fmt.Sprint.
+func (l *SlogLogger) Debug(v ...interface{}) {
+	l.Logger.Debug(fmt.Sprint(v...))
+}
+
+// Debugf for SlogLogger logs the provided formatted string as a debug
+// line using slog library.
+// The format and arguments are handled in the manner of fmt.Printf.
+func (l *SlogLogger) Debugf(format string, v ...interface{}) {
+	l.Logger.Debug(fmt.Sprintf(format, v...))
+}
+
 // SlogPlainLogger represents a plain logger using the slog library.
 //
 // **Attributes:**
@@ -258,6 +302,20 @@ func (l *SlogPlainLogger) Error(v ...interface{}) {
 // The format and arguments are handled in the manner of fmt.Printf.
 func (l *SlogPlainLogger) Errorf(format string, v ...interface{}) {
 	l.Logger.Error(fmt.Sprintf(format, v...))
+}
+
+// Debug for SlogPlainLogger logs the provided arguments as a debug line
+// using slog library.
+// The arguments are converted to a string using fmt.Sprint.
+func (l *SlogPlainLogger) Debug(v ...interface{}) {
+	l.Logger.Debug(fmt.Sprint(v...))
+}
+
+// Debugf for SlogPlainLogger logs the provided formatted string as a
+// debug line using slog library.
+// The format and arguments are handled in the manner of fmt.Printf.
+func (l *SlogPlainLogger) Debugf(format string, v ...interface{}) {
+	l.Logger.Debug(fmt.Sprintf(format, v...))
 }
 
 // ConfigureLogger creates a logger based on the provided level.

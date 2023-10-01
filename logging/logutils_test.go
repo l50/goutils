@@ -211,6 +211,26 @@ func TestLoggerImplementation(t *testing.T) {
 				l.Errorf("Test error message with format: %s", "Test")
 			},
 		},
+		{
+			name:   "Test SlogLogger Debug",
+			logger: &logging.SlogLogger{Logger: slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{}))},
+			logFunc: func(l logging.Logger) {
+				l.Debug("Test debug message")
+			},
+			errFunc: func(l logging.Logger) {
+				l.Debugf("Test debug message with format: %s", "Test")
+			},
+		},
+		{
+			name:   "Test SlogPlainLogger Debug",
+			logger: &logging.SlogPlainLogger{Logger: slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{}))},
+			logFunc: func(l logging.Logger) {
+				l.Debug("Test debug message")
+			},
+			errFunc: func(l logging.Logger) {
+				l.Debugf("Test debug message with format: %s", "Test")
+			},
+		},
 	}
 
 	for _, tc := range tests {

@@ -42,6 +42,9 @@ func ExampleCreateLogFile() {
 	var logger = &logging.ColoredLogger{Info: logInfo, ColorAttribute: color.FgBlue}
 	logger.Println("This is a log message")
 
+	logger.Debug("This is a debug log message")
+	logger.Debugf("This is a formatted debug log message: %s", "Debug details")
+
 	fmt.Printf("log file created at: %s", logInfo.Path)
 
 	// Clean up
