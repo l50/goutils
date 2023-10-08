@@ -12,7 +12,7 @@ require (
 	github.com/go-git/go-git/v5 v5.9.0
 	github.com/magefile/mage v1.15.0
 	github.com/otiai10/copy v1.12.0
-	github.com/samber/slog-multi v1.0.1
+	github.com/samber/slog-multi v1.0.2
 	github.com/spf13/afero v1.10.0
 	github.com/stretchr/testify v1.8.4
 	github.com/tidwall/gjson v1.17.0
