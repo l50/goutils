@@ -11,7 +11,7 @@ require (
 	github.com/glendc/go-external-ip v0.1.0
 	github.com/go-git/go-git/v5 v5.9.0
 	github.com/magefile/mage v1.15.0
-	github.com/otiai10/copy v1.12.0
+	github.com/otiai10/copy v1.14.0
 	github.com/samber/slog-multi v1.0.1
 	github.com/spf13/afero v1.10.0
 	github.com/stretchr/testify v1.8.4
@@ -55,6 +55,7 @@ require (
 	golang.org/x/exp v0.0.0-20230817173708-d852ddb80c63 // indirect
 	golang.org/x/mod v0.12.0 // indirect
 	golang.org/x/net v0.15.0 // indirect
+	golang.org/x/sync v0.3.0 // indirect
 	golang.org/x/sys v0.12.0 // indirect
 	golang.org/x/text v0.13.0 // indirect
 	golang.org/x/tools v0.13.0 // indirect
