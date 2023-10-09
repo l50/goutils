@@ -33,38 +33,16 @@ func TestCreatePackageDocs(t *testing.T) {
 			name: "valid template path",
 			repo: repo,
 			setupFs: func() afero.Fs {
-				baseFs := afero.NewOsFs()
-				templatePath, err := afero.TempDir(baseFs, "", "testDocs")
-				if err != nil {
-					t.Fatal(err)
+				fs, templatePath := initBaseFs(t)
+				initCommonDirs(fs, templatePath)
+
+				filesToCopy := []string{
+					"magefiles/go.mod", "magefiles/go.mod",
+					"magefiles/go.sum", "magefiles/go.sum",
+					"magefiles/magefile.go", "magefiles/magefile.go",
+					"magefiles/tmpl/README.md.tmpl", "magefiles/tmpl/README.md.tmpl",
 				}
-				fs := afero.NewBasePathFs(baseFs, templatePath)
-
-				// Create magefiles and tmpl directories in in-memory FS
-				_ = fs.MkdirAll(filepath.Join("magefiles", "tmpl"), 0755)
-				// Write template file to in-memory FS
-				_ = afero.WriteFile(fs, templatePath, []byte("{{.PackageName}}"), 0644)
-
-				repoRoot, err := git.RepoRoot()
-				if err != nil {
-					t.Fatal(err)
-				}
-
-				if err := copyFileToMockFs(afero.NewOsFs(), fs, filepath.Join(repoRoot, "magefiles", "go.mod"), filepath.Join("magefiles", "go.mod")); err != nil {
-					t.Fatal(err)
-				}
-
-				if err := copyFileToMockFs(afero.NewOsFs(), fs, filepath.Join(repoRoot, "magefiles", "go.sum"), filepath.Join("magefiles", "go.sum")); err != nil {
-					t.Fatal(err)
-				}
-
-				// Here, we're copying the real magefile.go into the mock filesystem.
-				if err := copyFileToMockFs(afero.NewOsFs(), fs, filepath.Join(repoRoot, "magefiles", "magefile.go"), filepath.Join("magefiles", "magefile.go")); err != nil {
-					t.Fatal(err)
-				}
-
-				// Here, we're copying the real README.md.tmpl into the mock filesystem.
-				if err := copyFileToMockFs(afero.NewOsFs(), fs, filepath.Join(repoRoot, "magefiles", "tmpl", "README.md.tmpl"), filepath.Join("magefiles", "tmpl", "README.md.tmpl")); err != nil {
+				if err := copyFilesToFs(fs, filesToCopy...); err != nil {
 					t.Fatal(err)
 				}
 
@@ -85,25 +63,13 @@ func TestCreatePackageDocs(t *testing.T) {
 			name: "invalid template path",
 			repo: repo,
 			setupFs: func() afero.Fs {
-				baseFs := afero.NewOsFs()
-				tempDir, err := afero.TempDir(baseFs, "", "testDocs")
-				if err != nil {
-					t.Fatal(err)
+				fs, templatePath := initBaseFs(t)
+				initCommonDirs(fs, templatePath)
+
+				filesToCopy := []string{
+					"magefiles/tmpl/README.md.tmpl", "magefiles/tmpl/README.md.tmpl",
 				}
-				fs := afero.NewBasePathFs(baseFs, tempDir)
-
-				// Create magefiles and tmpl directories in in-memory FS
-				_ = fs.MkdirAll(filepath.Join("magefiles", "tmpl"), 0755)
-				// Write template file to in-memory FS
-				_ = afero.WriteFile(fs, templatePath, []byte("{{.PackageName}}"), 0644)
-
-				repoRoot, err := git.RepoRoot()
-				if err != nil {
-					t.Fatal(err)
-				}
-
-				// Here, we're copying the real magefile.go into the mock filesystem.
-				if err := copyFileToMockFs(afero.NewOsFs(), fs, filepath.Join(repoRoot, "magefiles", "tmpl", "README.md.tmpl"), filepath.Join("magefiles", "tmpl", "README.md.tmpl")); err != nil {
+				if err := copyFilesToFs(fs, filesToCopy...); err != nil {
 					t.Fatal(err)
 				}
 
@@ -158,27 +124,16 @@ func TestCreatePackageDocs(t *testing.T) {
 			name: "magefiles directory with main package",
 			repo: repo,
 			setupFs: func() afero.Fs {
-				baseFs := afero.NewOsFs()
-				tempDir, err := afero.TempDir(baseFs, "", "testDocs")
-				if err != nil {
-					t.Fatal(err)
-				}
-				fs := afero.NewBasePathFs(baseFs, tempDir)
+				fs, templatePath := initBaseFs(t)
+				initCommonDirs(fs, templatePath)
 
-				// Create magefiles and tmpl directories in in-memory FS
-				_ = fs.MkdirAll(filepath.Join("magefiles", "tmpl"), 0755)
-				// Write template file to in-memory FS
-				_ = afero.WriteFile(fs, templatePath, []byte("{{.PackageName}}"), 0644)
 				// Mock README.md.tmpl content
 				_ = afero.WriteFile(fs, filepath.Join("magefiles", "tmpl", "README.md.tmpl"), []byte("mock README.md.tmpl content"), 0644)
 
-				repoRoot, err := git.RepoRoot()
-				if err != nil {
-					t.Fatal(err)
+				filesToCopy := []string{
+					"magefiles/magefile.go", "magefiles/magefile.go",
 				}
-
-				// Here, we're copying the real magefile.go into the mock filesystem.
-				if err := copyFileToMockFs(afero.NewOsFs(), fs, filepath.Join(repoRoot, "magefiles", "magefile.go"), filepath.Join("magefiles", "magefile.go")); err != nil {
+				if err := copyFilesToFs(fs, filesToCopy...); err != nil {
 					t.Fatal(err)
 				}
 
@@ -193,7 +148,6 @@ func TestCreatePackageDocs(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			fs := tc.setupFs()
-			printFs(fs, ".", "")
 
 			// Check directory explicitly:
 			dirExists, _ := afero.DirExists(fs, "magefiles")
@@ -215,13 +169,34 @@ func TestCreatePackageDocs(t *testing.T) {
 	}
 }
 
-func printFs(fs afero.Fs, dir string, indent string) {
-	entries, _ := afero.ReadDir(fs, dir)
-	for _, entry := range entries {
-		if entry.IsDir() {
-			printFs(fs, filepath.Join(dir, entry.Name()), indent+"  ")
+func initBaseFs(t *testing.T) (afero.Fs, string) {
+	baseFs := afero.NewOsFs()
+	templatePath, err := afero.TempDir(baseFs, "", "testDocs")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return afero.NewBasePathFs(baseFs, templatePath), templatePath
+}
+
+func initCommonDirs(fs afero.Fs, path string) {
+	_ = fs.MkdirAll(filepath.Join("magefiles", "tmpl"), 0755)
+	_ = afero.WriteFile(fs, path, []byte("{{.PackageName}}"), 0644)
+}
+
+func copyFilesToFs(fs afero.Fs, files ...string) error {
+	repoRoot, err := git.RepoRoot()
+	if err != nil {
+		return err
+	}
+	for i := 0; i < len(files); i += 2 {
+		src := filepath.Join(repoRoot, files[i])
+		dest := files[i+1]
+		if err := copyFileToMockFs(afero.NewOsFs(), fs, src, dest); err != nil {
+			return err
 		}
 	}
+	return nil
 }
 
 func copyFileToMockFs(srcFs afero.Fs, destFs afero.Fs, srcPath, destPath string) error {
