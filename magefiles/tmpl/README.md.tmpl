@@ -1,8 +1,10 @@
 # goutils/v2/{{.PackageName}}
 
-The `{{.PackageName}}` package is a collection of utility functions
+{{if ne .PackageName "magefiles"}}The `{{.PackageName}}` package is a collection of utility functions
 designed to simplify common {{.PackageName}} tasks.
-
+{{else}}
+`{{.PackageName}}` provide utilities that would normally be managed
+and executed with a `Makefile`.{{end}}
 Table of contents:
 
 - [Functions](#functions){{if ne .PackageName "magefiles"}}
@@ -55,8 +57,8 @@ command to execute the tests for `goutils/v2/{{.PackageName}}`:
 ```bash
 go test -v
 ```
-{{end}}
----
+
+---{{end}}
 
 ## Contributing
 

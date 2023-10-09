@@ -1,7 +1,6 @@
 package docs_test
 
 import (
-	"fmt"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -41,7 +40,6 @@ func TestCreatePackageDocs(t *testing.T) {
 				}
 				fs := afero.NewBasePathFs(baseFs, templatePath)
 
-				t.Log("templatePath: ", templatePath)
 				// Create magefiles and tmpl directories in in-memory FS
 				_ = fs.MkdirAll(filepath.Join("magefiles", "tmpl"), 0755)
 				// Write template file to in-memory FS
@@ -220,7 +218,6 @@ func TestCreatePackageDocs(t *testing.T) {
 func printFs(fs afero.Fs, dir string, indent string) {
 	entries, _ := afero.ReadDir(fs, dir)
 	for _, entry := range entries {
-		fmt.Printf("%s%s\n", indent, entry.Name())
 		if entry.IsDir() {
 			printFs(fs, filepath.Join(dir, entry.Name()), indent+"  ")
 		}

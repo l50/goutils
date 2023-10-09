@@ -1,8 +1,8 @@
 # goutils/v2/magefiles
 
-The `magefiles` package is a collection of utility functions
-designed to simplify common magefiles tasks.
 
+`magefiles` provide utilities that would normally be managed
+and executed with a `Makefile`.
 Table of contents:
 
 - [Functions](#functions)
@@ -155,7 +155,6 @@ error: an error if one occurred
 
 ---
 
----
 
 ## Contributing
 

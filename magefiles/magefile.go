@@ -85,8 +85,6 @@ func GeneratePackageDocs() error {
 		return fmt.Errorf("failed to create package docs: %v", err)
 	}
 
-	fmt.Println("Package docs created.")
-
 	return nil
 }
 
