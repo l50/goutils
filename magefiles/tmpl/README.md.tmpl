@@ -1,14 +1,15 @@
 # goutils/v2/{{.PackageName}}
 
-The `{{.PackageName}}` package is a collection of utility functions
+{{if ne .PackageName "magefiles"}}The `{{.PackageName}}` package is a collection of utility functions
 designed to simplify common {{.PackageName}} tasks.
-
+{{else}}`{{.PackageName}}` provides utilities that would normally be managed
+and executed with a `Makefile`.{{end}}
 Table of contents:
 
-- [Functions](#functions)
+- [Functions](#functions){{if ne .PackageName "magefiles"}}
 - [Installation](#installation)
 - [Usage](#usage)
-- [Tests](#tests)
+- [Tests](#tests){{end}}
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -24,7 +25,7 @@ Table of contents:
 
 {{.Description}}
 ---
-{{end}}
+{{end}}{{if ne .PackageName "magefiles"}}
 ## Installation
 
 To use the goutils/v2/{{.PackageName}} package, you first need to install it.
@@ -57,7 +58,7 @@ go test -v
 ```
 
 ---
-
+{{end}}
 ## Contributing
 
 Pull requests are welcome. For major changes,

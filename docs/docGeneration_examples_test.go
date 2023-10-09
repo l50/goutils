@@ -2,6 +2,7 @@ package docs_test
 
 import (
 	"fmt"
+	"path/filepath"
 
 	"github.com/l50/goutils/v2/docs"
 	"github.com/spf13/afero"
@@ -18,7 +19,7 @@ func ExampleCreatePackageDocs() {
 	}
 
 	// Set the path to the template file
-	templatePath := "dev/mage/templates/README.md.tmpl"
+	templatePath := filepath.Join("dev", "mage", "templates", "README.md.tmpl")
 
 	// Set the packages to exclude (optional)
 	excludedPkgs := []string{"excludedPkg1", "excludedPkg2"}

@@ -1,10 +1,10 @@
 //go:build mage
+// +build mage
 
 package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 
@@ -23,7 +23,19 @@ func init() {
 	os.Setenv("GO111MODULE", "on")
 }
 
-// InstallDeps Installs go dependencies
+// InstallDeps installs the Go dependencies necessary for developing
+// on the project.
+//
+// Example usage:
+//
+// ```go
+// mage installdeps
+// ```
+//
+// **Returns:**
+//
+// error: An error if any issue occurs while trying to
+// install the dependencies.
 func InstallDeps() error {
 	fmt.Println("Installing dependencies.")
 
@@ -42,24 +54,18 @@ func InstallDeps() error {
 	return nil
 }
 
-// FindExportedFuncsWithoutTests finds exported functions without tests
-func FindExportedFuncsWithoutTests(pkg string) ([]string, error) {
-	funcs, err := mageutils.FindExportedFuncsWithoutTests(os.Args[1])
-
-	if err != nil {
-		log.Fatalf("failed to find exported functions without tests: %v", err)
-	}
-
-	for _, funcName := range funcs {
-		fmt.Println(funcName)
-	}
-
-	return funcs, nil
-
-}
-
-// GeneratePackageDocs generates package documentation
-// for packages in the current directory and its subdirectories.
+// GeneratePackageDocs creates documentation for the various packages
+// in the project.
+//
+// Example usage:
+//
+// ```go
+// mage generatepackagedocs
+// ```
+//
+// **Returns:**
+//
+// error: An error if any issue occurs during documentation generation.
 func GeneratePackageDocs() error {
 	fs := afero.NewOsFs()
 
@@ -74,17 +80,31 @@ func GeneratePackageDocs() error {
 		Name:  "goutils/v2",
 	}
 
-	template := filepath.Join(repoRoot, "magefiles", "tmpl", "README.md.tmpl")
-	if err := docs.CreatePackageDocs(fs, repo, template); err != nil {
+	templatePath := filepath.Join("magefiles", "tmpl", "README.md.tmpl")
+	if err := docs.CreatePackageDocs(fs, repo, templatePath); err != nil {
 		return fmt.Errorf("failed to create package docs: %v", err)
 	}
-
-	fmt.Println("Package docs created.")
 
 	return nil
 }
 
-// RunPreCommit runs all pre-commit hooks locally
+// RunPreCommit updates, clears, and executes all pre-commit hooks
+// locally. The function follows a three-step process:
+//
+// First, it updates the pre-commit hooks.
+// Next, it clears the pre-commit cache to ensure a clean environment.
+// Lastly, it executes all pre-commit hooks locally.
+//
+// Example usage:
+//
+// ```go
+// mage runprecommit
+// ```
+//
+// **Returns:**
+//
+// error: An error if any issue occurs at any of the three stages
+// of the process.
 func RunPreCommit() error {
 	fmt.Println("Updating pre-commit hooks.")
 	if err := lint.UpdatePCHooks(); err != nil {
@@ -104,7 +124,17 @@ func RunPreCommit() error {
 	return nil
 }
 
-// RunTests runs all of the unit tests
+// RunTests executes all unit tests.
+//
+// Example usage:
+//
+// ```go
+// mage runtests
+// ```
+//
+// **Returns:**
+//
+// error: An error if any issue occurs while running the tests.
 func RunTests() error {
 	mg.Deps(InstallDeps)
 
@@ -116,7 +146,22 @@ func RunTests() error {
 	return nil
 }
 
-// UpdateMirror updates pkg.go.dev with the release associated with the input tag
+// UpdateMirror updates pkg.go.dev with the release associated with the
+// input tag
+//
+// Example usage:
+//
+// ```go
+// mage updatemirror v2.0.1
+// ```
+//
+// **Parameters:**
+//
+// tag: the tag to update pkg.go.dev with
+//
+// **Returns:**
+//
+// error: An error if any issue occurs while updating pkg.go.dev
 func UpdateMirror(tag string) error {
 	var err error
 	fmt.Printf("Updating pkg.go.dev with the new tag %s.", tag)
@@ -138,42 +183,24 @@ func UpdateMirror(tag string) error {
 	return nil
 }
 
-// UpdateDocs updates the package documentation
-// for packages in the current directory and its subdirectories.
-func UpdateDocs() error {
-	repo := docs.Repo{
-		Owner: "l50",
-		Name:  "goutils/v2",
-	}
-
-	fs := afero.NewOsFs()
-
-	templatePath := filepath.Join("magefiles", "tmpl", "README.md.tmpl")
-
-	if err := docs.CreatePackageDocs(fs, repo, templatePath); err != nil {
-		return fmt.Errorf("failed to update docs: %v", err)
-	}
-
-	return nil
-}
-
 // UseFixCodeBlocks fixes code blocks for the input filepath
 // using the input language.
+//
+// Example usage:
+//
+// ```go
+// mage fixcodeblocks docs/docGeneration.go go
+// ```
 //
 // **Parameters:**
 //
 // filepath: the path to the file or directory to fix
+//
 // language: the language of the code blocks to fix
 //
 // **Returns:**
 //
 // error: an error if one occurred
-//
-// Example:
-//
-// ```go
-// mage fixcodeblocks docs/docGeneration.go go
-// ```
 func UseFixCodeBlocks(filepath string, language string) error {
 	file := fileutils.RealFile(filepath)
 
