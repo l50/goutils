@@ -3,7 +3,9 @@
 The `str` package is a collection of utility functions
 designed to simplify common str tasks.
 
-Table of contents:
+---
+
+## Table of contents
 
 - [Functions](#functions)
 - [Installation](#installation)

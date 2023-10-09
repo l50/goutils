@@ -3,7 +3,9 @@
 The `macos` package is a collection of utility functions
 designed to simplify common macos tasks.
 
-Table of contents:
+---
+
+## Table of contents
 
 - [Functions](#functions)
 - [Installation](#installation)

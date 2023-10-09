@@ -3,7 +3,9 @@
 The `keeper` package is a collection of utility functions
 designed to simplify common keeper tasks.
 
-Table of contents:
+---
+
+## Table of contents
 
 - [Functions](#functions)
 - [Installation](#installation)

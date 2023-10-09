@@ -3,7 +3,9 @@
 The `docs` package is a collection of utility functions
 designed to simplify common docs tasks.
 
-Table of contents:
+---
+
+## Table of contents
 
 - [Functions](#functions)
 - [Installation](#installation)

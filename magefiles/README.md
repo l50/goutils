@@ -1,8 +1,12 @@
 # goutils/v2/magefiles
 
 `magefiles` provides utilities that would normally be managed
-and executed with a `Makefile`.
-Table of contents:
+and executed with a `Makefile`. Instead of being written in the make language,
+magefiles are crafted in Go and leverage the [Mage](https://magefile.org/) library.
+
+---
+
+## Table of contents
 
 - [Functions](#functions)
 - [Contributing](#contributing)
