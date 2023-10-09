@@ -2,8 +2,7 @@
 
 {{if ne .PackageName "magefiles"}}The `{{.PackageName}}` package is a collection of utility functions
 designed to simplify common {{.PackageName}} tasks.
-{{else}}
-`{{.PackageName}}` provide utilities that would normally be managed
+{{else}}`{{.PackageName}}` provides utilities that would normally be managed
 and executed with a `Makefile`.{{end}}
 Table of contents:
 
@@ -58,8 +57,8 @@ command to execute the tests for `goutils/v2/{{.PackageName}}`:
 go test -v
 ```
 
----{{end}}
-
+---
+{{end}}
 ## Contributing
 
 Pull requests are welcome. For major changes,

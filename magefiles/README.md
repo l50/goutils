@@ -1,7 +1,6 @@
 # goutils/v2/magefiles
 
-
-`magefiles` provide utilities that would normally be managed
+`magefiles` provides utilities that would normally be managed
 and executed with a `Makefile`.
 Table of contents:
 
@@ -65,10 +64,9 @@ RunPreCommit() error
 RunPreCommit updates, clears, and executes all pre-commit hooks
 locally. The function follows a three-step process:
 
- 1. Updates the pre-commit hooks using lint.UpdatePCHooks.
- 2. Clears the pre-commit cache with lint.ClearPCCache to ensure
-    a clean environment.
- 3. Executes all pre-commit hooks locally using lint.RunPCHooks.
+First, it updates the pre-commit hooks.
+Next, it clears the pre-commit cache to ensure a clean environment.
+Lastly, it executes all pre-commit hooks locally.
 
 Example usage:
 
@@ -154,7 +152,6 @@ language: the language of the code blocks to fix
 error: an error if one occurred
 
 ---
-
 
 ## Contributing
 

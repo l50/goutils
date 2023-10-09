@@ -392,7 +392,6 @@ func createFunctionDoc(fset *token.FileSet, fn *ast.FuncDecl) (FunctionDoc, erro
 
 	// Extract receiver (struct) name
 	if fn.Recv != nil && len(fn.Recv.List) > 0 {
-		// The receiver expression is of type *ast.StarExpr when it's a pointer
 		if se, ok := fn.Recv.List[0].Type.(*ast.StarExpr); ok {
 			structName = fmt.Sprintf("%s.", se.X)
 		} else {
