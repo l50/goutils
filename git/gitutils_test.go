@@ -442,7 +442,7 @@ func TestPullRepos(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 
-			defer cleanup()
+			defer cleanup(t)
 			filename, err := str.GenRandom(10)
 			require.NoError(t, err)
 
@@ -605,10 +605,9 @@ func commitChangesInRepo(t *testing.T, repoDir string, commitMsg string) error {
 	return nil
 }
 
-func cleanup() {
-	err := os.RemoveAll(testRepoPath)
-	if err != nil {
-		panic(err)
+func cleanup(t *testing.T) {
+	if err := os.RemoveAll(testRepoPath); err != nil {
+		t.Fatalf("failed to remove temporary directory: %v", err)
 	}
 }
 
