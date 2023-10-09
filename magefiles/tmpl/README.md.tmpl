@@ -5,10 +5,10 @@ designed to simplify common {{.PackageName}} tasks.
 
 Table of contents:
 
-- [Functions](#functions)
+- [Functions](#functions){{if ne .PackageName "magefiles"}}
 - [Installation](#installation)
 - [Usage](#usage)
-- [Tests](#tests)
+- [Tests](#tests){{end}}
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -24,7 +24,7 @@ Table of contents:
 
 {{.Description}}
 ---
-{{end}}
+{{end}}{{if ne .PackageName "magefiles"}}
 ## Installation
 
 To use the goutils/v2/{{.PackageName}} package, you first need to install it.
@@ -55,7 +55,7 @@ command to execute the tests for `goutils/v2/{{.PackageName}}`:
 ```bash
 go test -v
 ```
-
+{{end}}
 ---
 
 ## Contributing

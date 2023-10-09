@@ -26,6 +26,12 @@ func init() {
 // InstallDeps installs the Go dependencies necessary for developing
 // on the project.
 //
+// Example usage:
+//
+// ```go
+// mage installdeps
+// ```
+//
 // **Returns:**
 //
 // error: An error if any issue occurs while trying to
@@ -51,6 +57,12 @@ func InstallDeps() error {
 // GeneratePackageDocs creates documentation for the various packages
 // in the project.
 //
+// Example usage:
+//
+// ```go
+// mage generatepackagedocs
+// ```
+//
 // **Returns:**
 //
 // error: An error if any issue occurs during documentation generation.
@@ -68,8 +80,8 @@ func GeneratePackageDocs() error {
 		Name:  "goutils/v2",
 	}
 
-	template := filepath.Join(repoRoot, "magefiles", "tmpl", "README.md.tmpl")
-	if err := docs.CreatePackageDocs(fs, repo, template); err != nil {
+	templatePath := filepath.Join("magefiles", "tmpl", "README.md.tmpl")
+	if err := docs.CreatePackageDocs(fs, repo, templatePath); err != nil {
 		return fmt.Errorf("failed to create package docs: %v", err)
 	}
 
@@ -85,6 +97,12 @@ func GeneratePackageDocs() error {
 //  2. Clears the pre-commit cache with lint.ClearPCCache to ensure
 //     a clean environment.
 //  3. Executes all pre-commit hooks locally using lint.RunPCHooks.
+//
+// Example usage:
+//
+// ```go
+// mage runprecommit
+// ```
 //
 // **Returns:**
 //
@@ -111,6 +129,12 @@ func RunPreCommit() error {
 
 // RunTests executes all unit tests.
 //
+// Example usage:
+//
+// ```go
+// mage runtests
+// ```
+//
 // **Returns:**
 //
 // error: An error if any issue occurs while running the tests.
@@ -127,6 +151,12 @@ func RunTests() error {
 
 // UpdateMirror updates pkg.go.dev with the release associated with the
 // input tag
+//
+// Example usage:
+//
+// ```go
+// mage updatemirror v2.0.1
+// ```
 //
 // **Parameters:**
 //
@@ -159,6 +189,12 @@ func UpdateMirror(tag string) error {
 // UseFixCodeBlocks fixes code blocks for the input filepath
 // using the input language.
 //
+// Example usage:
+//
+// ```go
+// mage fixcodeblocks docs/docGeneration.go go
+// ```
+//
 // **Parameters:**
 //
 // filepath: the path to the file or directory to fix
@@ -168,12 +204,6 @@ func UpdateMirror(tag string) error {
 // **Returns:**
 //
 // error: an error if one occurred
-//
-// Example:
-//
-// ```go
-// mage fixcodeblocks docs/docGeneration.go go
-// ```
 func UseFixCodeBlocks(filepath string, language string) error {
 	file := fileutils.RealFile(filepath)
 
