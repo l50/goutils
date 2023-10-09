@@ -1,17 +1,17 @@
 package macos_test
 
 import (
-	"os"
 	"os/exec"
 	"testing"
 
 	"github.com/l50/goutils/v2/macos"
+	"github.com/l50/goutils/v2/sys"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestInstallBrewDeps(t *testing.T) {
 	// make sure brew is installed
-	if _, err := os.Stat("/usr/local/bin/brew"); err != nil {
+	if exists := sys.CmdExists("brew"); exists != true {
 		t.Skip("Skipping test, brew is not installed")
 	}
 
@@ -46,7 +46,7 @@ func TestInstallBrewDeps(t *testing.T) {
 
 func TestInstallBrewTFDeps(t *testing.T) {
 	// make sure brew is installed
-	if _, err := os.Stat("/usr/local/bin/brew"); err != nil {
+	if exists := sys.CmdExists("brew"); exists != true {
 		t.Skip("Skipping test, brew is not installed")
 	}
 
