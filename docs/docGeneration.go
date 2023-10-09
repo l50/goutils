@@ -98,6 +98,8 @@ func CreatePackageDocs(fs afero.Fs, repo Repo, templatePath string, excludedPack
 		excludedPackagesMap[pkg] = struct{}{}
 	}
 
+	printFs(fs, ".", "")
+
 	exists, err := afero.Exists(fs, templatePath)
 	if err != nil {
 		return fmt.Errorf("error checking if template file exists: %w", err)
@@ -111,6 +113,8 @@ func CreatePackageDocs(fs afero.Fs, repo Repo, templatePath string, excludedPack
 		return fmt.Errorf("error walking directories: %w", err)
 	}
 
+	printFs(fs, ".", "")
+	fmt.Println("Package docs created.")
 	return nil
 }
 
@@ -148,6 +152,8 @@ func generateReadmeFromTemplate(fs afero.Fs, pkgDoc *PackageDoc, path string, te
 		return fmt.Errorf("template file does not exist")
 	}
 
+	fmt.Printf("[DEBUG] Using template at path: %s\n", templatePath)
+
 	// Open the template file
 	templateFile, err := fs.Open(templatePath)
 	if err != nil {
@@ -166,6 +172,8 @@ func generateReadmeFromTemplate(fs afero.Fs, pkgDoc *PackageDoc, path string, te
 	if err != nil {
 		return err
 	}
+	fmt.Println("[DEBUG] Template parsed successfully.")
+	fmt.Println("[DEBUG] Template processed for:", path)
 
 	// Open the output file
 	out, err := fs.Create(path)
@@ -181,6 +189,8 @@ func generateReadmeFromTemplate(fs afero.Fs, pkgDoc *PackageDoc, path string, te
 		return err
 	}
 
+	fmt.Printf("[DEBUG] PackageDoc for %s: %+v\n", path, pkgDoc)
+
 	// Replace &#34; with "
 	readmeContent := strings.ReplaceAll(buf.String(), "&#34;", "\"")
 
@@ -191,6 +201,11 @@ func generateReadmeFromTemplate(fs afero.Fs, pkgDoc *PackageDoc, path string, te
 	if _, err := out.WriteString(readmeContent); err != nil {
 		return err
 	}
+
+	fmt.Println("[DEBUG] README generated for:", path)
+
+	fmt.Println("[DEBUG] Contents after generating README:")
+	printFs(fs, ".", "")
 
 	return nil
 }
@@ -203,7 +218,8 @@ func loadIgnoreList(fs afero.Fs, ignoreFilePath string) (map[string]struct{}, er
 		if os.IsNotExist(err) {
 			return ignoreList, nil // If the ignore file doesn't exist, just return the empty list.
 		}
-		return nil, err
+		// Let's not return the error if the file doesn't exist, instead, handle it gracefully.
+		return ignoreList, nil
 	}
 	defer ignoreFile.Close()
 
@@ -223,38 +239,48 @@ func loadIgnoreList(fs afero.Fs, ignoreFilePath string) (map[string]struct{}, er
 
 func handleDirectory(fs afero.Fs, repo Repo, templatePath string, excludedPackagesMap map[string]struct{}) filepath.WalkFunc {
 	return func(path string, info os.FileInfo, err error) error {
+		fmt.Println("[DEBUG] Handling directory:", path)
+
+		// General error handling
 		if err != nil {
 			return err
 		}
 
+		// If it's not a directory, we just skip it
 		if !info.IsDir() {
 			return nil
 		}
 
+		// Load the ignore list
 		ignoreList, err := loadIgnoreList(fs, ".docgenignore")
 		if err != nil {
 			return fmt.Errorf("error loading ignore list: %w", err)
 		}
 
+		// Check if the current path is in the ignore list
 		_, ignored := ignoreList[filepath.Clean(path)]
 		if ignored {
 			return filepath.SkipDir
 		}
 
+		// Check if directory contains Go files
 		hasGoFiles, err := directoryContainsGoFiles(fs, path)
 		if err != nil {
 			return err
 		}
 
+		// If the directory does not have Go files, skip it
 		if !hasGoFiles {
 			return nil
 		}
 
+		// Process Go files in the directory
 		return processGoFiles(fs, path, repo, templatePath, excludedPackagesMap)
 	}
 }
 
 func directoryContainsGoFiles(fs afero.Fs, path string) (bool, error) {
+
 	entries, err := afero.ReadDir(fs, path)
 	if err != nil {
 		return false, err
@@ -264,11 +290,18 @@ func directoryContainsGoFiles(fs afero.Fs, path string) (bool, error) {
 		if entry.IsDir() {
 			continue
 		}
-		if strings.HasSuffix(entry.Name(), ".go") &&
-			!strings.HasSuffix(entry.Name(), "_test.go") &&
-			!strings.HasSuffix(entry.Name(), "magefile.go") {
+
+		hasGoFile := strings.HasSuffix(entry.Name(), ".go")
+		// hasTestFile := strings.HasSuffix(entry.Name(), "_test.go")
+		// isTmpl := strings.HasSuffix(entry.Name(), ".tmpl")
+
+		fmt.Println("[DEBUG] Directory has Go files:", path, hasGoFile)
+		// Check if the file is a regular Go file (excluding test files and templates)
+		if hasGoFile {
+			// if isGoFile && !isTestFile && !isTmpl {
 			return true, nil
 		}
+
 	}
 
 	return false, nil
@@ -276,17 +309,49 @@ func directoryContainsGoFiles(fs afero.Fs, path string) (bool, error) {
 
 func processGoFiles(fs afero.Fs, path string, repo Repo, templatePath string, excludedPackagesMap map[string]struct{}) error {
 	fset := token.NewFileSet()
-	pkgs, err := parser.ParseDir(fset, path, nonTestFilter, parser.ParseComments)
+	fmt.Println("Trying to parse directory:", path)
+
+	files, _ := afero.ReadDir(fs, path)
+	for _, file := range files {
+		fmt.Println("File inside directory:", file.Name())
+	}
+
+	printFs(fs, ".", "")
+
+	// 1. Create a temporary directory
+	tempDir, err := os.MkdirTemp("", "parserTemp")
+	if err != nil {
+		return err
+	}
+	defer os.RemoveAll(tempDir) // Ensure cleanup
+
+	// 2. Copy files from afero to the temporary directory
+	aferoFiles, _ := afero.ReadDir(fs, path)
+	for _, file := range aferoFiles {
+		data, _ := afero.ReadFile(fs, filepath.Join(path, file.Name()))
+		if err := os.WriteFile(filepath.Join(tempDir, file.Name()), data, file.Mode()); err != nil {
+			return err
+		}
+	}
+
+	// 3. Point the parser to the temporary directory
+	pkgs, err := parser.ParseDir(fset, tempDir, nonTestFilter, parser.ParseComments)
 	if err != nil {
 		return err
 	}
 
 	for _, pkg := range pkgs {
+		fmt.Println("[DEBUG] Package Name before:", pkg.Name)
+
+		if filepath.Base(path) == "magefiles" && pkg.Name == "main" {
+			pkg.Name = "magefiles" // Magefiles are treated as a separate package for documentation
+		}
+		fmt.Println("[DEBUG] Package Name after:", pkg.Name)
+
 		// check if the package name is in the excluded packages list
 		if _, exists := excludedPackagesMap[pkg.Name]; exists {
 			continue // skip this package
 		}
-
 		err := generateReadmeForPackage(fs, path, fset, pkg, repo, templatePath)
 		if err != nil {
 			return err
@@ -301,6 +366,8 @@ func nonTestFilter(info os.FileInfo) bool {
 }
 
 func generateReadmeForPackage(fs afero.Fs, path string, fset *token.FileSet, pkg *ast.Package, repo Repo, templatePath string) error {
+	fmt.Println("Generating README for:", path) // Add this
+
 	pkgDoc := &PackageDoc{
 		PackageName: pkg.Name,
 		GoGetPath:   fmt.Sprintf("github.com/%s/%s/%s", repo.Owner, repo.Name, pkg.Name),
@@ -318,6 +385,10 @@ func generateReadmeForPackage(fs afero.Fs, path string, fset *token.FileSet, pkg
 	sort.Slice(pkgDoc.Functions, func(i, j int) bool {
 		return pkgDoc.Functions[i].Name < pkgDoc.Functions[j].Name
 	})
+
+	fmt.Println("Template Path:", templatePath)
+
+	fmt.Printf("[DEBUG] Path to generate README.md: %s\n", filepath.Join(path, "README.md"))
 
 	return generateReadmeFromTemplate(fs, pkgDoc, filepath.Join(path, "README.md"), templatePath)
 
@@ -345,11 +416,19 @@ func processFileDeclarations(fset *token.FileSet, pkgDoc *PackageDoc, file *ast.
 
 func createFunctionDoc(fset *token.FileSet, fn *ast.FuncDecl) (FunctionDoc, error) {
 	var params, results, structName string
+	var err error
 	if fn.Type.Params != nil {
-		params = formatNode(fset, fn.Type.Params)
+		params, err = formatNode(fset, fn.Type.Params)
+		if err != nil {
+			return FunctionDoc{}, fmt.Errorf("error formatting function parameters: %w", err)
+		}
+
 	}
 	if fn.Type.Results != nil {
-		results = formatNode(fset, fn.Type.Results)
+		results, err = formatNode(fset, fn.Type.Results)
+		if err != nil {
+			return FunctionDoc{}, fmt.Errorf("error formatting function results: %w", err)
+		}
 	}
 
 	// Extract receiver (struct) name
@@ -392,27 +471,45 @@ func splitLongSignature(signature string, maxLineLength int) string {
 	return strings.Join(parts, "")
 }
 
-func formatNode(fset *token.FileSet, node interface{}) string {
+func formatNode(fset *token.FileSet, node interface{}) (string, error) {
 	switch n := node.(type) {
 	case *ast.FieldList:
-		return fieldListString(fset, n)
+		outStr, err := fieldListString(fset, n)
+		if err != nil {
+			return "", err
+		}
+		return outStr, nil
 	default:
 		var buf bytes.Buffer
 		err := printer.Fprint(&buf, fset, node)
 		if err != nil {
-			return fmt.Sprintf("error printing syntax tree: %v", err)
+			return "", fmt.Errorf("error printing syntax tree: %w", err)
 		}
-		return buf.String()
+		return buf.String(), nil
 	}
 }
 
-func fieldListString(fset *token.FileSet, fieldList *ast.FieldList) string {
+func fieldListString(fset *token.FileSet, fieldList *ast.FieldList) (string, error) {
 	var buf strings.Builder
 	for i, field := range fieldList.List {
 		if i > 0 {
 			buf.WriteString(", ")
 		}
-		buf.WriteString(formatNode(fset, field.Type))
+		fieldString, err := formatNode(fset, field.Type)
+		if err != nil {
+			return "", err
+		}
+		buf.WriteString(fieldString)
 	}
-	return buf.String()
+	return buf.String(), nil
+}
+
+func printFs(fs afero.Fs, dir string, indent string) {
+	entries, _ := afero.ReadDir(fs, dir)
+	for _, entry := range entries {
+		fmt.Printf("%s%s\n", indent, entry.Name())
+		if entry.IsDir() {
+			printFs(fs, filepath.Join(dir, entry.Name()), indent+"  ")
+		}
+	}
 }

@@ -1,10 +1,10 @@
 //go:build mage
+// +build mage
 
 package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 
@@ -23,7 +23,13 @@ func init() {
 	os.Setenv("GO111MODULE", "on")
 }
 
-// InstallDeps Installs go dependencies
+// InstallDeps installs the Go dependencies necessary for developing
+// on the project.
+//
+// **Returns:**
+//
+// error: An error if any issue occurs while trying to
+// install the dependencies.
 func InstallDeps() error {
 	fmt.Println("Installing dependencies.")
 
@@ -42,24 +48,12 @@ func InstallDeps() error {
 	return nil
 }
 
-// FindExportedFuncsWithoutTests finds exported functions without tests
-func FindExportedFuncsWithoutTests(pkg string) ([]string, error) {
-	funcs, err := mageutils.FindExportedFuncsWithoutTests(os.Args[1])
-
-	if err != nil {
-		log.Fatalf("failed to find exported functions without tests: %v", err)
-	}
-
-	for _, funcName := range funcs {
-		fmt.Println(funcName)
-	}
-
-	return funcs, nil
-
-}
-
-// GeneratePackageDocs generates package documentation
-// for packages in the current directory and its subdirectories.
+// GeneratePackageDocs creates documentation for the various packages
+// in the project.
+//
+// **Returns:**
+//
+// error: An error if any issue occurs during documentation generation.
 func GeneratePackageDocs() error {
 	fs := afero.NewOsFs()
 
@@ -84,7 +78,18 @@ func GeneratePackageDocs() error {
 	return nil
 }
 
-// RunPreCommit runs all pre-commit hooks locally
+// RunPreCommit updates, clears, and executes all pre-commit hooks
+// locally. The function follows a three-step process:
+//
+//  1. Updates the pre-commit hooks using lint.UpdatePCHooks.
+//  2. Clears the pre-commit cache with lint.ClearPCCache to ensure
+//     a clean environment.
+//  3. Executes all pre-commit hooks locally using lint.RunPCHooks.
+//
+// **Returns:**
+//
+// error: An error if any issue occurs at any of the three stages
+// of the process.
 func RunPreCommit() error {
 	fmt.Println("Updating pre-commit hooks.")
 	if err := lint.UpdatePCHooks(); err != nil {
@@ -104,7 +109,11 @@ func RunPreCommit() error {
 	return nil
 }
 
-// RunTests runs all of the unit tests
+// RunTests executes all unit tests.
+//
+// **Returns:**
+//
+// error: An error if any issue occurs while running the tests.
 func RunTests() error {
 	mg.Deps(InstallDeps)
 
@@ -116,7 +125,16 @@ func RunTests() error {
 	return nil
 }
 
-// UpdateMirror updates pkg.go.dev with the release associated with the input tag
+// UpdateMirror updates pkg.go.dev with the release associated with the
+// input tag
+//
+// **Parameters:**
+//
+// tag: the tag to update pkg.go.dev with
+//
+// **Returns:**
+//
+// error: An error if any issue occurs while updating pkg.go.dev
 func UpdateMirror(tag string) error {
 	var err error
 	fmt.Printf("Updating pkg.go.dev with the new tag %s.", tag)
@@ -138,31 +156,13 @@ func UpdateMirror(tag string) error {
 	return nil
 }
 
-// UpdateDocs updates the package documentation
-// for packages in the current directory and its subdirectories.
-func UpdateDocs() error {
-	repo := docs.Repo{
-		Owner: "l50",
-		Name:  "goutils/v2",
-	}
-
-	fs := afero.NewOsFs()
-
-	templatePath := filepath.Join("magefiles", "tmpl", "README.md.tmpl")
-
-	if err := docs.CreatePackageDocs(fs, repo, templatePath); err != nil {
-		return fmt.Errorf("failed to update docs: %v", err)
-	}
-
-	return nil
-}
-
 // UseFixCodeBlocks fixes code blocks for the input filepath
 // using the input language.
 //
 // **Parameters:**
 //
 // filepath: the path to the file or directory to fix
+//
 // language: the language of the code blocks to fix
 //
 // **Returns:**
