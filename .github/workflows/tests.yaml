@@ -11,7 +11,7 @@ env:
 
 jobs:
   tests:
-    name: Run tests - includes pre-commit hooks and determining code coverage %
+    name: Run tests and determine code coverage %
     runs-on: ubuntu-latest
     steps:
       - name: Set up git repository
