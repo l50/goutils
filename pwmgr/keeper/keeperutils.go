@@ -119,7 +119,8 @@ func (k Keeper) AddRecord(fields map[string]string) error {
 }
 
 // RetrieveRecord retrieves a user's Keeper record using the
-// provided unique identifier (uid).
+// provided unique identifier (uid) and returns it as a JSON
+// string.
 //
 // **Parameters:**
 //
@@ -128,7 +129,8 @@ func (k Keeper) AddRecord(fields map[string]string) error {
 //
 // **Returns:**
 //
-// pwmgr.Record: The retrieved Keeper record. This contains the following
+// string: The JSON string representation of the retrieved
+// Keeper record. The JSON string contains the following
 // attributes:
 //
 // - UID: The unique identifier of the record.
@@ -139,29 +141,30 @@ func (k Keeper) AddRecord(fields map[string]string) error {
 // - TOTP: The one-time password (if any) associated with the record.
 // - Note: Any additional notes associated with the record.
 //
-// error: An error if the Keeper record cannot be retrieved.
-func (k Keeper) RetrieveRecord(uid string) (pwmgr.Record, error) {
+// error: An error if the Keeper record cannot be retrieved
+// or if there is an issue converting the record to a JSON string.
+func (k Keeper) RetrieveRecord(uid string) (string, error) {
 	var record pwmgr.Record
 
 	if !k.CommanderInstalled() || !k.LoggedIn() {
-		return record, errors.New("error: ensure keeper commander is installed and a valid keeper session is established")
+		return "", errors.New("error: ensure keeper commander is installed and a valid keeper session is established")
 	}
 
 	configPath, err := configPath()
 	if err != nil {
 		err := errors.New(color.RedString(
 			"failed to retrieve keeper config path"))
-		return record, err
+		return "", err
 	}
 
 	jsonData, err := sys.RunCommand("keeper", "get", uid, "--unmask", "--format", "json", "--config", configPath)
 	if err != nil {
-		return record, err
+		return "", err
 	}
 
 	var r rawRecord
 	if err := json.Unmarshal([]byte(jsonData), &r); err != nil {
-		return record, err
+		return "", err
 	}
 
 	record.UID = r.RecordUID
@@ -183,7 +186,13 @@ func (k Keeper) RetrieveRecord(uid string) (pwmgr.Record, error) {
 		}
 	}
 
-	return record, nil
+	// Convert the record struct to a JSON string
+	jsonRecord, err := json.MarshalIndent(record, "", "  ")
+	if err != nil {
+		return "", err
+	}
+
+	return string(jsonRecord), nil // Return the JSON representation of the record
 }
 
 // SearchRecords searches the user's Keeper records for records

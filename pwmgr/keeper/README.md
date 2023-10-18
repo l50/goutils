@@ -73,11 +73,12 @@ bool: True if the user is logged into their Keeper vault, false otherwise.
 ### Keeper.RetrieveRecord(string)
 
 ```go
-RetrieveRecord(string) pwmgr.Record, error
+RetrieveRecord(string) string, error
 ```
 
 RetrieveRecord retrieves a user's Keeper record using the
-provided unique identifier (uid).
+provided unique identifier (uid) and returns it as a JSON
+string.
 
 **Parameters:**
 
@@ -86,7 +87,8 @@ Keeper record to retrieve.
 
 **Returns:**
 
-pwmgr.Record: The retrieved Keeper record. This contains the following
+string: The JSON string representation of the retrieved
+Keeper record. The JSON string contains the following
 attributes:
 
 - UID: The unique identifier of the record.
@@ -97,7 +99,8 @@ attributes:
 - TOTP: The one-time password (if any) associated with the record.
 - Note: Any additional notes associated with the record.
 
-error: An error if the Keeper record cannot be retrieved.
+error: An error if the Keeper record cannot be retrieved
+or if there is an issue converting the record to a JSON string.
 
 ---
 

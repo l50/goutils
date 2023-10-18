@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"encoding/json"
 	"os"
 	"testing"
 
@@ -56,11 +57,27 @@ func TestRetrieveRecord(t *testing.T) {
 			}
 
 			k := keeper.Keeper{}
-			_, err := k.RetrieveRecord(tc.UID)
+			jsonRecord, err := k.RetrieveRecord(tc.UID)
 			if tc.wantError {
 				assert.Error(t, err, "Expected error but got none.")
 			} else {
 				assert.NoError(t, err, "Did not expect error but got one.")
+
+				// Assert that the returned string is a valid JSON representation of a pwmgr.Record
+				var record pwmgr.Record
+				err := json.Unmarshal([]byte(jsonRecord), &record)
+				assert.NoError(t, err, "Failed to unmarshal returned JSON into a pwmgr.Record")
+
+				if !tc.wantError {
+					// Assert specific attributes of the record
+					assert.Equal(t, "hfLu-IbhTTVhE3DjWsS-Eg", record.UID, "UID mismatch")
+					assert.Equal(t, "TESTRECORD", record.Title, "Title mismatch")
+					assert.Equal(t, "https://evil.com", record.URL, "URL mismatch")
+					assert.Equal(t, "test", record.Username, "Username mismatch")
+					assert.Equal(t, "my test password 123!", record.Password, "Password mismatch")
+					assert.Equal(t, "", record.TOTP, "TOTP mismatch")
+					assert.Equal(t, "", record.Note, "Note mismatch")
+				}
 			}
 		})
 	}
