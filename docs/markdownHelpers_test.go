@@ -74,7 +74,7 @@ if err != nil {
 			}
 
 			// Run the function
-			err = docs.FixCodeBlocks(fileutils.RealFile(tmpfile.Name()), tc.language)
+			err = docs.FixCodeBlocks(tc.language, fileutils.RealFile(tmpfile.Name()))
 
 			// Check the outcome
 			if err != nil {

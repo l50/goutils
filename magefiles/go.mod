@@ -3,7 +3,8 @@ module magefile
 go 1.21
 
 require (
-	github.com/l50/goutils/v2 v2.1.3
+	github.com/fatih/color v1.15.0
+	github.com/l50/goutils/v2 v2.1.4
 	github.com/magefile/mage v1.15.0
 	github.com/spf13/afero v1.10.0
 )
@@ -17,7 +18,6 @@ require (
 	github.com/cloudflare/circl v1.3.3 // indirect
 	github.com/cyphar/filepath-securejoin v0.2.4 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
-	github.com/fatih/color v1.15.0 // indirect
 	github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 // indirect
 	github.com/go-git/go-billy/v5 v5.5.0 // indirect
 	github.com/go-git/go-git/v5 v5.9.0 // indirect
@@ -43,3 +43,5 @@ require (
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	mvdan.cc/sh/v3 v3.6.0 // indirect
 )
+
+replace github.com/l50/goutils/v2 => ../

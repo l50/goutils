@@ -51,10 +51,10 @@ documentation.
 
 ---
 
-### FixCodeBlocks(fileutils.RealFile, string)
+### FixCodeBlocks(string, fileutils.RealFile)
 
 ```go
-FixCodeBlocks(fileutils.RealFile, string) error
+FixCodeBlocks(string, fileutils.RealFile) error
 ```
 
 FixCodeBlocks processes a provided file to ensure that all code

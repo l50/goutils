@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/fatih/color"
 	"github.com/l50/goutils/v2/dev/lint"
 	mageutils "github.com/l50/goutils/v2/dev/mage"
 	"github.com/l50/goutils/v2/docs"
@@ -37,8 +38,7 @@ func init() {
 // error: An error if any issue occurs while trying to
 // install the dependencies.
 func InstallDeps() error {
-
-	fmt.Println("Running go mod tidy on magefiles")
+	fmt.Println(color.YellowString("Running go mod tidy on magefiles and repo root."))
 	cwd := sys.Gwd()
 	if err := sys.Cd("magefiles"); err != nil {
 		return fmt.Errorf("failed to cd into magefiles directory: %v", err)
@@ -52,19 +52,18 @@ func InstallDeps() error {
 		return fmt.Errorf("failed to cd back into repo root: %v", err)
 	}
 
-	fmt.Println("Running go mod tidy")
 	if err := mageutils.Tidy(); err != nil {
 		return fmt.Errorf("failed to install dependencies: %v", err)
 	}
 
-	fmt.Println("Installing dependencies.")
-
+	fmt.Println(color.YellowString("Installing dependencies."))
 	if err := lint.InstallGoPCDeps(); err != nil {
 		return fmt.Errorf("failed to install pre-commit dependencies: %v", err)
 	}
 
 	if err := mageutils.InstallVSCodeModules(); err != nil {
-		return fmt.Errorf("failed to install vscode-go modules: %v", err)
+		return fmt.Errorf(color.RedString(
+			"failed to install vscode-go modules: %v", err))
 	}
 
 	return nil
@@ -199,13 +198,13 @@ func UpdateMirror(tag string) error {
 	return nil
 }
 
-// UseFixCodeBlocks fixes code blocks for the input filepath
+// FixCodeBlocks fixes code blocks for the input filepath
 // using the input language.
 //
 // Example usage:
 //
 // ```go
-// mage fixcodeblocks docs/docGeneration.go go
+// mage fixcodeblocks go docs/docGeneration.go
 // ```
 //
 // **Parameters:**
@@ -217,10 +216,10 @@ func UpdateMirror(tag string) error {
 // **Returns:**
 //
 // error: an error if one occurred
-func UseFixCodeBlocks(filepath string, language string) error {
+func FixCodeBlocks(language string, filepath string) error {
 	file := fileutils.RealFile(filepath)
 
-	if err := docs.FixCodeBlocks(file, language); err != nil {
+	if err := docs.FixCodeBlocks(language, file); err != nil {
 		return fmt.Errorf("failed to fix code blocks: %v", err)
 	}
 

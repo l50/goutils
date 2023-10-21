@@ -18,7 +18,7 @@ import (
 //
 // **Returns:**
 // error: An error if there's an issue reading or writing the file.
-func FixCodeBlocks(file fileutils.RealFile, language string) error {
+func FixCodeBlocks(language string, file fileutils.RealFile) error {
 	rc, err := file.Open()
 	if err != nil {
 		return err

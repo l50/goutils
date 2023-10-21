@@ -16,6 +16,33 @@ magefiles are crafted in Go and leverage the [Mage](https://magefile.org/) libra
 
 ## Functions
 
+### FixCodeBlocks(string, string)
+
+```go
+FixCodeBlocks(string, string) error
+```
+
+FixCodeBlocks fixes code blocks for the input filepath
+using the input language.
+
+Example usage:
+
+```go
+mage fixcodeblocks go docs/docGeneration.go
+```
+
+**Parameters:**
+
+filepath: the path to the file or directory to fix
+
+language: the language of the code blocks to fix
+
+**Returns:**
+
+error: an error if one occurred
+
+---
+
 ### GeneratePackageDocs()
 
 ```go
@@ -127,33 +154,6 @@ tag: the tag to update pkg.go.dev with
 **Returns:**
 
 error: An error if any issue occurs while updating pkg.go.dev
-
----
-
-### UseFixCodeBlocks(string, string)
-
-```go
-UseFixCodeBlocks(string, string) error
-```
-
-UseFixCodeBlocks fixes code blocks for the input filepath
-using the input language.
-
-Example usage:
-
-```go
-mage fixcodeblocks docs/docGeneration.go go
-```
-
-**Parameters:**
-
-filepath: the path to the file or directory to fix
-
-language: the language of the code blocks to fix
-
-**Returns:**
-
-error: an error if one occurred
 
 ---
 

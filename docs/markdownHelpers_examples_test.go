@@ -45,7 +45,7 @@ if err != nil {
 
 	// Run the function
 	file := fileutils.RealFile(tmpfile.Name())
-	err = docs.FixCodeBlocks(file, language)
+	err = docs.FixCodeBlocks(language, file)
 	if err != nil {
 		log.Printf("failed to fix code blocks: %v", err)
 		return
