@@ -15,7 +15,6 @@ import (
 	fileutils "github.com/l50/goutils/v2/file/fileutils"
 	"github.com/l50/goutils/v2/git"
 	"github.com/l50/goutils/v2/sys"
-	"github.com/magefile/mage/mg"
 	"github.com/magefile/mage/sh"
 	"github.com/spf13/afero"
 )
@@ -121,41 +120,25 @@ func GeneratePackageDocs() error {
 // error: An error if any issue occurs at any of the three stages
 // of the process.
 func RunPreCommit() error {
-	fmt.Println("Updating pre-commit hooks.")
+	if !sys.CmdExists("pre-commit") {
+		return fmt.Errorf("pre-commit is not installed, please follow the " +
+			"instructions in the dev doc: " +
+			"https://github.com/facebookincubator/TTPForge/tree/main/docs/dev")
+	}
+
+	fmt.Println(color.YellowString("Updating pre-commit hooks."))
 	if err := lint.UpdatePCHooks(); err != nil {
 		return err
 	}
 
-	fmt.Println("Clearing the pre-commit cache to ensure we have a fresh start.")
+	fmt.Println(color.YellowString("Clearing the pre-commit cache to ensure we have a fresh start."))
 	if err := lint.ClearPCCache(); err != nil {
 		return err
 	}
 
-	fmt.Println("Running all pre-commit hooks locally.")
+	fmt.Println(color.YellowString("Running all pre-commit hooks locally."))
 	if err := lint.RunPCHooks(); err != nil {
 		return err
-	}
-
-	return nil
-}
-
-// RunTests executes all unit tests.
-//
-// Example usage:
-//
-// ```go
-// mage runtests
-// ```
-//
-// **Returns:**
-//
-// error: An error if any issue occurs while running the tests.
-func RunTests() error {
-	mg.Deps(InstallDeps)
-
-	fmt.Println("Running unit tests.")
-	if err := sh.RunV(filepath.Join(".hooks", "run-go-tests.sh"), "all"); err != nil {
-		return fmt.Errorf("failed to run unit tests: %v", err)
 	}
 
 	return nil
