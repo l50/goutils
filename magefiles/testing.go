@@ -52,7 +52,7 @@ func RunTests() error {
 }
 
 // processLines parses an io.Reader, identifying and marking code blocks
-// found in a TTP README.
+// found in a README.
 func processLines(r io.Reader, language string) ([]string, error) {
 	scanner := bufio.NewScanner(r)
 	var lines, codeBlockLines []string
@@ -81,7 +81,7 @@ func processLines(r io.Reader, language string) ([]string, error) {
 }
 
 // handleLineInCodeBlock categorizes and handles each line based on its
-// content and relation to code blocks found in a TTP README.
+// content and relation to code blocks found in a README.
 func handleLineInCodeBlock(trimmedLine, line string, inCodeBlock bool, language string, codeBlockLines []string) (bool, []string) {
 	switch {
 	case strings.HasPrefix(trimmedLine, "```"+language):
