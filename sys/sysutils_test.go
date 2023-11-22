@@ -885,3 +885,38 @@ func TestRmRf(t *testing.T) {
 		})
 	}
 }
+
+func TestGetTempPath(t *testing.T) {
+	testCases := []struct {
+		name     string
+		os       string
+		expected string
+	}{
+		{
+			name:     "Windows OS",
+			os:       "windows",
+			expected: "C:\\Temp",
+		},
+		{
+			name:     "Unix/Linux OS",
+			os:       "linux",
+			expected: "/tmp",
+		},
+		{
+			name:     "Mac OS",
+			os:       "darwin",
+			expected: "/tmp",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			if runtime.GOOS == tc.os {
+				tempPath := sys.GetTempPath()
+				assert.Equal(t, tc.expected, tempPath, "GetTempPath should return correct path for %s", tc.os)
+			} else {
+				t.Skipf("Skipping test for %s on %s", tc.os, runtime.GOOS)
+			}
+		})
+	}
+}

@@ -227,6 +227,23 @@ error: Error if one occurs during key retrieval or decryption.
 
 ---
 
+### GetTempPath()
+
+```go
+GetTempPath() string
+```
+
+GetTempPath determines the path to the temporary directory based on the
+operating system. This function is useful for retrieving a standard location
+for temporary files and directories.
+
+**Returns:**
+
+string: The path to the temporary directory. On Windows, it returns 'C:\\Temp'.
+On Unix/Linux systems, it returns '/tmp'.
+
+---
+
 ### Gwd()
 
 ```go

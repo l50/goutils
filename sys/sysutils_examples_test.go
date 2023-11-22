@@ -174,3 +174,8 @@ func ExampleRmRf() {
 	fmt.Println("Path successfully removed!")
 	// Output: Path successfully removed!
 }
+
+func ExampleGetTempPath() {
+	tempPath := sys.GetTempPath()
+	fmt.Println("Temporary path:", tempPath)
+}

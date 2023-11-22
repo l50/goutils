@@ -466,3 +466,18 @@ func RmRf(file fileutils.File) error {
 
 	return nil
 }
+
+// GetTempPath determines the path to the temporary directory based on the
+// operating system. This function is useful for retrieving a standard location
+// for temporary files and directories.
+//
+// **Returns:**
+//
+// string: The path to the temporary directory. On Windows, it returns 'C:\\Temp'.
+// On Unix/Linux systems, it returns '/tmp'.
+func GetTempPath() string {
+	if runtime.GOOS == "windows" {
+		return "C:\\Temp" // Windows temporary directory
+	}
+	return "/tmp" // Unix/Linux temporary directory
+}
