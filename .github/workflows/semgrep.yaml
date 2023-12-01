@@ -16,16 +16,18 @@ jobs:
   semgrep:
     name: Evaluate code for vulnerabilities
     runs-on: ubuntu-latest
-    # Skip any PR created by dependabot to avoid permission issues
+
+    container:
+      # https://semgrep.dev/docs/semgrep-ci/sample-ci-configs/#sample-github-actions-configuration-file
+      image: returntocorp/semgrep
+
+    # Skip any PR created by dependabot to avoid permission issues:
     if: (github.actor != 'dependabot[bot]')
 
     steps:
-      - name: Set up git repository
+      - name: Checkout code
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
 
-      - uses: returntocorp/semgrep-action@713efdd345f3035192eaa63f56867b88e63e4e5d # v1
-        with:
-          config: >- # more at semgrep.dev/explore
-            p/security-audit
-            p/secrets
-            p/golang
+      # Run the "semgrep ci" command on the command line of the docker image.
+      - name: Semgrep Analysis
+        run: semgrep ci
