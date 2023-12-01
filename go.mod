@@ -9,7 +9,7 @@ require (
 	github.com/chromedp/chromedp v0.9.3
 	github.com/fatih/color v1.16.0
 	github.com/glendc/go-external-ip v0.1.0
-	github.com/go-git/go-git/v5 v5.10.0
+	github.com/go-git/go-git/v5 v5.10.1
 	github.com/magefile/mage v1.15.0
 	github.com/otiai10/copy v1.14.0
 	github.com/samber/slog-multi v1.0.2
@@ -46,7 +46,7 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/samber/lo v1.38.1 // indirect
 	github.com/sergi/go-diff v1.3.1 // indirect
-	github.com/skeema/knownhosts v1.2.0 // indirect
+	github.com/skeema/knownhosts v1.2.1 // indirect
 	github.com/stretchr/objx v0.5.0 // indirect
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.1 // indirect
