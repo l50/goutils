@@ -2,6 +2,7 @@ package cdpu
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -349,4 +350,49 @@ func takeSS(quality int, res *[]byte) chromedp.Tasks {
 			return nil
 		}),
 	}
+}
+
+// SaveCookiesToDisk retrieves cookies from the current session and writes them to a file.
+//
+// **Parameters:**
+//
+// site (web.Site): The site from which to retrieve cookies.
+// filePath (string): The file path where the cookies should be saved.
+//
+// **Returns:**
+//
+// error: An error if any occurred during cookie retrieval or file writing.
+func SaveCookiesToDisk(site web.Site, filePath string) error {
+	chromeDriver, ok := site.Session.Driver.(*Driver)
+	if !ok {
+		return errors.New("driver is not of type *Driver")
+	}
+
+	ctx := chromeDriver.GetContext()
+
+	// Create an instance of GetCookiesParams
+	cookiesParams := network.GetCookies()
+
+	// Optional: Specify URLs if needed
+	// cookiesParams.Urls = []string{"<your-url-here>"}
+
+	// Use the new GetCookies method
+	var cookies []*network.Cookie
+	err := chromedp.Run(ctx, chromedp.ActionFunc(func(ctx context.Context) error {
+		var err error
+		cookies, err = cookiesParams.Do(ctx)
+		return err
+	}))
+	if err != nil {
+		return err
+	}
+
+	// Marshal cookies into JSON
+	cookieJSON, err := json.Marshal(cookies)
+	if err != nil {
+		return err
+	}
+
+	// Write the JSON to the specified file
+	return os.WriteFile(filePath, cookieJSON, 0644)
 }

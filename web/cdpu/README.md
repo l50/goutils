@@ -136,6 +136,25 @@ error: An error if any occurred during navigation.
 
 ---
 
+### SaveCookiesToDisk(web.Site, string)
+
+```go
+SaveCookiesToDisk(web.Site, string) error
+```
+
+SaveCookiesToDisk retrieves cookies from the current session and writes them to a file.
+
+**Parameters:**
+
+site (web.Site): The site from which to retrieve cookies.
+filePath (string): The file path where the cookies should be saved.
+
+**Returns:**
+
+error: An error if any occurred during cookie retrieval or file writing.
+
+---
+
 ### ScreenShot(web.Site, string)
 
 ```go
