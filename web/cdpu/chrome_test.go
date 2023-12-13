@@ -268,3 +268,90 @@ func TestGetPageSource(t *testing.T) {
 		})
 	}
 }
+
+func TestSaveCookiesToDisk(t *testing.T) {
+	tests := []struct {
+		name       string
+		filePath   string
+		headless   bool
+		ignoreCert bool
+		wantErr    bool
+		url        string
+	}{
+		{
+			name:       "Success",
+			filePath:   "valid_file_path.json",
+			headless:   true,
+			ignoreCert: true,
+			wantErr:    false,
+			url:        "https://google.com",
+		},
+		{
+			name:       "ErrorWritingFile",
+			filePath:   "invalid/path/valid_file_path.json",
+			headless:   true,
+			ignoreCert: true,
+			wantErr:    true,
+			url:        "https://google.com",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			// Initialize the chrome browser
+			browser, err := cdpu.Init(tc.headless, tc.ignoreCert)
+			if err != nil {
+				t.Fatalf("failed to initialize a chrome browser: %v", err)
+			}
+			defer web.CancelAll(browser.Cancels...)
+
+			// Set up the site with the browser's driver
+			site := web.Site{
+				LoginURL: tc.url,
+				Session: web.Session{
+					Driver: browser.Driver,
+				},
+			}
+
+			// Navigation actions to set up for the screenshot
+			initialLoginActions := []cdpu.InputAction{
+				{
+					Description: "Navigate to the login page",
+					Action:      chromedp.Navigate(tc.url),
+				},
+			}
+
+			waitTime, err := web.GetRandomWait(2, 6)
+			if err != nil {
+				t.Errorf("failed to create random wait time: %v", err)
+			}
+
+			if err := cdpu.Navigate(site, initialLoginActions, waitTime); err != nil {
+				t.Errorf("failed to navigate to %s: %v", site.LoginURL, err)
+			}
+
+			// Call SaveCookiesToDisk
+			err = cdpu.SaveCookiesToDisk(site, tc.filePath)
+
+			if tc.wantErr {
+				if err == nil {
+					t.Errorf("%s: expected error but got none", tc.name)
+				}
+			} else {
+				if err != nil {
+					t.Errorf("%s: unexpected error: %v", tc.name, err)
+				} else {
+					// Additional validation to check if the file is created and has content
+					if _, err := os.Stat(tc.filePath); os.IsNotExist(err) {
+						t.Errorf("%s: expected file was not created", tc.name)
+					} else {
+						// Clean up the file after the test
+						if err := os.Remove(tc.filePath); err != nil {
+							t.Errorf("%s: failed to delete test file: %v", tc.name, err)
+						}
+					}
+				}
+			}
+		})
+	}
+}
