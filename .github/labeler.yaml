@@ -1,51 +1,80 @@
 ---
 area/github:
-  - ".github/**/*"
+  any:
+    changed-files:
+      any-glob-to-any-file: [".github/**/*"]
 
 area/pre-commit:
-  - ".pre-commit-config.yaml"
-  - ".hooks/**/*"
+  any:
+    changed-files:
+      any-glob-to-any-file: [".pre-commit-config.yaml", ".hooks/**/*"]
 
 area/ansible:
-  - "ansible/*.go"
+  any:
+    changed-files:
+      any-glob-to-any-file: ["ansible/*.go"]
 
 area/cloudflare:
-  - "cloudflare/*.go"
+  any:
+    changed-files:
+      any-glob-to-any-file: ["cloudflare/*.go"]
 
 area/dev:
-  - "dev/**/*.go"
+  any:
+    changed-files:
+      any-glob-to-any-file: ["dev/**/*.go"]
 
 area/file:
-  - "file/*.go"
+  any:
+    changed-files:
+      any-glob-to-any-file: ["file/*.go"]
 
 area/git:
-  - "git/*.go"
+  any:
+    changed-files:
+      any-glob-to-any-file: ["git/*.go"]
 
 area/keeper:
-  - "keeper/*.go"
+  any:
+    changed-files:
+      any-glob-to-any-file: ["keeper/*.go"]
 
 area/logging:
-  - "logging/*.go"
+  any:
+    changed-files:
+      any-glob-to-any-file: ["logging/*.go"]
 
 area/macos:
-  - "macos/*.go"
+  any:
+    changed-files:
+      any-glob-to-any-file: ["macos/*.go"]
 
 area/net:
-  - "net/*.go"
+  any:
+    changed-files:
+      any-glob-to-any-file: ["net/*.go"]
 
 area/str:
-  - "str/*.go"
+  any:
+    changed-files:
+      any-glob-to-any-file: ["str/*.go"]
 
 area/sys:
-  - "sys/*.go"
+  any:
+    changed-files:
+      any-glob-to-any-file: ["sys/*.go"]
 
 area/web:
-  - "web/*.go"
-  - "web/cdpchrome/*.go"
+  any:
+    changed-files:
+      any-glob-to-any-file: ["web/*.go", "web/cdpchrome/*.go"]
 
 area/magefiles:
-  - "magefiles/*"
+  any:
+    changed-files:
+      any-glob-to-any-file: ["magefiles/*"]
 
 area/go-mod-sum:
-  - "go.mod"
-  - "go.sum"
+  any:
+    changed-files:
+      any-glob-to-any-file: ["go.mod", "go.sum"]
