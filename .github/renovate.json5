@@ -9,7 +9,6 @@
     ":enablePreCommit",
     ":automergeDigest",
     ":automergeBranch",
-    "github>l50/goutils//.github/renovate/autoMerge.json5",
     "helpers:pinGitHubActionDigests"
   ],
   "platform": "github",
@@ -27,6 +26,12 @@
       "matchManagers": ["gomod"],
       "matchPackagePatterns": ["*"],
       "enabled": true
+    },
+    {
+      "description": "Auto merge GitHub Actions",
+      "matchManagers": ["github-actions"],
+      "automerge": true,
+      "automergeType": "pr"
     }
   ],
   "customManagers": [
