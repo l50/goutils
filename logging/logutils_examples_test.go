@@ -38,8 +38,8 @@ func ExampleCreateLogFile() {
 		return
 	}
 
-	// Specify the color attribute for the ColoredLogger
-	var logger = &logging.ColoredLogger{Info: logInfo, ColorAttribute: color.FgBlue}
+	// Specify the color attribute for theColorLogger
+	var logger = &logging.ColorLogger{Info: logInfo, ColorAttribute: color.FgBlue}
 	logger.Println("This is a log message")
 
 	logger.Debug("This is a debug log message")

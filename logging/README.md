@@ -18,73 +18,73 @@ designed to simplify common logging tasks.
 
 ## Functions
 
-### ColoredLogger.Debug(...interface{})
+### ColorLogger.Debug(...interface{})
 
 ```go
 Debug(...interface{})
 ```
 
-Debug for ColoredLogger logs the provided arguments as a debug line
+Debug for ColorLogger logs the provided arguments as a debug line
 in the specified color. The arguments are handled in the manner
 of fmt.Println.
 
 ---
 
-### ColoredLogger.Debugf(string, ...interface{})
+### ColorLogger.Debugf(string, ...interface{})
 
 ```go
 Debugf(string, ...interface{})
 ```
 
-Debugf for ColoredLogger logs the provided formatted string as a debug
+Debugf for ColorLogger logs the provided formatted string as a debug
 line in the specified color. The format and arguments are handled
 in the manner of fmt.Printf.
 
 ---
 
-### ColoredLogger.Error(...interface{})
+### ColorLogger.Error(...interface{})
 
 ```go
 Error(...interface{})
 ```
 
-Error for ColoredLogger logs the provided arguments as an error line
+Error for ColorLogger logs the provided arguments as an error line
 in the specified color. The arguments are handled in the manner
 of fmt.Println.
 
 ---
 
-### ColoredLogger.Errorf(string, ...interface{})
+### ColorLogger.Errorf(string, ...interface{})
 
 ```go
 Errorf(string, ...interface{})
 ```
 
-Errorf for ColoredLogger logs the provided formatted string as an
+Errorf for ColorLogger logs the provided formatted string as an
 error line in the specified color. The format and arguments are handled
 in the manner of fmt.Printf.
 
 ---
 
-### ColoredLogger.Printf(string, ...interface{})
+### ColorLogger.Printf(string, ...interface{})
 
 ```go
 Printf(string, ...interface{})
 ```
 
-Printf for ColoredLogger logs the provided formatted string in
+Printf for ColorLogger logs the provided formatted string in
 the specified color. The format and arguments are handled in the
 manner of fmt.Printf.
 
 ---
 
-### ColoredLogger.Println(...interface{})
+### ColorLogger.Println(...interface{})
 
 ```go
 Println(...interface{})
 ```
 
-Println for ColoredLogger logs the provided arguments as a line
+Println for ColorLogger logs the provided arguments as a line
 in the specified color. The arguments are handled in the manner
 of fmt.Println.
 
