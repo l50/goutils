@@ -24,15 +24,18 @@
   },
   "packageRules": [
     {
-      "managers": ["gomod"],
-      "packagePatterns": ["*"],
+      "matchManagers": ["gomod"],
+      "matchPackagePatterns": ["*"],
       "enabled": true
     }
   ],
-  "regexManagers": [
+  "customManagers": [
     {
+      "customType": "regex",
       "fileMatch": [".sh$"],
-      "matchStrings": ["go install (?<depName>[^@]+?)@(?<currentValue>[0-9.-a-zA-Z]+)"],
+      "matchStrings": [
+        "go install (?<depName>[^@]+?)@(?<currentValue>[0-9.-a-zA-Z]+)"
+      ],
       "datasourceTemplate": "go"
     }
   ]
