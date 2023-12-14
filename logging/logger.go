@@ -1,18 +1,13 @@
 package logging
 
-import "log/slog"
-
-// GlobalLogger is a variable that holds the instance of the logger.
+// GlobalLogger is a global variable that holds the instance of the logger.
 var GlobalLogger Logger
 
-// InitGlobalLogger initializes the global logger with the specified level and file path.
-func InitGlobalLogger(level slog.Level, path string) error {
-	var err error
-	GlobalLogger, err = ConfigureLogger(level, path)
-	return err
-}
-
-// L returns the global logger instance.
+// L returns the global logger instance for use in logging operations.
+//
+// **Returns:**
+//
+// Logger: The global Logger instance.
 func L() Logger {
 	return GlobalLogger
 }
@@ -29,7 +24,6 @@ func L() Logger {
 // Errorf: Logs a formatted error message.
 // Debug: Logs a debug message.
 // Debugf: Logs a formatted debug message.
-// Info: Logs a structured message.
 type Logger interface {
 	Println(v ...interface{})
 	Printf(format string, v ...interface{})

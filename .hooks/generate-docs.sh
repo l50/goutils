@@ -31,9 +31,7 @@ source "${bashutils_path}"
 rr || exit 1
 
 # Check if mage is installed
-if command -v mage > /dev/null 2>&1; then
-    echo "mage is installed"
-else
+if ! command -v mage > /dev/null 2>&1; then
     echo -e "mage is not installed\n"
     echo -e "Please install mage by running the following command:\n"
     echo -e "go install github.com/magefile/mage@latest\n"
