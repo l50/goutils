@@ -88,19 +88,30 @@ func ConfigureLogger(level slog.Level, path string) (Logger, error) {
 
 	fileHandler := slog.NewJSONHandler(logFile, opts)
 
-	// Using PrettyHandler for all levels
-	prettyOpts := PrettyHandlerOptions{SlogOpts: *opts}
-	stdoutHandler := NewPrettyHandler(os.Stdout, prettyOpts)
+	var logger Logger
+	var stdoutHandler slog.Handler
 
-	handler := slogmulti.Fanout(fileHandler, stdoutHandler)
-	logger := slog.New(handler)
+	if level == slog.LevelDebug {
+		// Use PrettyHandler for ColorLogger with colorized output
+		prettyOpts := PrettyHandlerOptions{SlogOpts: *opts}
+		stdoutHandler = NewPrettyHandler(os.Stdout, prettyOpts)
 
-	colorAttribute := determineColorAttribute(level)
-	return &ColorLogger{
-		Info:           LogInfo{File: logFile, Path: path},
-		ColorAttribute: colorAttribute,
-		Logger:         logger,
-	}, nil
+		colorAttribute := determineColorAttribute(level)
+		logger = &ColorLogger{
+			Info:           LogInfo{File: logFile, Path: path},
+			ColorAttribute: colorAttribute,
+			Logger:         slog.New(slogmulti.Fanout(fileHandler, stdoutHandler)),
+		}
+	} else {
+		// Use standard JSON handler for PlainLogger without colorization
+		stdoutHandler = slog.NewJSONHandler(os.Stdout, opts)
+		logger = &PlainLogger{
+			Info:   LogInfo{File: logFile, Path: path},
+			Logger: slog.New(slogmulti.Fanout(fileHandler, stdoutHandler)),
+		}
+	}
+
+	return logger, nil
 }
 
 func extractFields(r slog.Record) map[string]interface{} {
