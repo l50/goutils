@@ -12,25 +12,6 @@ This repo is comprised of utilities that I use across various go projects.
 
 ## Dependencies
 
-- [Install asdf](https://asdf-vm.com/):
-
-  ```bash
-  git clone https://github.com/asdf-vm/asdf.git ~/.asdf
-  ```
-
-- Install and use asdf plugins to manage go, python, and ruby for this project:
-
-  ```bash
-  source .asdf
-  ```
-
-  Alternatively, you can pick and choose which plugins to install:
-
-  ```bash
-  # Employ asdf for this project's python:
-  source .asdf python
-  ```
-
 - [Install pre-commit](https://pre-commit.com/):
 
   ```bash
@@ -46,10 +27,10 @@ This repo is comprised of utilities that I use across various go projects.
 
 - [Install Keeper Commander](https://github.com/Keeper-Security/Commander):
 
-   ```bash
-   python3 -m pip install --upgrade pip
-   python3 -m pip install keepercommander
-   ```
+  ```bash
+  python3 -m pip install --upgrade pip
+  python3 -m pip install keepercommander
+  ```
 
 ---
 
@@ -75,9 +56,9 @@ This repo is comprised of utilities that I use across various go projects.
 
 - Download and install the [gh cli tool](https://cli.github.com/):
 
-   - [macOS](https://github.com/cli/cli#macos)
-   - [Linux](https://github.com/cli/cli/blob/trunk/docs/install_linux.md)
-   - [Windows](https://github.com/cli/cli#windows)
+  - [macOS](https://github.com/cli/cli#macos)
+  - [Linux](https://github.com/cli/cli/blob/trunk/docs/install_linux.md)
+  - [Windows](https://github.com/cli/cli#windows)
 
 - Install changelog extension:
 

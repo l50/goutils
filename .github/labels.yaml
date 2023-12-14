@@ -64,10 +64,6 @@
   color: "7BD7E0"
   description: >-
     Changes made to go.mod and go.sum
-- name: area/asdf
-  color: "F4D1B7" # orange
-  description: >-
-    Changes made to asdf resources
 
 # Renovate
 - name: renovate/container

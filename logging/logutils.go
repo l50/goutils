@@ -2,162 +2,31 @@ package logging
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"log/slog"
 
-	"github.com/fatih/color"
 	slogmulti "github.com/samber/slog-multi"
 	"github.com/spf13/afero"
 )
 
-// Logger defines the methods for a generic logging interface.
-// It consists of Println, Printf and Error methods.
-type Logger interface {
-	Println(v ...interface{})
-	Printf(format string, v ...interface{})
-	Error(v ...interface{})
-	Errorf(format string, v ...interface{})
-	Debug(v ...interface{})
-	Debugf(format string, v ...interface{})
-}
+// OutputType is an enumeration type that specifies the output format
+// of the logger. It can be either plain text or colorized text.
+type OutputType int
 
-// ColoredLogger represents a logger that outputs in cyan color.
-//
-// **Attributes:**
-//
-// Info: LogInfo object containing information about the log file.
-// ColorAttribute: A color.Attribute object representing the color
-type ColoredLogger struct {
-	Info           LogInfo
-	ColorAttribute color.Attribute
-}
+const (
+	// PlainOutput indicates that the logger will produce plain text
+	// output without any colorization. This is suitable for log
+	// files or environments where ANSI color codes are not supported.
+	PlainOutput OutputType = iota
 
-// Println for ColoredLogger logs the provided arguments as a line
-// in the specified color. The arguments are handled in the manner
-// of fmt.Println.
-func (l *ColoredLogger) Println(v ...interface{}) {
-	log.SetOutput(l.Info.File)
-	log.Println(color.New(l.ColorAttribute).Sprint(v...))
-}
-
-// Printf for ColoredLogger logs the provided formatted string in
-// the specified color. The format and arguments are handled in the
-// manner of fmt.Printf.
-func (l *ColoredLogger) Printf(format string, v ...interface{}) {
-	log.SetOutput(l.Info.File)
-	if len(v) > 0 {
-		log.Println(color.New(l.ColorAttribute).Sprintf(format, v...))
-	} else {
-		log.Println(color.New(l.ColorAttribute).Sprint(format))
-	}
-}
-
-// Error for ColoredLogger logs the provided arguments as an error line
-// in the specified color. The arguments are handled in the manner
-// of fmt.Println.
-func (l *ColoredLogger) Error(v ...interface{}) {
-	log.SetOutput(l.Info.File)
-	log.Println(color.New(l.ColorAttribute).Add(color.Bold).Sprint(v...))
-}
-
-// Errorf for ColoredLogger logs the provided formatted string as an
-// error line in the specified color. The format and arguments are handled
-// in the manner of fmt.Printf.
-func (l *ColoredLogger) Errorf(format string, v ...interface{}) {
-	log.SetOutput(l.Info.File)
-	if len(v) > 0 {
-		log.Println(color.New(l.ColorAttribute).Add(color.Bold).Sprintf(format, v...))
-	} else {
-		log.Println(color.New(l.ColorAttribute).Add(color.Bold).Sprint(format))
-	}
-}
-
-// Debug for ColoredLogger logs the provided arguments as a debug line
-// in the specified color. The arguments are handled in the manner
-// of fmt.Println.
-func (l *ColoredLogger) Debug(v ...interface{}) {
-	color.New(l.ColorAttribute).Println(fmt.Sprint(v...))
-}
-
-// Debugf for ColoredLogger logs the provided formatted string as a debug
-// line in the specified color. The format and arguments are handled
-// in the manner of fmt.Printf.
-func (l *ColoredLogger) Debugf(format string, v ...interface{}) {
-	color.New(l.ColorAttribute).Printf(format, v...)
-}
-
-// PlainLogger represents a logger that outputs in plain format.
-//
-// **Attributes:**
-//
-// Info: LogInfo object containing information about the log file.
-type PlainLogger struct {
-	Info LogInfo
-}
-
-// Println for PlainLogger logs the provided arguments as a line in plain text.
-// The arguments are handled in the manner of fmt.Println.
-func (l *PlainLogger) Println(v ...interface{}) {
-	log.SetOutput(l.Info.File)
-	log.Println(v...)
-}
-
-// Printf for PlainLogger logs the provided formatted string in plain text.
-// The format and arguments are handled in the manner of fmt.Printf.
-func (l *PlainLogger) Printf(format string, v ...interface{}) {
-	log.SetOutput(l.Info.File)
-	log.Printf(format, v...)
-}
-
-// Error for PlainLogger logs the provided arguments as an error line
-// in plain text.
-// The arguments are handled in the manner of fmt.Println.
-func (l *PlainLogger) Error(v ...interface{}) {
-	log.SetOutput(l.Info.File)
-	log.Println(v...)
-}
-
-// Errorf for PlainLogger logs the provided formatted string as an error
-// line in plain text.
-// The format and arguments are handled in the manner of fmt.Printf.
-func (l *PlainLogger) Errorf(format string, v ...interface{}) {
-	log.SetOutput(l.Info.File)
-	log.Printf(format, v...)
-}
-
-// Debug for PlainLogger logs the provided arguments as a debug line
-// in plain text.
-// The arguments are handled in the manner of fmt.Println.
-func (l *PlainLogger) Debug(v ...interface{}) {
-	fmt.Println(v...)
-}
-
-// Debugf for PlainLogger logs the provided formatted string as a debug
-// line in plain text.
-// The format and arguments are handled in the manner of fmt.Printf.
-func (l *PlainLogger) Debugf(format string, v ...interface{}) {
-	fmt.Printf(format, v...)
-}
-
-// LogInfo represents parameters used to manage logging throughout
-// a program.
-//
-// **Attributes:**
-//
-// Dir: A string representing the directory where the log file is located.
-// File: An afero.File object representing the log file.
-// FileName: A string representing the name of the log file.
-// Path: A string representing the full path to the log file.
-type LogInfo struct {
-	Dir      string
-	File     afero.File
-	FileName string
-	Path     string
-}
+	// ColorOutput indicates that the logger will produce colorized
+	// text output. This is useful for console output where color
+	// coding can enhance readability.
+	ColorOutput
+)
 
 // CreateLogFile creates a log file in a 'logs' subdirectory of the
 // specified directory. The log file's name is the provided log name
@@ -176,188 +45,93 @@ type LogInfo struct {
 // including its directory, file pointer, file name, and path.
 // error: An error, if an issue occurs while creating the directory
 // or the log file.
-func CreateLogFile(fs afero.Fs, logDir string, logName string) (LogInfo, error) {
-	logInfo := LogInfo{}
-	var err error
-
-	logDir = strings.TrimSpace(logDir)
+func CreateLogFile(fs afero.Fs, logDir, logName string) (LogInfo, error) {
 	logName = strings.TrimSpace(logName)
+	logDir = strings.TrimSpace(logDir)
 
 	if logDir == "" {
-		return logInfo, fmt.Errorf("logDir cannot be empty")
+		return LogInfo{}, fmt.Errorf("logDir cannot be empty")
 	}
-
 	if logName == "" {
-		return logInfo, fmt.Errorf("logName cannot be empty")
+		return LogInfo{}, fmt.Errorf("logName cannot be empty")
 	}
-
-	logInfo.Dir = filepath.Join(logDir, "logs")
-
 	if filepath.Ext(logName) != ".log" {
-		logInfo.FileName = fmt.Sprintf("%s.log", logName)
-	} else {
-		logInfo.FileName = logName
+		logName += ".log"
 	}
 
-	logInfo.Path = filepath.Join(logInfo.Dir, logInfo.FileName)
+	logInfo := LogInfo{
+		Dir:      filepath.Join(logDir, "logs"),
+		FileName: logName,
+		Path:     filepath.Join(logDir, "logs", logName),
+	}
 
-	// Create path to log file if the log file doesn't already exist.
 	if _, err := fs.Stat(logInfo.Path); os.IsNotExist(err) {
 		if err := fs.MkdirAll(logInfo.Dir, os.ModePerm); err != nil {
-			return logInfo, fmt.Errorf("failed to create %s: %v", logInfo.Dir, err)
+			return LogInfo{}, fmt.Errorf("failed to create %s: %v", logInfo.Dir, err)
 		}
 	}
 
-	// Create log file.
-	logInfo.File, err = fs.OpenFile(logInfo.Path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	file, err := fs.OpenFile(logInfo.Path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
-		return logInfo, fmt.Errorf("failed to create %s: %v", logInfo.Path, err)
+		return LogInfo{}, fmt.Errorf("failed to create %s: %v", logInfo.Path, err)
 	}
+	logInfo.File = file
 
 	return logInfo, nil
 }
 
-// SlogLogger represents a logger using the slog library.
-//
-// **Attributes:**
-//
-// Logger: Logger object from slog library.
-type SlogLogger struct {
-	Logger *slog.Logger
-}
-
-// Println for SlogLogger logs the provided arguments as a line using
-// slog library.
-// The arguments are converted to a string using fmt.Sprint.
-func (l *SlogLogger) Println(v ...interface{}) {
-	l.Logger.Info(fmt.Sprint(v...))
-}
-
-// Printf for SlogLogger logs the provided formatted string using slog library.
-// The format and arguments are handled in the manner of fmt.Printf.
-func (l *SlogLogger) Printf(format string, v ...interface{}) {
-	l.Logger.Info(fmt.Sprintf(format, v...))
-}
-
-// Error for SlogLogger logs the provided arguments as an error line
-// using slog library.
-// The arguments are converted to a string using fmt.Sprint.
-func (l *SlogLogger) Error(v ...interface{}) {
-	l.Logger.Error(fmt.Sprint(v...))
-}
-
-// Errorf for SlogLogger logs the provided formatted string as an error
-// line using slog library.
-// The format and arguments are handled in the manner of fmt.Printf.
-func (l *SlogLogger) Errorf(format string, v ...interface{}) {
-	l.Logger.Error(fmt.Sprintf(format, v...))
-}
-
-// Debug for SlogLogger logs the provided arguments as a debug line
-// using slog library.
-// The arguments are converted to a string using fmt.Sprint.
-func (l *SlogLogger) Debug(v ...interface{}) {
-	l.Logger.Debug(fmt.Sprint(v...))
-}
-
-// Debugf for SlogLogger logs the provided formatted string as a debug
-// line using slog library.
-// The format and arguments are handled in the manner of fmt.Printf.
-func (l *SlogLogger) Debugf(format string, v ...interface{}) {
-	l.Logger.Debug(fmt.Sprintf(format, v...))
-}
-
-// SlogPlainLogger represents a plain logger using the slog library.
-//
-// **Attributes:**
-//
-// Logger: Logger object from slog library.
-type SlogPlainLogger struct {
-	Logger *slog.Logger
-}
-
-// Println for SlogPlainLogger logs the provided arguments as a line
-// using slog library.
-// The arguments are converted to a string using fmt.Sprint.
-func (l *SlogPlainLogger) Println(v ...interface{}) {
-	l.Logger.Info(fmt.Sprint(v...))
-}
-
-// Printf for SlogPlainLogger logs the provided formatted string
-// using slog library.
-// The format and arguments are handled in the manner of fmt.Printf.
-func (l *SlogPlainLogger) Printf(format string, v ...interface{}) {
-	l.Logger.Info(fmt.Sprintf(format, v...))
-}
-
-// Error for SlogPlainLogger logs the provided arguments as an error line
-// using slog library.
-// The arguments are converted to a string using fmt.Sprint.
-func (l *SlogPlainLogger) Error(v ...interface{}) {
-	l.Logger.Error(fmt.Sprint(v...))
-}
-
-// Errorf for SlogPlainLogger logs the provided formatted string as an
-// error line using slog library.
-// The format and arguments are handled in the manner of fmt.Printf.
-func (l *SlogPlainLogger) Errorf(format string, v ...interface{}) {
-	l.Logger.Error(fmt.Sprintf(format, v...))
-}
-
-// Debug for SlogPlainLogger logs the provided arguments as a debug line
-// using slog library.
-// The arguments are converted to a string using fmt.Sprint.
-func (l *SlogPlainLogger) Debug(v ...interface{}) {
-	l.Logger.Debug(fmt.Sprint(v...))
-}
-
-// Debugf for SlogPlainLogger logs the provided formatted string as a
-// debug line using slog library.
-// The format and arguments are handled in the manner of fmt.Printf.
-func (l *SlogPlainLogger) Debugf(format string, v ...interface{}) {
-	l.Logger.Debug(fmt.Sprintf(format, v...))
-}
-
-// ConfigureLogger creates a logger based on the provided level.
-// Depending on the level, it returns a colored or plain logger.
+// ConfigureLogger sets up a logger based on the provided logging level,
+// file path, and output type. It supports both colorized and plain text
+// logging output, selectable via the OutputType parameter. The logger
+// writes log entries to both a file and standard output.
 //
 // **Parameters:**
 //
 // level: Logging level as a slog.Level.
 // path: Path to the log file.
+// outputType: Type of log output, either ColorOutput or PlainOutput.
 //
 // **Returns:**
 //
-// Logger: Logger object based on provided level.
+// Logger: Configured Logger object based on provided parameters.
 // error: An error, if an issue occurs while setting up the logger.
-func ConfigureLogger(level slog.Level, path string) (Logger, error) {
-	var err error
-
-	// Create log file handlers
+func ConfigureLogger(level slog.Level, path string, outputType OutputType) (Logger, error) {
 	logFile, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
 		return nil, err
 	}
 
-	// Setup options for logging
-	opts := slog.HandlerOptions{
+	opts := &slog.HandlerOptions{
 		Level: level,
 	}
 
 	// File logger
-	fileHandler := slog.NewJSONHandler(logFile, &opts)
+	fileHandler := slog.NewJSONHandler(logFile, opts)
 
-	// Stdout logger
-	stdoutHandler := slog.NewJSONHandler(os.Stdout, &opts)
+	var stdoutHandler slog.Handler
+	var logger Logger
 
-	// Combining both handlers
-	handler := slogmulti.Fanout(fileHandler, stdoutHandler)
+	switch outputType {
+	case ColorOutput:
+		// PrettyHandler for colorized output in console
+		prettyOpts := PrettyHandlerOptions{SlogOpts: *opts}
+		stdoutHandler = NewPrettyHandler(os.Stdout, prettyOpts)
 
-	logger := slog.New(handler)
+		colorAttribute := determineColorAttribute(level)
+		logger = &ColorLogger{
+			Info:           LogInfo{File: logFile, Path: path},
+			ColorAttribute: colorAttribute,
+			Logger:         slog.New(slogmulti.Fanout(fileHandler, stdoutHandler)),
+		}
 
-	// Depending on the level, return colored or plain logger
-	if level == slog.LevelDebug {
-		return &SlogLogger{Logger: logger}, nil
+	case PlainOutput:
+		// Standard JSON handler for PlainLogger without colorization
+		stdoutHandler = slog.NewJSONHandler(os.Stdout, opts)
+		logger = &PlainLogger{
+			Info:   LogInfo{File: logFile, Path: path},
+			Logger: slog.New(slogmulti.Fanout(fileHandler, stdoutHandler)),
+		}
 	}
-	return &SlogPlainLogger{Logger: logger}, nil
+
+	return logger, nil
 }

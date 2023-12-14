@@ -9,7 +9,6 @@ import (
 
 	"log/slog"
 
-	"github.com/fatih/color"
 	"github.com/l50/goutils/v2/logging"
 	"github.com/spf13/afero"
 )
@@ -128,116 +127,140 @@ func TestCreateLogFile(t *testing.T) {
 	}
 }
 
-func TestLoggerImplementation(t *testing.T) {
-	// create an in-memory filesystem
-	fs := afero.NewMemMapFs()
-	logDir := "/tmp"
-	logName := "test.log"
-	logInfo, err := logging.CreateLogFile(fs, logDir, logName)
-	if err != nil {
-		t.Fatalf("unexpected error while creating log file: %v", err)
-	}
-
+func TestPlainLogger(t *testing.T) {
 	tests := []struct {
-		name    string
-		logger  logging.Logger
-		logFunc func(l logging.Logger)
-		errFunc func(l logging.Logger)
+		name       string
+		level      slog.Level
+		outputType logging.OutputType
+		logFunc    func(l logging.Logger)
+		errFunc    func(l logging.Logger)
 	}{
 		{
-			name:   "PlainLogger Println",
-			logger: &logging.PlainLogger{Info: logInfo},
+			name:       "Test PlainLogger Println",
+			level:      slog.LevelInfo,
+			outputType: logging.PlainOutput,
 			logFunc: func(l logging.Logger) {
-				l.Println("test plain logger")
+				l.Println("Test Plain Println logger")
 			},
 			errFunc: func(l logging.Logger) {
-				l.Error("test plain logger error")
+				l.Error("Test Plain Println logger error")
 			},
 		},
 		{
-			name:   "PlainLogger Printf",
-			logger: &logging.PlainLogger{Info: logInfo},
+			name:       "Test PlainLogger Printf",
+			level:      slog.LevelInfo,
+			outputType: logging.PlainOutput,
 			logFunc: func(l logging.Logger) {
-				l.Printf("test %s logger", "plain")
+				l.Printf("Test %s logger", "Plain Printf")
 			},
 			errFunc: func(l logging.Logger) {
-				l.Errorf("test %s logger error", "plain")
+				l.Errorf("Test %s logger error", "Plain Printf")
 			},
 		},
 		{
-			name:   "Test ColoredLogger",
-			logger: &logging.ColoredLogger{Info: logInfo},
+			name:       "Test PlainLogger Debug",
+			level:      slog.LevelDebug,
+			outputType: logging.PlainOutput,
 			logFunc: func(l logging.Logger) {
-				l.Printf("Test log message with format: %s", "Test")
+				l.Debug("Test Plain Debug logger")
 			},
 			errFunc: func(l logging.Logger) {
-				l.Errorf("test error message with format: %s", "Test")
+				l.Debug("Test Plain Debug logger with error")
 			},
 		},
 		{
-			name:   "Test ColoredLogger with Blue color",
-			logger: &logging.ColoredLogger{Info: logInfo, ColorAttribute: color.FgBlue},
+			name:       "Test PlainLogger Debugf",
+			level:      slog.LevelDebug,
+			outputType: logging.PlainOutput,
 			logFunc: func(l logging.Logger) {
-				l.Printf("Test log message with format: %s", "Test")
+				l.Debugf("Test %s logger", "Plain Debugf")
 			},
 			errFunc: func(l logging.Logger) {
-				l.Errorf("test error message with format: %s", "Test")
-			},
-		},
-		{
-			name:   "Test PlainLogger",
-			logger: &logging.PlainLogger{Info: logInfo},
-			logFunc: func(l logging.Logger) {
-				l.Printf("Test log message with format: %s", "Test")
-			},
-		},
-		{
-			name:   "Test SlogLogger",
-			logger: &logging.SlogLogger{Logger: slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{}))},
-			logFunc: func(l logging.Logger) {
-				l.Printf("Test log message with format: %s", "Test")
-			},
-			errFunc: func(l logging.Logger) {
-				l.Errorf("Test error message with format: %s", "Test")
-			},
-		},
-		{
-			name:   "Test SlogPlainLogger",
-			logger: &logging.SlogPlainLogger{Logger: slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{}))},
-			logFunc: func(l logging.Logger) {
-				l.Printf("Test log message with format: %s", "Test")
-			},
-			errFunc: func(l logging.Logger) {
-				l.Errorf("Test error message with format: %s", "Test")
-			},
-		},
-		{
-			name:   "Test SlogLogger Debug",
-			logger: &logging.SlogLogger{Logger: slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{}))},
-			logFunc: func(l logging.Logger) {
-				l.Debug("Test debug message")
-			},
-			errFunc: func(l logging.Logger) {
-				l.Debugf("Test debug message with format: %s", "Test")
-			},
-		},
-		{
-			name:   "Test SlogPlainLogger Debug",
-			logger: &logging.SlogPlainLogger{Logger: slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{}))},
-			logFunc: func(l logging.Logger) {
-				l.Debug("Test debug message")
-			},
-			errFunc: func(l logging.Logger) {
-				l.Debugf("Test debug message with format: %s", "Test")
+				l.Debugf("Test %s logger with error", "Plain Debugf")
 			},
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			tc.logFunc(tc.logger)
+			logger, err := logging.ConfigureLogger(tc.level, "/tmp/test.log", tc.outputType)
+			if err != nil {
+				t.Fatalf("Failed to configure logger: %v", err)
+			}
+			t.Logf("Running test case: %s", tc.name)
+			tc.logFunc(logger)
 			if tc.errFunc != nil {
-				tc.errFunc(tc.logger)
+				tc.errFunc(logger)
+			}
+		})
+	}
+}
+
+func TestColorLogger(t *testing.T) {
+	tests := []struct {
+		name       string
+		level      slog.Level
+		outputType logging.OutputType
+		logFunc    func(l logging.Logger)
+		errFunc    func(l logging.Logger)
+	}{
+		{
+			name:       "Test ColorLogger Println",
+			level:      slog.LevelInfo,
+			outputType: logging.ColorOutput,
+			logFunc: func(l logging.Logger) {
+				l.Println("Test Color Println logger")
+			},
+			errFunc: func(l logging.Logger) {
+				l.Error("Test Color Println logger error")
+			},
+		},
+		{
+			name:       "Test ColorLogger Printf",
+			level:      slog.LevelInfo,
+			outputType: logging.ColorOutput,
+			logFunc: func(l logging.Logger) {
+				l.Printf("Test %s logger", "Color Printf")
+			},
+			errFunc: func(l logging.Logger) {
+				l.Errorf("Test %s logger error", "Color Printf")
+			},
+		},
+		{
+			name:       "Test ColorLogger Debug",
+			level:      slog.LevelDebug,
+			outputType: logging.ColorOutput,
+			logFunc: func(l logging.Logger) {
+				l.Debug("Test Color Debug logger")
+			},
+			errFunc: func(l logging.Logger) {
+				l.Debug("Test Color Debug logger with error")
+			},
+		},
+		{
+			name:       "Test ColorLogger Debugf",
+			level:      slog.LevelDebug,
+			outputType: logging.ColorOutput,
+			logFunc: func(l logging.Logger) {
+				l.Debugf("Test %s logger", "Color Debugf")
+			},
+			errFunc: func(l logging.Logger) {
+				l.Debugf("Test %s logger with error", "Color Debugf")
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			logger, err := logging.ConfigureLogger(tc.level, "/tmp/test.log",
+				tc.outputType)
+			if err != nil {
+				t.Fatalf("Failed to configure logger: %v", err)
+			}
+			t.Logf("Running test case: %s", tc.name)
+			tc.logFunc(logger)
+			if tc.errFunc != nil {
+				tc.errFunc(logger)
 			}
 		})
 	}
@@ -247,28 +270,107 @@ func TestConfigureLogger(t *testing.T) {
 	tests := []struct {
 		name       string
 		level      slog.Level
-		loggerType string
+		path       string
+		outputType logging.OutputType
+		logFunc    func(l logging.Logger)
+		errFunc    func(l logging.Logger)
+		wantErr    bool
 	}{
 		{
-			name:       "Test debug level",
-			level:      slog.LevelDebug,
-			loggerType: "*logging.SlogLogger",
+			name:       "Info Level with Color Output",
+			level:      slog.LevelInfo,
+			path:       "/tmp/test_info_color.log",
+			outputType: logging.ColorOutput,
+			logFunc: func(l logging.Logger) {
+				l.Println("Test info color logger")
+			},
+			errFunc: func(l logging.Logger) {
+				l.Error("Test info color logger error")
+			},
+			wantErr: false,
 		},
 		{
-			name:       "Test non-debug level",
+			name:       "Debug Level with Plain Output",
+			level:      slog.LevelDebug,
+			path:       "/tmp/test_debug_plain.log",
+			outputType: logging.PlainOutput,
+			logFunc: func(l logging.Logger) {
+				l.Debug("Test debug plain logger")
+			},
+			errFunc: func(l logging.Logger) {
+				l.Debug("Test debug plain logger error")
+			},
+			wantErr: false,
+		},
+		{
+			name:       "Invalid Path",
 			level:      slog.LevelInfo,
-			loggerType: "*logging.SlogPlainLogger",
+			path:       "/invalid_path/test.log",
+			outputType: logging.PlainOutput,
+			wantErr:    true,
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			logger, err := logging.ConfigureLogger(tc.level, "/tmp/test.log")
-			if err != nil {
-				t.Fatalf("unexpected error: %v", err)
+			logger, err := logging.ConfigureLogger(tc.level, tc.path, tc.outputType)
+
+			if (err != nil) != tc.wantErr {
+				t.Errorf("ConfigureLogger() error = %v, wantErr %v", err, tc.wantErr)
+				return
 			}
-			if strings.Compare(fmt.Sprintf("%T", logger), tc.loggerType) != 0 {
-				t.Fatalf("expected logger type: %s, got: %T", tc.loggerType, logger)
+
+			if err == nil {
+				tc.logFunc(logger)
+				if tc.errFunc != nil {
+					tc.errFunc(logger)
+				}
+			}
+		})
+	}
+}
+
+func TestGlobalLogger(t *testing.T) {
+	tests := []struct {
+		name       string
+		level      slog.Level
+		path       string
+		outputType logging.OutputType
+		logFunc    func(l logging.Logger)
+		errFunc    func(l logging.Logger)
+	}{
+		{
+			name:       "Set and Retrieve Global Logger",
+			level:      slog.LevelInfo,
+			path:       "/tmp/test_global_logger.log",
+			outputType: logging.PlainOutput,
+			logFunc: func(l logging.Logger) {
+				l.Println("Testing global logger")
+			},
+			errFunc: func(l logging.Logger) {
+				l.Error("Testing global logger error")
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			// Configure and set the global logger
+			logger, err := logging.ConfigureLogger(tc.level, tc.path, tc.outputType)
+			if err != nil {
+				t.Fatalf("Failed to configure logger: %v", err)
+			}
+			logging.GlobalLogger = logger
+
+			// Retrieve and use the global logger
+			globalLogger := logging.L()
+			if globalLogger == nil {
+				t.Fatal("GlobalLogger is nil after being set")
+			}
+
+			tc.logFunc(globalLogger)
+			if tc.errFunc != nil {
+				tc.errFunc(globalLogger)
 			}
 		})
 	}
