@@ -4,7 +4,7 @@ go 1.21
 
 require (
 	github.com/fatih/color v1.16.0
-	github.com/l50/goutils/v2 v2.1.7
+	github.com/l50/goutils/v2 v2.1.8
 	github.com/magefile/mage v1.15.0
 	github.com/spf13/afero v1.11.0
 )
