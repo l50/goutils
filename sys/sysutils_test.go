@@ -678,95 +678,6 @@ func TestKillProcess(t *testing.T) {
 	}
 }
 
-func TestRunCommand(t *testing.T) {
-	tests := []struct {
-		name       string
-		cmd        string
-		args       []string
-		wantError  bool
-		wantOutput string
-	}{
-		{
-			name:       "EchoTest",
-			cmd:        "echo",
-			args:       []string{"Hello, world!"},
-			wantError:  false,
-			wantOutput: "Hello, world!\n",
-		},
-		{
-			name:      "InvalidCommand",
-			cmd:       "someinvalidcommand",
-			args:      []string{},
-			wantError: true,
-		},
-		{
-			name:       "ColorTest",
-			cmd:        "echo",
-			args:       []string{"\033[31mRed\033[0m"},
-			wantError:  false,
-			wantOutput: "\033[31mRed\033[0m\n",
-		},
-	}
-
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			output, err := sys.RunCommand(tc.cmd, tc.args...)
-
-			if (err != nil) != tc.wantError {
-				t.Errorf("RunCommand() error = %v, wantError %v", err, tc.wantError)
-				return
-			}
-
-			// if we expect an output, let's check it
-			if tc.wantOutput != "" && !strings.Contains(output, tc.wantOutput) {
-				t.Errorf("expected output '%s' not found in: '%s'", tc.wantOutput, output)
-			}
-		})
-	}
-}
-
-func TestRunCommandWithTimeout(t *testing.T) {
-	tests := []struct {
-		name    string
-		timeout int
-		cmd     string
-		args    []string
-		wantErr bool
-	}{
-		{
-			name:    "Test command that runs quickly",
-			timeout: 5,
-			cmd:     "echo",
-			args:    []string{"hi"},
-			wantErr: false,
-		},
-		{
-			name:    "Test command that takes longer than timeout",
-			timeout: 2,
-			cmd:     "sleep",
-			args:    []string{"5"},
-			wantErr: true,
-		},
-		{
-			name:    "Test command that fails",
-			timeout: 5,
-			cmd:     "ls",
-			args:    []string{"/nonexistentpath"},
-			wantErr: true,
-		},
-	}
-
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			_, err := sys.RunCommandWithTimeout(tc.timeout, tc.cmd, tc.args...)
-			if (err != nil) != tc.wantErr {
-				t.Errorf("RunCommandWithTimeout() error = %v, wantErr %v", err, tc.wantErr)
-				return
-			}
-		})
-	}
-}
-
 type MockFile struct {
 	open      func() (io.ReadCloser, error)
 	write     func(contents []byte, perm os.FileMode) error
@@ -916,6 +827,155 @@ func TestGetTempPath(t *testing.T) {
 				assert.Equal(t, tc.expected, tempPath, "GetTempPath should return correct path for %s", tc.os)
 			} else {
 				t.Skipf("Skipping test for %s on %s", tc.os, runtime.GOOS)
+			}
+		})
+	}
+}
+
+func TestRunCommand(t *testing.T) {
+	tests := []struct {
+		name       string
+		cmd        string
+		args       []string
+		wantError  bool
+		wantOutput string
+	}{
+		{
+			name:       "EchoTest",
+			cmd:        "echo",
+			args:       []string{"Hello, world!"},
+			wantError:  false,
+			wantOutput: "Hello, world!\n",
+		},
+		{
+			name:      "InvalidCommand",
+			cmd:       "someinvalidcommand",
+			args:      []string{},
+			wantError: true,
+		},
+		{
+			name:       "ColorTest",
+			cmd:        "echo",
+			args:       []string{"\033[31mRed\033[0m"},
+			wantError:  false,
+			wantOutput: "\033[31mRed\033[0m\n",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			output, err := sys.RunCommand(tc.cmd, tc.args...)
+			if (err != nil) != tc.wantError {
+				t.Errorf("RunCommand() error = %v, wantError %v", err, tc.wantError)
+				return
+			}
+
+			// if we expect an output, let's check it
+			if tc.wantOutput != "" && !strings.Contains(output, tc.wantOutput) {
+				t.Errorf("expected output '%s' not found in: '%s'", tc.wantOutput, output)
+			}
+		})
+	}
+}
+
+func TestRunCommandWithTimeout(t *testing.T) {
+	tests := []struct {
+		name    string
+		timeout int
+		cmd     string
+		args    []string
+		wantErr bool
+	}{
+		{
+			name:    "Test command that runs quickly",
+			timeout: 5,
+			cmd:     "echo",
+			args:    []string{"hi"},
+			wantErr: false,
+		},
+		{
+			name:    "Test command that takes longer than timeout",
+			timeout: 2,
+			cmd:     "sleep",
+			args:    []string{"5"},
+			wantErr: true,
+		},
+		{
+			name:    "Test command that fails",
+			timeout: 5,
+			cmd:     "ls",
+			args:    []string{"/nonexistentpath"},
+			wantErr: true,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := sys.RunCommandWithTimeout(tc.timeout, tc.cmd, tc.args...)
+			if (err != nil) != tc.wantErr {
+				t.Errorf("RunCommandWithTimeout() error = %v, wantErr %v", err, tc.wantErr)
+				return
+			}
+		})
+	}
+}
+
+func TestRunCmd(t *testing.T) {
+	testCases := []*struct {
+		name           string
+		cmd            sys.Cmd
+		expectedOutput string
+		expectError    bool
+	}{
+		{
+			name: "Successful Command Execution",
+			cmd: sys.Cmd{
+				CmdString:     "echo",
+				Args:          []string{"hello"},
+				Timeout:       0,
+				OutputHandler: nil,
+			},
+			expectedOutput: "hello",
+			expectError:    false,
+		},
+		{
+			name: "Invalid Command",
+			cmd: sys.Cmd{
+				CmdString:     "invalidcommand",
+				Args:          []string{},
+				Timeout:       0,
+				OutputHandler: nil,
+			},
+			expectedOutput: "",
+			expectError:    true,
+		},
+		{
+			name: "Command with Timeout",
+			cmd: sys.Cmd{
+				CmdString:     "sleep",
+				Args:          []string{"5"},
+				Timeout:       5 * time.Second,
+				OutputHandler: nil,
+			},
+			expectedOutput: "",
+			expectError:    true,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc // Capture range variable
+		t.Run(tc.name, func(t *testing.T) {
+			// Run the command
+			output, err := tc.cmd.RunCmd() // Capture both output and error
+			// Check the output and error
+			if (err != nil) != tc.expectError {
+				t.Errorf("Test '%s' failed: expected error: %v, got: %v",
+					tc.name, tc.expectError, err)
+			}
+
+			if strings.TrimSpace(output) != tc.expectedOutput {
+				t.Errorf("Test '%s' failed: expected output: %q, got: %q",
+					tc.name, tc.expectedOutput, output)
 			}
 		})
 	}

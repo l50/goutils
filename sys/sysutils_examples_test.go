@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	fileutils "github.com/l50/goutils/v2/file/fileutils"
 	"github.com/l50/goutils/v2/sys"
@@ -178,4 +179,22 @@ func ExampleRmRf() {
 func ExampleGetTempPath() {
 	tempPath := sys.GetTempPath()
 	fmt.Println("Temporary path:", tempPath)
+}
+
+func ExampleCmd_RunCmd() {
+	cmd := sys.Cmd{
+		CmdString:     "echo",
+		Args:          []string{"Hello, world!"},
+		Timeout:       5 * time.Second,
+		OutputHandler: nil,
+	}
+
+	output, err := cmd.RunCmd()
+	if err != nil {
+		fmt.Printf("Error executing command: %v\n", err)
+		return
+	}
+
+	fmt.Print(output)
+	// Output: Hello, world!
 }
