@@ -16,7 +16,8 @@ on:
         default: latest
         required: false
   schedule:
-    - cron: "0 * * * *"
+    # Run every week on sunday and wednesday at 00:00 UTC
+    - cron: "0 0 * * 0,3"
   push:
     branches: ["main"]
     paths:
