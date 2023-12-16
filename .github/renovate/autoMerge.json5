@@ -15,6 +15,13 @@
       "automerge": true,
       "automergeType": "branch",
       "matchUpdateTypes": ["minor", "patch"]
+    },
+    {
+      "description": "Ignore updates for mirrors-prettier > prettier pre-commit hook",
+      "matchPackageNames": ["mirrors-prettier"],
+      "matchDepTypes": ["pre-commit"],
+      "excludePackagePatterns": ["prettier"],
+      "allowedVersions": "3.1.0"
     }
   ]
 }
