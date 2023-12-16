@@ -50,6 +50,27 @@ error: An error if the process is not being run as root.
 
 ---
 
+### Cmd.RunCmd()
+
+```go
+RunCmd() string, error
+```
+
+RunCmd executes a command with the settings specified in the Cmd struct.
+It starts the command, optionally manages a timeout, and captures the
+command's output. If the command does not complete within the specified
+timeout, it is forcibly terminated.
+
+**Returns:**
+
+string: The combined output from both standard output and standard error
+of the executed command. If an error occurs or the command times out,
+an empty string is returned.
+error: An error if any issue occurs while executing the command, including
+a timeout.
+
+---
+
 ### CmdExists(string)
 
 ```go

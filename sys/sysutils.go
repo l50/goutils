@@ -1,6 +1,7 @@
 package sys
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"errors"
@@ -20,18 +21,36 @@ import (
 	cp "github.com/otiai10/copy"
 )
 
+// Signal constants
+const (
+	// SignalKill represents a signal that kills a process immediately
+	SignalKill Signal = iota
+)
+
+// Cmd represents a command to be executed in a shell environment.
+//
+// **Attributes:**
+//
+// CmdString:     The command string to be executed.
+// Args:          Arguments for the command.
+// Timeout:       Maximum duration to wait for the command to execute.
+//
+//	A value of 0 indicates no timeout.
+//
+// OutputHandler: Function to handle the output of the command.
+type Cmd struct {
+	CmdString     string
+	Args          []string
+	Timeout       time.Duration
+	OutputHandler func(string)
+}
+
 // Signal represents a signal that can be sent to a process.
 //
 // **Attributes:**
 //
 // SignalKill: A signal that causes the process to be killed immediately.
 type Signal int
-
-// Signal constants
-const (
-	// SignalKill represents a signal that kills a process immediately
-	SignalKill Signal = iota
-)
 
 // CheckRoot checks if the current process is being run with root permissions.
 //
@@ -352,6 +371,50 @@ func KillProcess(pid int, signal Signal) error {
 	return nil
 }
 
+// RmRf deletes an input path and everything in it.
+// If the input path doesn't exist, an error is returned.
+//
+// **Parameters:**
+//
+// path: A string representing the path to remove.
+//
+// **Returns:**
+//
+// error: An error if there was any problem removing the path.
+func RmRf(file fileutils.File) error {
+	info, err := file.Stat()
+	if err != nil {
+		return fmt.Errorf("failed to os.Stat: %v", err)
+	}
+
+	if info.IsDir() {
+		if err := file.RemoveAll(); err != nil {
+			return fmt.Errorf("failed to run RemoveAll: %v", err)
+		}
+	} else {
+		if err := file.Remove(); err != nil {
+			return fmt.Errorf("failed to run Remove: %v", err)
+		}
+	}
+
+	return nil
+}
+
+// GetTempPath determines the path to the temporary directory based on the
+// operating system. This function is useful for retrieving a standard location
+// for temporary files and directories.
+//
+// **Returns:**
+//
+// string: The path to the temporary directory. On Windows, it returns 'C:\\Temp'.
+// On Unix/Linux systems, it returns '/tmp'.
+func GetTempPath() string {
+	if runtime.GOOS == "windows" {
+		return "C:\\Temp" // Windows temporary directory
+	}
+	return "/tmp" // Unix/Linux temporary directory
+}
+
 // RunCommand executes a specified system command.
 //
 // **Parameters:**
@@ -438,46 +501,93 @@ func RunCommandWithTimeout(to int, cmd string, args ...string) (string, error) {
 	}
 }
 
-// RmRf deletes an input path and everything in it.
-// If the input path doesn't exist, an error is returned.
-//
-// **Parameters:**
-//
-// path: A string representing the path to remove.
+// RunCmd executes a command with the settings specified in the Cmd struct.
+// It starts the command, optionally manages a timeout, and captures the
+// command's output. If the command does not complete within the specified
+// timeout, it is forcibly terminated.
 //
 // **Returns:**
 //
-// error: An error if there was any problem removing the path.
-func RmRf(file fileutils.File) error {
-	info, err := file.Stat()
+// string: The combined output from both standard output and standard error
+// of the executed command. If an error occurs or the command times out,
+// an empty string is returned.
+// error: An error if any issue occurs while executing the command, including
+// a timeout.
+func (c *Cmd) RunCmd() (string, error) {
+	if c.OutputHandler == nil {
+		c.OutputHandler = func(s string) { fmt.Println(s) }
+	}
+
+	var ctx context.Context
+	var cancel context.CancelFunc
+	ctx = context.Background()
+
+	if c.Timeout > 0 {
+		ctx, cancel = context.WithTimeout(ctx, c.Timeout)
+		defer cancel()
+	}
+
+	execCmd := exec.CommandContext(ctx, c.CmdString, c.Args...)
+	execCmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+
+	stdout, err := execCmd.StdoutPipe()
 	if err != nil {
-		return fmt.Errorf("failed to os.Stat: %v", err)
+		return "", fmt.Errorf("failed to get stdout pipe: %v", err)
+	}
+	stderr, err := execCmd.StderrPipe()
+	if err != nil {
+		return "", fmt.Errorf("failed to get stderr pipe: %v", err)
 	}
 
-	if info.IsDir() {
-		if err := file.RemoveAll(); err != nil {
-			return fmt.Errorf("failed to run RemoveAll: %v", err)
-		}
-	} else {
-		if err := file.Remove(); err != nil {
-			return fmt.Errorf("failed to run Remove: %v", err)
+	// Start the command
+	if err := execCmd.Start(); err != nil {
+		return "", fmt.Errorf("failed to start command %s: %v", c.CmdString, err)
+	}
+
+	done := make(chan struct{}, 2) // Buffered channel
+	var outputBuf bytes.Buffer
+	c.OutputHandler = func(s string) { outputBuf.WriteString(s + "\n") }
+
+	go func() {
+		c.handleOutput(stdout)
+		done <- struct{}{}
+	}()
+
+	go func() {
+		c.handleOutput(stderr)
+		done <- struct{}{}
+	}()
+
+	// Wait for the command to complete
+	err = execCmd.Wait()
+
+	// Wait for both output handlers to complete
+	<-done
+	<-done
+
+	if err != nil {
+		// Handle error (including timeout)
+		if ctx.Err() == context.DeadlineExceeded {
+			// The command timed out, now force kill the process group
+			if err := KillProcess(-execCmd.Process.Pid, SignalKill); err != nil {
+				return "", fmt.Errorf("failed to kill process group: %v", err)
+			}
+			return "", fmt.Errorf("command timed out")
 		}
 	}
 
-	return nil
+	return outputBuf.String(), nil
 }
 
-// GetTempPath determines the path to the temporary directory based on the
-// operating system. This function is useful for retrieving a standard location
-// for temporary files and directories.
+// handleOutput reads from the provided reader (standard output
+// or standard error of the command) and sends each line of
+// output to the OutputHandler function of the Cmd struct.
 //
-// **Returns:**
-//
-// string: The path to the temporary directory. On Windows, it returns 'C:\\Temp'.
-// On Unix/Linux systems, it returns '/tmp'.
-func GetTempPath() string {
-	if runtime.GOOS == "windows" {
-		return "C:\\Temp" // Windows temporary directory
+// This function is used internally within the RunCmd method
+// to handle output from the executed command.
+func (c *Cmd) handleOutput(reader io.Reader) {
+	scanner := bufio.NewScanner(reader)
+	for scanner.Scan() {
+		c.OutputHandler(scanner.Text())
 	}
-	return "/tmp" // Unix/Linux temporary directory
 }
