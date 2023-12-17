@@ -182,11 +182,16 @@ func ExampleGetTempPath() {
 }
 
 func ExampleCmd_RunCmd() {
+	var loggedOutput string
+	logOutputHandler := func(output string) {
+		loggedOutput += output + "\n"
+	}
+
 	cmd := sys.Cmd{
 		CmdString:     "echo",
 		Args:          []string{"Hello, world!"},
 		Timeout:       5 * time.Second,
-		OutputHandler: nil,
+		OutputHandler: logOutputHandler,
 	}
 
 	output, err := cmd.RunCmd()
