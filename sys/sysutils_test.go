@@ -921,21 +921,37 @@ func TestRunCommandWithTimeout(t *testing.T) {
 }
 
 func TestRunCmd(t *testing.T) {
-	testCases := []*struct {
+	var loggedOutput string
+	logOutputHandler := func(output string) {
+		loggedOutput += output + "\n"
+	}
+
+	testCases := []struct {
 		name           string
 		cmd            sys.Cmd
 		expectedOutput string
 		expectError    bool
 	}{
 		{
-			name: "Successful Command Execution",
+			name: "Successful Command Execution with Default Output Handler",
 			cmd: sys.Cmd{
 				CmdString:     "echo",
 				Args:          []string{"hello"},
 				Timeout:       0,
 				OutputHandler: nil,
 			},
-			expectedOutput: "hello",
+			expectedOutput: "hello\n",
+			expectError:    false,
+		},
+		{
+			name: "Successful Command Execution with Log Output Handler",
+			cmd: sys.Cmd{
+				CmdString:     "echo",
+				Args:          []string{"hello"},
+				Timeout:       0,
+				OutputHandler: logOutputHandler,
+			},
+			expectedOutput: "hello\n",
 			expectError:    false,
 		},
 		{
@@ -953,9 +969,9 @@ func TestRunCmd(t *testing.T) {
 			name: "Command with Timeout",
 			cmd: sys.Cmd{
 				CmdString:     "sleep",
-				Args:          []string{"5"},
-				Timeout:       5 * time.Second,
-				OutputHandler: nil,
+				Args:          []string{"1"},
+				Timeout:       500 * time.Millisecond,
+				OutputHandler: logOutputHandler,
 			},
 			expectedOutput: "",
 			expectError:    true,
@@ -963,19 +979,22 @@ func TestRunCmd(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tc := tc // Capture range variable
 		t.Run(tc.name, func(t *testing.T) {
-			// Run the command
-			output, err := tc.cmd.RunCmd() // Capture both output and error
-			// Check the output and error
-			if (err != nil) != tc.expectError {
+			loggedOutput = ""
+			output, err := tc.cmd.RunCmd()
+			if (err != nil) != (tc.expectError) {
 				t.Errorf("Test '%s' failed: expected error: %v, got: %v",
 					tc.name, tc.expectError, err)
 			}
 
-			if strings.TrimSpace(output) != tc.expectedOutput {
+			actualOutput := output
+			if tc.cmd.OutputHandler == nil {
+				actualOutput = loggedOutput
+			}
+
+			if strings.TrimSpace(actualOutput) != strings.TrimSpace(tc.expectedOutput) {
 				t.Errorf("Test '%s' failed: expected output: %q, got: %q",
-					tc.name, tc.expectedOutput, output)
+					tc.name, tc.expectedOutput, actualOutput)
 			}
 		})
 	}

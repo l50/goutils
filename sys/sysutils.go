@@ -544,26 +544,12 @@ func (c *Cmd) RunCmd() (string, error) {
 		return "", fmt.Errorf("failed to start command %s: %v", c.CmdString, err)
 	}
 
-	done := make(chan struct{}, 2) // Buffered channel
 	var outputBuf bytes.Buffer
-	c.OutputHandler = func(s string) { outputBuf.WriteString(s + "\n") }
-
-	go func() {
-		c.handleOutput(stdout)
-		done <- struct{}{}
-	}()
-
-	go func() {
-		c.handleOutput(stderr)
-		done <- struct{}{}
-	}()
+	go c.handleOutput(stdout, &outputBuf)
+	go c.handleOutput(stderr, &outputBuf)
 
 	// Wait for the command to complete
 	err = execCmd.Wait()
-
-	// Wait for both output handlers to complete
-	<-done
-	<-done
 
 	if err != nil {
 		// Handle error (including timeout)
@@ -572,8 +558,9 @@ func (c *Cmd) RunCmd() (string, error) {
 			if err := KillProcess(-execCmd.Process.Pid, SignalKill); err != nil {
 				return "", fmt.Errorf("failed to kill process group: %v", err)
 			}
-			return "", fmt.Errorf("command timed out")
+			return outputBuf.String(), fmt.Errorf("command timed out")
 		}
+		return outputBuf.String(), err
 	}
 
 	return outputBuf.String(), nil
@@ -581,13 +568,12 @@ func (c *Cmd) RunCmd() (string, error) {
 
 // handleOutput reads from the provided reader (standard output
 // or standard error of the command) and sends each line of
-// output to the OutputHandler function of the Cmd struct.
-//
-// This function is used internally within the RunCmd method
-// to handle output from the executed command.
-func (c *Cmd) handleOutput(reader io.Reader) {
+// output to the OutputHandler function of the Cmd struct, while also writing it to the output buffer.
+func (c *Cmd) handleOutput(reader io.Reader, outputBuf *bytes.Buffer) {
 	scanner := bufio.NewScanner(reader)
 	for scanner.Scan() {
-		c.OutputHandler(scanner.Text())
+		line := scanner.Text()
+		c.OutputHandler(line)
+		outputBuf.WriteString(line + "\n")
 	}
 }
