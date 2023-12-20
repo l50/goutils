@@ -188,3 +188,47 @@ func TestRunPCHooks(t *testing.T) {
 		})
 	}
 }
+
+func TestRunHookTool(t *testing.T) {
+	tests := []struct {
+		name    string
+		hook    string
+		files   []string
+		wantErr bool
+	}{
+		{
+			name:    "RunHookWithSingleFile",
+			hook:    "markdownlint",
+			files:   []string{"../README.md"},
+			wantErr: false,
+		},
+		{
+			name:    "RunHookWithMultipleFiles",
+			hook:    "markdownlint",
+			files:   []string{"../README.md", "../logging/README.md"},
+			wantErr: false,
+		},
+		{
+			name:    "RunHookWithNoFiles",
+			hook:    "prettier",
+			files:   nil,
+			wantErr: false,
+		},
+		{
+			name:    "RunHookWithError",
+			hook:    "failing-hook",
+			files:   []string{"file1.txt"},
+			wantErr: true,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := lint.RunHookTool(tc.hook, tc.files...)
+			if (err != nil) != tc.wantErr {
+				t.Errorf("RunHookTool(%s, %s) error = %v, wantErr %v",
+					tc.hook, strings.Join(tc.files, ", "), err, tc.wantErr)
+			}
+		})
+	}
+}

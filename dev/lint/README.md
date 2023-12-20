@@ -81,6 +81,31 @@ error: An error if the hooks fail to install.
 
 ---
 
+### RunHookTool(string, ...string)
+
+```go
+RunHookTool(string, ...string) error
+```
+
+RunHookTool executes the specified pre-commit hook on a set of files.
+It constructs a command to run 'pre-commit' with the given hook and
+file arguments. If no files are provided, it defaults to "all".
+The function then executes the command and handles any resulting error.
+
+**Parameters:**
+
+hook: A string specifying the name of the pre-commit hook to be run.
+files: A variadic string slice containing file paths to be included
+in the pre-commit hook execution. If no files are specified, it defaults
+to running the hook on all files.
+
+**Returns:**
+
+error: An error if any issue occurs during the execution of the pre-commit
+hook, otherwise nil if the hook runs successfully.
+
+---
+
 ### RunPCHooks(...int)
 
 ```go
