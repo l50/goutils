@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	mageutils "github.com/l50/goutils/v2/dev/mage"
 	fileutils "github.com/l50/goutils/v2/file/fileutils"
@@ -193,5 +194,44 @@ func AddFencedCB(filePath string, language string) error {
 		return err
 	}
 
+	return nil
+}
+
+// RunHookTool executes the specified pre-commit hook on a set of files.
+// It constructs a command to run 'pre-commit' with the given hook and
+// file arguments. If no files are provided, it defaults to "all".
+// The function then executes the command and handles any resulting error.
+//
+// **Parameters:**
+//
+// hook: A string specifying the name of the pre-commit hook to be run.
+// files: A variadic string slice containing file paths to be included
+// in the pre-commit hook execution. If no files are specified, it defaults
+// to running the hook on all files.
+//
+// **Returns:**
+//
+// error: An error if any issue occurs during the execution of the pre-commit
+// hook, otherwise nil if the hook runs successfully.
+func RunHookTool(hook string, files ...string) error {
+	fmt.Printf("Running %s hook on %s\n", hook, files)
+
+	if files == nil {
+		files = []string{"all"}
+	}
+
+	cmd := sys.Cmd{
+		CmdString:     "pre-commit",
+		Args:          []string{"run", hook, "--files", strings.Join(files, " ")},
+		Timeout:       5 * time.Second,
+		OutputHandler: nil,
+	}
+
+	_, err := cmd.RunCmd()
+	if err != nil {
+		return fmt.Errorf("failed to run %s hook: %v", hook, err)
+	}
+
+	fmt.Printf("pre-commit hook %s ran successfully.", hook)
 	return nil
 }

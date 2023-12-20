@@ -60,3 +60,9 @@ func ExampleAddFencedCB() {
 		log.Fatalf("error modifying markdown file: %v", err)
 	}
 }
+
+func ExampleRunHookTool() {
+	if err := lint.RunHookTool("golangci-lint", "run"); err != nil {
+		log.Fatalf("error running hook tool: %v", err)
+	}
+}

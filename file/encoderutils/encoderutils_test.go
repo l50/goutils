@@ -4,12 +4,37 @@ import (
 	"archive/zip"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	encoder "github.com/l50/goutils/v2/file/encoderutils"
 )
 
-func TestUnzip(t *testing.T) {
+func TestUnzipAndZip(t *testing.T) {
+	tests := []struct {
+		name     string
+		testFunc func(t *testing.T)
+	}{
+		{
+			name:     "Unzip",
+			testFunc: testUnzip,
+		},
+		{
+			name:     "Zip",
+			testFunc: testZip,
+		},
+		{
+			name:     "UnzipTraversalAttack",
+			testFunc: testUnzipTraversalAttack,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, tc.testFunc)
+	}
+}
+
+func testUnzip(t *testing.T) {
 	// Create a temporary directory
 	tempDir, err := os.MkdirTemp("", "test_unzip")
 	if err != nil {
@@ -17,23 +42,22 @@ func TestUnzip(t *testing.T) {
 	}
 	defer os.RemoveAll(tempDir)
 
-	// Create a test zip file in the temporary directory
+	// Specify the source directory for zipping
 	zipFilePath := filepath.Join(tempDir, "test.zip")
 	err = createTestZipFile(zipFilePath)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	// Specify the destination directory for unzipping
 	destDir := filepath.Join(tempDir, "extracted")
 
-	// Call the Unzip function
+	// Attempt to unzip the input zip file
 	err = encoder.Unzip(zipFilePath, destDir)
 	if err != nil {
-		t.Fatalf("Unzip failed: %v", err)
+		t.Fatalf("Unzip failed unexpectedly: %v", err)
 	}
 
-	// Check if the extracted file exists
+	// Check if the file was extracted
 	extractedFilePath := filepath.Join(destDir, "file1.txt")
 	_, err = os.Stat(extractedFilePath)
 	if err != nil {
@@ -41,7 +65,7 @@ func TestUnzip(t *testing.T) {
 	}
 }
 
-func TestZip(t *testing.T) {
+func testZip(t *testing.T) {
 	// Create a temporary directory
 	tempDir, err := os.MkdirTemp("", "test_zip")
 	if err != nil {
@@ -101,8 +125,7 @@ func createTestZipFile(zipFilePath string) error {
 
 // createTestSourceDir creates a test source directory for the purpose of testing the Zip function.
 func createTestSourceDir(srcDir string) error {
-	err := os.MkdirAll(srcDir, os.ModePerm)
-	if err != nil {
+	if err := os.MkdirAll(srcDir, os.ModePerm); err != nil {
 		return err
 	}
 
@@ -116,48 +139,13 @@ func createTestSourceDir(srcDir string) error {
 
 	// Write some data to the test file
 	data := []byte("This is a test file.")
-	_, err = file.Write(data)
-	if err != nil {
+	if _, err := file.Write(data); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func TestUnzipTraversalAttack(t *testing.T) {
-	// Create a temporary directory
-	tempDir, err := os.MkdirTemp("", "test_unzip")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(tempDir)
-
-	// Create a test zip file in the temporary directory
-	zipFilePath := filepath.Join(tempDir, "test.zip")
-	err = createTestZipFileTraversal(zipFilePath)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// Specify the destination directory for unzipping
-	destDir := filepath.Join(tempDir, "extracted")
-
-	// Call the Unzip function
-	err = encoder.Unzip(zipFilePath, destDir)
-	if err != nil {
-		t.Fatalf("Unzip failed: %v", err)
-	}
-
-	// Check if the extracted file exists at a location that it should not
-	extractedFilePath := filepath.Join(tempDir, "file1.txt")
-	_, err = os.Stat(extractedFilePath)
-	if err == nil || !os.IsNotExist(err) {
-		t.Errorf("File was written outside the destination directory: %s", extractedFilePath)
-	}
-}
-
-// createTestZipFileTraversal creates a test zip file with a file that attempts
-// to be written outside of the extraction directory.
 func createTestZipFileTraversal(zipFilePath string) error {
 	file, err := os.Create(zipFilePath)
 	if err != nil {
@@ -168,8 +156,9 @@ func createTestZipFileTraversal(zipFilePath string) error {
 	zipWriter := zip.NewWriter(file)
 	defer zipWriter.Close()
 
-	// Create a test file inside the zip with ../ traversal
-	fileWriter, err := zipWriter.Create("../file1.txt")
+	// Create a test file inside the zip with a traversal path like "../file1.txt"
+	// This attempts to create a file outside of the intended directory when unzipped
+	fileWriter, err := zipWriter.Create("../../file1.txt") // Attempting path traversal
 	if err != nil {
 		return err
 	}
@@ -182,4 +171,35 @@ func createTestZipFileTraversal(zipFilePath string) error {
 	}
 
 	return nil
+}
+
+func testUnzipTraversalAttack(t *testing.T) {
+	tempDir, err := os.MkdirTemp("", "test_unzip")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(tempDir)
+
+	zipFilePath := filepath.Join(tempDir, "test.zip")
+	err = createTestZipFileTraversal(zipFilePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	destDir := filepath.Join(tempDir, "extracted")
+
+	err = encoder.Unzip(zipFilePath, destDir)
+	if err == nil {
+		t.Fatal("Expected an error for path traversal, but got none")
+	}
+
+	if !strings.Contains(err.Error(), "illegal file path") {
+		t.Fatalf("Expected an 'illegal file path' error, got: %v", err)
+	}
+
+	extractedFilePath := filepath.Join(tempDir, "file1.txt")
+	_, err = os.Stat(extractedFilePath)
+	if !os.IsNotExist(err) {
+		t.Errorf("File was written outside the destination directory: %s", extractedFilePath)
+	}
 }
