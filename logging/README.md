@@ -90,10 +90,10 @@ of fmt.Println.
 
 ---
 
-### ConfigureLogger(slog.Level, string, OutputType)
+### ConfigureLogger(afero.Fs, slog.Level, string, OutputType)
 
 ```go
-ConfigureLogger(slog.Level, string, OutputType) Logger, error
+ConfigureLogger(afero.Fs, slog.Level, string, OutputType) Logger, error
 ```
 
 ConfigureLogger sets up a logger based on the provided logging level,
@@ -137,6 +137,30 @@ LogInfo: A LogInfo struct with information about the log file,
 including its directory, file pointer, file name, and path.
 error: An error, if an issue occurs while creating the directory
 or the log file.
+
+---
+
+### InitLogging(string, slog.Level, OutputType, afero.Fs)
+
+```go
+InitLogging(string, slog.Level, OutputType, afero.Fs) Logger, error
+```
+
+InitLogging sets up logging with a single function call. It creates a log file
+and configures the logger based on the specified parameters.
+
+**Parameters:**
+
+logDir: The directory where the log file should be created.
+logName: The name of the log file.
+level: The logging level.
+outputType: The output type of the logger (PlainOutput or ColorOutput).
+fs: An afero.Fs instance for filesystem operations, allows mocking in tests.
+
+**Returns:**
+
+Logger: A configured Logger object.
+error: An error if any issue occurs during initialization.
 
 ---
 

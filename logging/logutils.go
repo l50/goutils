@@ -95,11 +95,18 @@ func CreateLogFile(fs afero.Fs, logDir, logName string) (LogInfo, error) {
 //
 // Logger: Configured Logger object based on provided parameters.
 // error: An error, if an issue occurs while setting up the logger.
-func ConfigureLogger(level slog.Level, path string, outputType OutputType) (Logger, error) {
-	logFile, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+func ConfigureLogger(fs afero.Fs, level slog.Level, path string, outputType OutputType) (Logger, error) {
+	// Check if the directory for the given path exists
+	dir := filepath.Dir(path)
+	if _, err := fs.Stat(dir); os.IsNotExist(err) {
+		return nil, fmt.Errorf("invalid path: %s", dir)
+	}
+
+	logFile, err := fs.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
 		return nil, err
 	}
+	defer logFile.Close()
 
 	opts := &slog.HandlerOptions{
 		Level: level,
@@ -131,6 +138,35 @@ func ConfigureLogger(level slog.Level, path string, outputType OutputType) (Logg
 			Info:   LogInfo{File: logFile, Path: path},
 			Logger: slog.New(slogmulti.Fanout(fileHandler, stdoutHandler)),
 		}
+	}
+
+	return logger, nil
+}
+
+// InitLogging sets up logging with a single function call. It creates a log file
+// and configures the logger based on the specified parameters.
+//
+// **Parameters:**
+//
+// logDir: The directory where the log file should be created.
+// logName: The name of the log file.
+// level: The logging level.
+// outputType: The output type of the logger (PlainOutput or ColorOutput).
+// fs: An afero.Fs instance for filesystem operations, allows mocking in tests.
+//
+// **Returns:**
+//
+// Logger: A configured Logger object.
+// error: An error if any issue occurs during initialization.
+func InitLogging(logDir, logName string, level slog.Level, outputType OutputType, fs afero.Fs) (Logger, error) {
+	logInfo, err := CreateLogFile(fs, logDir, logName)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create log file: %v", err)
+	}
+
+	logger, err := ConfigureLogger(fs, level, logInfo.Path, outputType)
+	if err != nil {
+		return nil, fmt.Errorf("failed to configure logger: %v", err)
 	}
 
 	return logger, nil
