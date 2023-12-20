@@ -50,10 +50,11 @@ func ExampleConfigureLogger() {
 
 func ExampleCreateLogFile() {
 	fs := afero.NewOsFs()
-	logDir := "/tmp"
+	logDir := filepath.Join("/tmp", "logs")
 	logName := "test.log"
+	logPath := filepath.Join(logDir, logName)
 
-	logInfo, err := logging.CreateLogFile(fs, logDir, logName)
+	logInfo, err := logging.CreateLogFile(fs, logPath)
 	if err != nil {
 		fmt.Printf("failed to create log file: %v", err)
 		return
@@ -71,10 +72,11 @@ func ExampleCreateLogFile() {
 
 func ExampleInitLogging() {
 	fs := afero.NewOsFs()
-	logDir := "/tmp"
+	logDir := filepath.Join("/tmp", "logs")
 	logName := "test.log"
+	logPath := filepath.Join(logDir, logName)
 
-	logger, err := logging.InitLogging(logDir, logName, slog.LevelDebug, logging.PlainOutput, fs)
+	logger, err := logging.InitLogging(fs, logPath, slog.LevelDebug, logging.PlainOutput)
 	if err != nil {
 		fmt.Printf("failed to initialize logging: %v", err)
 		return
@@ -88,7 +90,7 @@ func ExampleInitLogging() {
 	fmt.Println("Logger configured successfully.")
 
 	// Clean up
-	if err := fs.Remove(filepath.Join(logDir, logName)); err != nil {
+	if err := fs.Remove(logPath); err != nil {
 		fmt.Printf("failed to clean up: %v", err)
 	}
 

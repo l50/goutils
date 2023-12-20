@@ -45,24 +45,20 @@ const (
 // including its directory, file pointer, file name, and path.
 // error: An error, if an issue occurs while creating the directory
 // or the log file.
-func CreateLogFile(fs afero.Fs, logDir, logName string) (LogInfo, error) {
-	logName = strings.TrimSpace(logName)
-	logDir = strings.TrimSpace(logDir)
+func CreateLogFile(fs afero.Fs, logPath string) (LogInfo, error) {
+	logPath = strings.TrimSpace(logPath)
 
-	if logDir == "" {
+	if logPath == "" {
 		return LogInfo{}, fmt.Errorf("logDir cannot be empty")
 	}
-	if logName == "" {
-		return LogInfo{}, fmt.Errorf("logName cannot be empty")
-	}
-	if filepath.Ext(logName) != ".log" {
-		logName += ".log"
+	if filepath.Ext(logPath) != ".log" {
+		logPath += ".log"
 	}
 
 	logInfo := LogInfo{
-		Dir:      filepath.Join(logDir, "logs"),
-		FileName: logName,
-		Path:     filepath.Join(logDir, "logs", logName),
+		Dir:      filepath.Dir(logPath),
+		FileName: filepath.Base(logPath),
+		Path:     logPath,
 	}
 
 	if _, err := fs.Stat(logInfo.Path); os.IsNotExist(err) {
@@ -148,18 +144,18 @@ func ConfigureLogger(fs afero.Fs, level slog.Level, path string, outputType Outp
 //
 // **Parameters:**
 //
+// fs: An afero.Fs instance for filesystem operations, allows mocking in tests.
 // logDir: The directory where the log file should be created.
 // logName: The name of the log file.
 // level: The logging level.
 // outputType: The output type of the logger (PlainOutput or ColorOutput).
-// fs: An afero.Fs instance for filesystem operations, allows mocking in tests.
 //
 // **Returns:**
 //
 // Logger: A configured Logger object.
 // error: An error if any issue occurs during initialization.
-func InitLogging(logDir, logName string, level slog.Level, outputType OutputType, fs afero.Fs) (Logger, error) {
-	logInfo, err := CreateLogFile(fs, logDir, logName)
+func InitLogging(fs afero.Fs, logPath string, level slog.Level, outputType OutputType) (Logger, error) {
+	logInfo, err := CreateLogFile(fs, logPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create log file: %v", err)
 	}

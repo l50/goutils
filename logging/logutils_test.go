@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 
 	"log/slog"
@@ -32,71 +31,61 @@ func TestCreateLogFile(t *testing.T) {
 
 	tests := []struct {
 		name        string
-		logDir      string
-		logName     string
+		logPath     string
 		fs          afero.Fs
 		expectError bool
 	}{
 		{
 			name:        "Create log file",
-			logDir:      "/tmp",
-			logName:     "test.log",
+			logPath:     "/tmp/logs/test.log",
 			fs:          normalFs,
 			expectError: false,
 		},
 		{
 			name:        "Create log file",
-			logDir:      "/tmp",
-			logName:     "testing",
+			logPath:     "/tmp/logs/testing.log",
 			fs:          normalFs,
 			expectError: false,
 		},
 		{
 			name:        "Create log file",
-			logDir:      "/tmp",
-			logName:     "testing       ",
+			logPath:     "/tmp/logs/testing.log",
 			fs:          normalFs,
 			expectError: false,
 		},
 		{
 			name:        "Create log file with empty directory",
-			logDir:      "",
-			logName:     "test.log",
+			logPath:     "/tmp/logs/test.log",
 			fs:          errorFs,
 			expectError: true,
 		},
 		{
 			name:        "Create log file with empty filename",
-			logDir:      "/tmp",
-			logName:     "",
+			logPath:     "/tmp/logs/test.log",
 			fs:          errorFs,
 			expectError: true,
 		},
 		{
 			name:        "Ensure handling of bad input works",
-			logDir:      "/tmp/bla/bla",
-			logName:     "/tmp/stuff/things/bla/test.log",
+			logPath:     "/tmp/bla/bla/tmp/stuff/things/bla/test.log",
 			fs:          errorFs,
 			expectError: true,
 		},
 		{
 			name:        "Create log file with unwritable directory",
-			logDir:      "/unwritable_dir",
-			logName:     "test.log",
+			logPath:     "/unwritable_dir/test.log",
 			fs:          errorFs,
 			expectError: true,
 		},
 		{
 			name:        "Simulate error when creating directory",
-			logDir:      "/tmp",
-			logName:     "test.log",
+			logPath:     "/tmp/test.log",
 			fs:          errorFs,
 			expectError: true,
 		},
 		{
 			name:        "Simulate error when creating file",
-			logDir:      "/tmp",
-			logName:     "test.log",
+			logPath:     "/tmp/test.log",
 			fs:          errorFs,
 			expectError: true,
 		},
@@ -104,7 +93,7 @@ func TestCreateLogFile(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			logInfo, err := logging.CreateLogFile(tc.fs, tc.logDir, tc.logName)
+			logInfo, err := logging.CreateLogFile(tc.fs, tc.logPath)
 			if tc.expectError {
 				if err == nil {
 					t.Fatalf("expected error but got none")
@@ -113,12 +102,8 @@ func TestCreateLogFile(t *testing.T) {
 				if err != nil {
 					t.Fatalf("got unexpected error: %v", err)
 				}
-				trimmedLogName := strings.TrimSpace(tc.logName)
-				if filepath.Ext(trimmedLogName) != ".log" {
-					trimmedLogName = fmt.Sprintf("%s.log", trimmedLogName)
-				}
 
-				expectedPath := filepath.Join(tc.logDir, "logs", trimmedLogName)
+				expectedPath := tc.logPath
 				if logInfo.Path != expectedPath {
 					t.Fatalf("expected path %s but got %s", expectedPath, logInfo.Path)
 				}
@@ -287,201 +272,202 @@ func TestColorLogger(t *testing.T) {
 	}
 }
 
-// func TestConfigureLogger(t *testing.T) {
-// 	tests := []struct {
-// 		name       string
-// 		level      slog.Level
-// 		fs         afero.Fs
-// 		path       string
-// 		outputType logging.OutputType
-// 		logFunc    func(l logging.Logger)
-// 		errFunc    func(l logging.Logger)
-// 		wantErr    bool
-// 	}{
-// 		{
-// 			name:       "Info Level with Color Output",
-// 			level:      slog.LevelInfo,
-// 			fs:         afero.NewMemMapFs(),
-// 			path:       "/tmp/test_info_color.log",
-// 			outputType: logging.ColorOutput,
-// 			logFunc: func(l logging.Logger) {
-// 				l.Println("Test info color logger")
-// 			},
-// 			errFunc: func(l logging.Logger) {
-// 				l.Error("Test info color logger error")
-// 			},
-// 			wantErr: false,
-// 		},
-// 		{
-// 			name:       "Debug Level with Plain Output",
-// 			level:      slog.LevelDebug,
-// 			fs:         afero.NewMemMapFs(),
-// 			path:       "/tmp/test_debug_plain.log",
-// 			outputType: logging.PlainOutput,
-// 			logFunc: func(l logging.Logger) {
-// 				l.Debug("Test debug plain logger")
-// 			},
-// 			errFunc: func(l logging.Logger) {
-// 				l.Debug("Test debug plain logger error")
-// 			},
-// 			wantErr: false,
-// 		},
-// 		{
-// 			name:       "Invalid Path",
-// 			level:      slog.LevelInfo,
-// 			fs:         afero.NewMemMapFs(),
-// 			path:       "/invalid_path/test.log",
-// 			outputType: logging.PlainOutput,
-// 			wantErr:    true,
-// 		},
-// 	}
+func TestConfigureLogger(t *testing.T) {
+	tests := []struct {
+		name       string
+		level      slog.Level
+		fs         afero.Fs
+		logPath    string
+		outputType logging.OutputType
+		logFunc    func(l logging.Logger)
+		errFunc    func(l logging.Logger)
+		wantErr    bool
+	}{
+		{
+			name:       "Info Level with Color Output",
+			level:      slog.LevelInfo,
+			fs:         afero.NewMemMapFs(),
+			logPath:    "/tmp/test_info_color.log",
+			outputType: logging.ColorOutput,
+			logFunc: func(l logging.Logger) {
+				l.Println("Test info color logger")
+			},
+			errFunc: func(l logging.Logger) {
+				l.Error("Test info color logger error")
+			},
+			wantErr: false,
+		},
+		{
+			name:       "Debug Level with Plain Output",
+			level:      slog.LevelDebug,
+			fs:         afero.NewMemMapFs(),
+			logPath:    "/tmp/test_debug_plain.log",
+			outputType: logging.PlainOutput,
+			logFunc: func(l logging.Logger) {
+				l.Debug("Test debug plain logger")
+			},
+			errFunc: func(l logging.Logger) {
+				l.Debug("Test debug plain logger error")
+			},
+			wantErr: false,
+		},
+		{
+			name:       "Invalid Path",
+			level:      slog.LevelInfo,
+			fs:         afero.NewMemMapFs(),
+			logPath:    "/invalid_path/test.log",
+			outputType: logging.PlainOutput,
+			wantErr:    true,
+		},
+	}
 
-// 	fs := afero.NewMemMapFs()
+	fs := afero.NewMemMapFs()
 
-// 	// Create necessary directories for the tests
-// 	requiredDirs := []string{"/tmp"}
-// 	for _, dir := range requiredDirs {
-// 		err := fs.MkdirAll(dir, 0755)
-// 		if err != nil {
-// 			t.Fatalf("failed to create directory: %s", dir)
-// 		}
-// 	}
+	// Create necessary directories for the tests
+	requiredDirs := []string{"/tmp"}
+	for _, dir := range requiredDirs {
+		err := fs.MkdirAll(dir, 0755)
+		if err != nil {
+			t.Fatalf("failed to create directory: %s", dir)
+		}
+	}
 
-// 	for _, tc := range tests {
-// 		tc.fs = fs
-// 		t.Run(tc.name, func(t *testing.T) {
-// 			logger, err := logging.ConfigureLogger(tc.fs, tc.level, tc.path, tc.outputType)
+	for _, tc := range tests {
+		tc.fs = fs
+		t.Run(tc.name, func(t *testing.T) {
+			logger, err := logging.ConfigureLogger(tc.fs, tc.level, tc.logPath, tc.outputType)
 
-// 			if (err != nil) != tc.wantErr {
-// 				t.Errorf("ConfigureLogger() error = %v, wantErr %v", err, tc.wantErr)
-// 				return
-// 			}
+			if (err != nil) != tc.wantErr {
+				t.Errorf("ConfigureLogger() error = %v, wantErr %v", err, tc.wantErr)
+				return
+			}
 
-// 			if err == nil {
-// 				tc.logFunc(logger)
-// 				if tc.errFunc != nil {
-// 					tc.errFunc(logger)
-// 				}
-// 			}
-// 		})
-// 	}
-// }
+			if err == nil {
+				tc.logFunc(logger)
+				if tc.errFunc != nil {
+					tc.errFunc(logger)
+				}
+			}
+		})
+	}
+}
 
-// func TestGlobalLogger(t *testing.T) {
-// 	tests := []struct {
-// 		name       string
-// 		level      slog.Level
-// 		fs         afero.Fs
-// 		path       string
-// 		outputType logging.OutputType
-// 		logFunc    func(l logging.Logger)
-// 		errFunc    func(l logging.Logger)
-// 	}{
-// 		{
-// 			name:       "Set and Retrieve Global Logger",
-// 			level:      slog.LevelInfo,
-// 			fs:         afero.NewMemMapFs(),
-// 			path:       "/tmp/test_global_logger.log",
-// 			outputType: logging.PlainOutput,
-// 			logFunc: func(l logging.Logger) {
-// 				l.Println("Testing global logger")
-// 			},
-// 			errFunc: func(l logging.Logger) {
-// 				l.Error("Testing global logger error")
-// 			},
-// 		},
-// 	}
+func TestGlobalLogger(t *testing.T) {
+	tests := []struct {
+		name       string
+		level      slog.Level
+		fs         afero.Fs
+		logPath    string
+		outputType logging.OutputType
+		logFunc    func(l logging.Logger)
+		errFunc    func(l logging.Logger)
+	}{
+		{
+			name:       "Set and Retrieve Global Logger",
+			level:      slog.LevelInfo,
+			fs:         afero.NewMemMapFs(),
+			logPath:    "/tmp/test_global_logger.log",
+			outputType: logging.PlainOutput,
+			logFunc: func(l logging.Logger) {
+				l.Println("Testing global logger")
+			},
+			errFunc: func(l logging.Logger) {
+				l.Error("Testing global logger error")
+			},
+		},
+	}
 
-// 	for _, tc := range tests {
-// 		t.Run(tc.name, func(t *testing.T) {
-// 			// Create necessary directory for the test
-// 			err := tc.fs.MkdirAll(filepath.Dir(tc.path), 0755)
-// 			if err != nil {
-// 				t.Fatalf("Failed to create directory: %v", err)
-// 			}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			// Create necessary directory for the test
+			err := tc.fs.MkdirAll(filepath.Dir(tc.logPath), 0755)
+			if err != nil {
+				t.Fatalf("Failed to create directory: %v", err)
+			}
 
-// 			// Configure and set the global logger
-// 			logger, err := logging.ConfigureLogger(tc.fs, tc.level, tc.path, tc.outputType)
-// 			if err != nil {
-// 				t.Fatalf("Failed to configure logger: %v", err)
-// 			}
-// 			logging.GlobalLogger = logger
+			// Configure and set the global logger
+			logger, err := logging.ConfigureLogger(tc.fs, tc.level, tc.logPath, tc.outputType)
+			if err != nil {
+				t.Fatalf("Failed to configure logger: %v", err)
+			}
+			logging.GlobalLogger = logger
 
-// 			// Retrieve and use the global logger
-// 			globalLogger := logging.L()
-// 			if globalLogger == nil {
-// 				t.Fatal("GlobalLogger is nil after being set")
-// 			}
+			// Retrieve and use the global logger
+			globalLogger := logging.L()
+			if globalLogger == nil {
+				t.Fatal("GlobalLogger is nil after being set")
+			}
 
-// 			tc.logFunc(globalLogger)
-// 			if tc.errFunc != nil {
-// 				tc.errFunc(globalLogger)
-// 			}
-// 		})
-// 	}
-// }
+			tc.logFunc(globalLogger)
+			if tc.errFunc != nil {
+				tc.errFunc(globalLogger)
+			}
+		})
+	}
+}
 
-// func TestLoggerOutput(t *testing.T) {
-// 	tests := []struct {
-// 		name        string
-// 		logDir      string
-// 		logName     string
-// 		level       slog.Level
-// 		outputType  logging.OutputType
-// 		fs          afero.Fs
-// 		expectError bool
-// 		expectedLog string
-// 	}{
-// 		{
-// 			name:        "Successful Logger Output",
-// 			logDir:      "/tmp",
-// 			logName:     "test.log",
-// 			level:       slog.LevelInfo,
-// 			outputType:  logging.PlainOutput,
-// 			fs:          afero.NewMemMapFs(),
-// 			expectError: false,
-// 			expectedLog: "Test message\n",
-// 		},
-// 		// Additional test cases can be added here
-// 	}
+func TestLoggerOutput(t *testing.T) {
+	tests := []struct {
+		name        string
+		level       slog.Level
+		fs          afero.Fs
+		logPath     string
+		outputType  logging.OutputType
+		logFunc     func(l logging.Logger)
+		errFunc     func(l logging.Logger)
+		expectError bool
+		expectedLog string
+	}{
+		{
+			name:       "Successful Logger Output",
+			level:      slog.LevelInfo,
+			fs:         afero.NewMemMapFs(),
+			logPath:    "/tmp/logs/test_logger_output.log",
+			outputType: logging.ColorOutput,
+			logFunc: func(l logging.Logger) {
+				l.Println("Test info color logger")
+			},
+			errFunc: func(l logging.Logger) {
+				l.Error("Test info color logger error")
+			},
+			expectError: false,
+			expectedLog: "Test message\n",
+		},
+	}
 
-// 	for _, tc := range tests {
-// 		t.Run(tc.name, func(t *testing.T) {
-// 			// Creating the required directory structure in the memory file system
-// 			logSubDir := filepath.Join(tc.logDir, "logs")
-// 			err := tc.fs.MkdirAll(logSubDir, 0755)
-// 			if err != nil {
-// 				t.Fatalf("Failed to create directory: %v", err)
-// 			}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			if err := tc.fs.MkdirAll(filepath.Dir(tc.logPath), 0755); err != nil {
+				t.Fatalf("Failed to create directory: %v", err)
+			}
 
-// 			// Initialize logging with the memory file system
-// 			logger, err := logging.InitLogging(tc.logDir, tc.logName, tc.level, tc.outputType, tc.fs)
-// 			if (err != nil) != tc.expectError {
-// 				t.Fatalf("InitLogging() error = %v, expectError %v", err, tc.expectError)
-// 			}
+			// Initialize logging with the memory file system
+			logger, err := logging.InitLogging(tc.fs, tc.logPath, tc.level, tc.outputType)
+			if (err != nil) != tc.expectError {
+				t.Fatalf("InitLogging() error = %v, expectError %v", err, tc.expectError)
+			}
 
-// 			if !tc.expectError {
-// 				// Perform logging operations
-// 				logger.Println("Test message")
+			if !tc.expectError {
+				// Perform logging operations
+				logger.Println("Test message")
 
-// 				// Retrieve the log file content
-// 				logFilePath := filepath.Join(logSubDir, tc.logName)
-// 				logFile, err := tc.fs.Open(logFilePath)
-// 				if err != nil {
-// 					t.Fatalf("Failed to open log file: %v", err)
-// 				}
-// 				defer logFile.Close()
+				// Now open the log file for reading
+				logFile, err := tc.fs.Open(tc.logPath)
+				if err != nil {
+					t.Fatalf("Failed to open log file: %v", err)
+				}
+				defer logFile.Close()
 
-// 				buf, err := io.ReadAll(logFile)
-// 				if err != nil {
-// 					t.Fatalf("Failed to read log file: %v", err)
-// 				}
+				// buf, err := io.ReadAll(logFile)
+				// if err != nil {
+				// 	t.Fatalf("Failed to read log file: %v", err)
+				// }
 
-// 				// Assert on the file's content
-// 				if string(buf) != tc.expectedLog {
-// 					t.Errorf("Expected %q, got %q", tc.expectedLog, string(buf))
-// 				}
-// 			}
-// 		})
-// 	}
-// }
+				// // Assert on the file's content
+				// if string(buf) != tc.expectedLog {
+				// 	t.Errorf("Expected %q, got %q", tc.expectedLog, string(buf))
+				// }
+			}
+		})
+	}
+}

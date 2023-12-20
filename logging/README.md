@@ -140,10 +140,10 @@ or the log file.
 
 ---
 
-### InitLogging(string, slog.Level, OutputType, afero.Fs)
+### InitLogging(afero.Fs, string, slog.Level, OutputType)
 
 ```go
-InitLogging(string, slog.Level, OutputType, afero.Fs) Logger, error
+InitLogging(afero.Fs, string, slog.Level, OutputType) Logger, error
 ```
 
 InitLogging sets up logging with a single function call. It creates a log file
@@ -151,11 +151,11 @@ and configures the logger based on the specified parameters.
 
 **Parameters:**
 
+fs: An afero.Fs instance for filesystem operations, allows mocking in tests.
 logDir: The directory where the log file should be created.
 logName: The name of the log file.
 level: The logging level.
 outputType: The output type of the logger (PlainOutput or ColorOutput).
-fs: An afero.Fs instance for filesystem operations, allows mocking in tests.
 
 **Returns:**
 
