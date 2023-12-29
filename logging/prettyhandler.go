@@ -67,12 +67,26 @@ func (h *PrettyHandler) Handle(ctx context.Context, r slog.Record) error {
 	levelColor := colorizeLevel(r.Level)
 	timeStr := r.Time.Format("[15:05:05.000]")
 	messageColor := colorizeMessage(r.Message, r.Level)
-	fields, err := json.MarshalIndent(extractFields(r), "", "  ")
-	if err != nil {
-		return err
+
+	// Extract fields and marshal if they exist
+	fields := extractFields(r)
+	var fieldsStr string
+	if len(fields) > 0 {
+		marshaledFields, err := json.MarshalIndent(fields, "", "  ")
+		if err != nil {
+			return err
+		}
+		fieldsStr = string(marshaledFields)
 	}
 
-	h.l.Println(timeStr, levelColor, messageColor, string(fields))
+	// Construct and print the log message
+	if fieldsStr != "" {
+		h.l.Println(timeStr, levelColor, messageColor, fieldsStr)
+	} else {
+		// Omit fields part if it's empty
+		h.l.Println(timeStr, levelColor, messageColor)
+	}
+
 	return nil
 }
 
