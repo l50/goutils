@@ -49,6 +49,14 @@ func (l *PlainLogger) Errorf(format string, v ...interface{}) {
 	l.Logger.Error(fmt.Sprintf(format, v...))
 }
 
+// Close for PlainLogger closes the log file.
+func (l *PlainLogger) Close() error {
+	if l.Info.File != nil {
+		return l.Info.File.Close()
+	}
+	return nil
+}
+
 // Debug for PlainLogger logs the provided arguments as a debug line
 // using slog library.
 // The arguments are converted to a string using fmt.Sprint.

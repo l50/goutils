@@ -446,6 +446,7 @@ func TestLoggerOutput(t *testing.T) {
 			if (err != nil) != tc.expectError {
 				t.Fatalf("InitLogging() error = %v, expectError %v", err, tc.expectError)
 			}
+			defer logger.Close()
 
 			if !tc.expectError {
 				// Perform logging operations

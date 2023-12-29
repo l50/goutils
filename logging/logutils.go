@@ -51,6 +51,7 @@ func CreateLogFile(fs afero.Fs, logPath string) (LogInfo, error) {
 	if logPath == "" {
 		return LogInfo{}, fmt.Errorf("logDir cannot be empty")
 	}
+
 	if filepath.Ext(logPath) != ".log" {
 		logPath += ".log"
 	}
@@ -102,7 +103,6 @@ func ConfigureLogger(fs afero.Fs, level slog.Level, path string, outputType Outp
 	if err != nil {
 		return nil, err
 	}
-	defer logFile.Close()
 
 	opts := &slog.HandlerOptions{
 		Level: level,
