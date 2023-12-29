@@ -116,6 +116,9 @@ func ConfigureLogger(fs afero.Fs, level slog.Level, path string, outputType Outp
 
 	switch outputType {
 	case ColorOutput:
+		// Create a plain JSON handler for file logging to avoid color codes in the file
+		fileHandler := slog.NewJSONHandler(logFile, opts)
+
 		// PrettyHandler for colorized output in console
 		prettyOpts := PrettyHandlerOptions{SlogOpts: *opts}
 		stdoutHandler = NewPrettyHandler(os.Stdout, prettyOpts)
