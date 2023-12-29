@@ -16,6 +16,7 @@ func plainLoggerExample() {
 		fmt.Printf("failed to configure logger: %v", err)
 		return
 	}
+	defer logger.Close()
 
 	logger.Println("This is a log message")
 	logger.Error("This is an error log message")
@@ -32,6 +33,7 @@ func colorLoggerExample() {
 		fmt.Printf("failed to configure logger: %v", err)
 		return
 	}
+	defer logger.Close()
 
 	logger.Println("This is a log message")
 	logger.Error("This is an error log message")
@@ -81,6 +83,7 @@ func ExampleInitLogging() {
 		fmt.Printf("failed to initialize logging: %v", err)
 		return
 	}
+	defer logger.Close()
 
 	logger.Println("This is a log message")
 	logger.Error("This is an error log message")

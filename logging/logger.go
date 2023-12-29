@@ -29,6 +29,7 @@ type Logger interface {
 	Printf(format string, v ...interface{})
 	Error(v ...interface{})
 	Errorf(format string, v ...interface{})
+	Close() error
 	Debug(v ...interface{})
 	Debugf(format string, v ...interface{})
 }

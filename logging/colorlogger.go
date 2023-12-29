@@ -57,6 +57,14 @@ func (l *ColorLogger) Errorf(format string, v ...interface{}) {
 	l.Logger.Error(coloredOutput(format, v...))
 }
 
+// Close for ColorLogger closes the log file.
+func (l *ColorLogger) Close() error {
+	if l.Info.File != nil {
+		return l.Info.File.Close()
+	}
+	return nil
+}
+
 // Debug for ColorLogger logs the provided arguments as a debug line
 // in the specified color. The arguments are handled in the manner
 // of fmt.Println.

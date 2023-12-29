@@ -18,6 +18,16 @@ designed to simplify common logging tasks.
 
 ## Functions
 
+### ColorLogger.Close()
+
+```go
+Close() error
+```
+
+Close for ColorLogger closes the log file.
+
+---
+
 ### ColorLogger.Debug(...interface{})
 
 ```go
@@ -196,6 +206,16 @@ opts: PrettyHandlerOptions for configuring the handler.
 **Returns:**
 
 *PrettyHandler: A new instance of PrettyHandler.
+
+---
+
+### PlainLogger.Close()
+
+```go
+Close() error
+```
+
+Close for PlainLogger closes the log file.
 
 ---
 
