@@ -11,10 +11,10 @@ import (
 //
 // **Attributes:**
 //
-// Info: LogInfo object containing information about the log file.
+// Info: LogConfig object containing information about the log file.
 // Logger: The slog Logger instance used for logging operations.
 type PlainLogger struct {
-	Info   LogInfo
+	Info   LogConfig
 	Logger *slog.Logger
 }
 
