@@ -56,25 +56,25 @@ func CreateLogFile(fs afero.Fs, logPath string) (LogConfig, error) {
 		logPath += ".log"
 	}
 
-	logInfo := LogConfig{
+	logCfg := LogConfig{
 		Dir:      filepath.Dir(logPath),
 		FileName: filepath.Base(logPath),
 		Path:     logPath,
 	}
 
-	if _, err := fs.Stat(logInfo.Path); os.IsNotExist(err) {
-		if err := fs.MkdirAll(logInfo.Dir, os.ModePerm); err != nil {
-			return LogConfig{}, fmt.Errorf("failed to create %s: %v", logInfo.Dir, err)
+	if _, err := fs.Stat(logCfg.Path); os.IsNotExist(err) {
+		if err := fs.MkdirAll(logCfg.Dir, os.ModePerm); err != nil {
+			return LogConfig{}, fmt.Errorf("failed to create %s: %v", logCfg.Dir, err)
 		}
 	}
 
-	file, err := fs.OpenFile(logInfo.Path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	file, err := fs.OpenFile(logCfg.Path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
-		return LogConfig{}, fmt.Errorf("failed to create %s: %v", logInfo.Path, err)
+		return LogConfig{}, fmt.Errorf("failed to create %s: %v", logCfg.Path, err)
 	}
-	logInfo.File = file
+	logCfg.File = file
 
-	return logInfo, nil
+	return logCfg, nil
 }
 
 // ConfigureLogger sets up a logger based on the provided logging level,
