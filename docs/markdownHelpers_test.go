@@ -18,7 +18,7 @@ func TestFixCodeBlocks(t *testing.T) {
 		return strings.Join(lines, "\n")
 	}
 
-	tests := []struct {
+	testCases := []struct {
 		name     string
 		input    string
 		language string
@@ -56,7 +56,7 @@ if err != nil {
 		},
 	}
 
-	for _, tc := range tests {
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			// Create a temporary file
 			tmpfile, err := os.CreateTemp("", "example.*.md")

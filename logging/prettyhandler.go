@@ -6,6 +6,8 @@ import (
 	"io"
 	"log"
 	"log/slog"
+
+	"github.com/l50/goutils/v2/str"
 )
 
 // PrettyHandlerOptions represents options used for configuring
@@ -68,22 +70,23 @@ func (h *PrettyHandler) Handle(ctx context.Context, r slog.Record) error {
 	timeStr := r.Time.Format("[15:05:05.000]")
 	messageColor := colorizeMessage(r.Message, r.Level)
 
-	// Extract fields and marshal if they exist
+	// Extract fields and marshal only if they exist
 	fields := extractFields(r)
-	var fieldsStr string
 	if len(fields) > 0 {
-		marshaledFields, err := json.MarshalIndent(fields, "", "  ")
+		fields, err := json.MarshalIndent(fields, "", "  ")
 		if err != nil {
 			return err
 		}
-		fieldsStr = string(marshaledFields)
-	}
+		// Convert fields from bytes to string
+		fieldsStr := string(fields)
 
-	// Construct and print the log message
-	if fieldsStr != "" {
-		h.l.Println(timeStr, levelColor, messageColor, fieldsStr)
+		// Strip ANSI escape sequences
+		fieldStr := str.StripANSI(fieldsStr)
+
+		// Print with fields
+		h.l.Println(timeStr, r.Level, r.Message, fieldStr)
 	} else {
-		// Omit fields part if it's empty
+		// Print without fields
 		h.l.Println(timeStr, levelColor, messageColor)
 	}
 

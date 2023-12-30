@@ -122,7 +122,7 @@ func createTestRepo(name string) string {
 }
 
 func TestCompile(t *testing.T) {
-	tests := []struct {
+	testCases := []struct {
 		name      string
 		buildPath string
 		goOS      string
@@ -138,7 +138,7 @@ func TestCompile(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			err := mageutils.Compile(tc.buildPath, tc.goOS, tc.goArch)
 
@@ -446,7 +446,7 @@ func TestInstallGoDeps(t *testing.T) {
 // 	}
 
 // 	// Define a table of test cases with input values and expected results
-// 	tests := []struct {
+// 	testCases := []struct {
 // 		name           string
 // 		packagePath    string
 // 		expectedFuncs  map[string]bool
@@ -466,7 +466,7 @@ func TestInstallGoDeps(t *testing.T) {
 // 		},
 // 	}
 // 	// Loop through the test cases and execute each one
-// 	for _, tc := range tests {
+// 	for _, tc := range testCases {
 // 		t.Run(tc.name, func(t *testing.T) {
 // 			// Get the exported functions from the package
 // 			goFuncs, err := mageutils.FindExportedFunctionsInPackage(tc.packagePath)
@@ -502,7 +502,7 @@ func TestInstallGoDeps(t *testing.T) {
 // }
 
 func TestFindExportedFuncsWithoutTests(t *testing.T) {
-	tests := []struct {
+	testCases := []struct {
 		name           string
 		sourceContent  string
 		testContent    string
@@ -526,7 +526,7 @@ func TestFindExportedFuncsWithoutTests(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			tempDir, err := os.MkdirTemp("", "test")
 			if err != nil {
@@ -561,7 +561,7 @@ func TestFindExportedFuncsWithoutTests(t *testing.T) {
 }
 
 func TestFindExportedFunctionsInPackage(t *testing.T) {
-	tests := []struct {
+	testCases := []struct {
 		name              string
 		packageDir        string
 		expectedFunctions []mageutils.FuncInfo
@@ -602,7 +602,7 @@ func TestFindExportedFunctionsInPackage(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			result, err := mageutils.FindExportedFunctionsInPackage(tc.packageDir)
 			if (err != nil) != tc.expectErr {

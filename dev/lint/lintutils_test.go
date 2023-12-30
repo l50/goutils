@@ -167,7 +167,7 @@ func TestLintUtils(t *testing.T) {
 }
 
 func TestRunPCHooks(t *testing.T) {
-	tests := []struct {
+	testCases := []struct {
 		name    string
 		timeout []int
 		wantErr bool
@@ -179,7 +179,7 @@ func TestRunPCHooks(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			err := lint.RunPCHooks(tc.timeout...)
 			if (err != nil) != tc.wantErr {
@@ -190,7 +190,7 @@ func TestRunPCHooks(t *testing.T) {
 }
 
 func TestRunHookTool(t *testing.T) {
-	tests := []struct {
+	testCases := []struct {
 		name    string
 		hook    string
 		files   []string
@@ -222,7 +222,7 @@ func TestRunHookTool(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			err := lint.RunHookTool(tc.hook, tc.files...)
 			if (err != nil) != tc.wantErr {

@@ -17,7 +17,7 @@ import (
 )
 
 func TestRealFile_Open(t *testing.T) {
-	tests := []struct {
+	testCases := []struct {
 		name    string
 		file    string
 		wantErr bool
@@ -34,7 +34,7 @@ func TestRealFile_Open(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			// Create a temporary directory for the test
 			tmpDir, err := os.MkdirTemp("", "")
@@ -62,7 +62,7 @@ func TestRealFile_Open(t *testing.T) {
 }
 
 func TestRealFile_RemoveAll(t *testing.T) {
-	tests := []struct {
+	testCases := []struct {
 		name    string
 		file    string
 		wantErr bool
@@ -79,7 +79,7 @@ func TestRealFile_RemoveAll(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			tmpDir, err := os.MkdirTemp("", "")
 			if err != nil {
@@ -104,7 +104,7 @@ func TestRealFile_RemoveAll(t *testing.T) {
 }
 
 func TestRealFile_Stat(t *testing.T) {
-	tests := []struct {
+	testCases := []struct {
 		name    string
 		file    string
 		wantErr bool
@@ -121,7 +121,7 @@ func TestRealFile_Stat(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			tmpDir, err := os.MkdirTemp("", "")
 			if err != nil {
@@ -146,7 +146,7 @@ func TestRealFile_Stat(t *testing.T) {
 }
 
 func TestRealFile_Remove(t *testing.T) {
-	tests := []struct {
+	testCases := []struct {
 		name    string
 		file    string
 		wantErr bool
@@ -163,7 +163,7 @@ func TestRealFile_Remove(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			tmpDir, err := os.MkdirTemp("", "")
 			if err != nil {
@@ -188,7 +188,7 @@ func TestRealFile_Remove(t *testing.T) {
 }
 
 func TestRealFile_Write(t *testing.T) {
-	tests := []struct {
+	testCases := []struct {
 		name     string
 		file     string
 		contents []byte
@@ -202,7 +202,7 @@ func TestRealFile_Write(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			rf := fileutils.RealFile(tc.file)
 			err := rf.Write(tc.contents, 0644)
@@ -231,7 +231,7 @@ func TestRealFile_Write(t *testing.T) {
 }
 
 func TestAppend(t *testing.T) {
-	tests := []struct {
+	testCases := []struct {
 		name string
 		file fileutils.RealFile
 		data string
@@ -243,7 +243,7 @@ func TestAppend(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			if err := tc.file.Write([]byte("I am a test!"), 0644); err != nil {
 				t.Fatalf("failed to create %s - Write() failed: %v", string(tc.file), err)
@@ -283,7 +283,7 @@ func TestCreate(t *testing.T) {
 		t.Fatalf("failed to create temp dir: %v", err)
 	}
 
-	tests := []struct {
+	testCases := []struct {
 		name       string
 		path       string
 		contents   []byte
@@ -311,7 +311,7 @@ func TestCreate(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			err := fileutils.Create(tc.path, tc.contents, tc.createType)
 
@@ -352,7 +352,7 @@ func TestCreate(t *testing.T) {
 }
 
 func TestContainsStr(t *testing.T) {
-	tests := []struct {
+	testCases := []struct {
 		name      string
 		input     string
 		searchStr string
@@ -367,7 +367,7 @@ func TestContainsStr(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			tempDir := t.TempDir()
 			path := filepath.Join(tempDir, "test.txt")
@@ -480,7 +480,7 @@ func TestExistsAndDeleteFile(t *testing.T) {
 }
 
 func TestToSlice(t *testing.T) {
-	tests := []struct {
+	testCases := []struct {
 		name     string
 		input    string
 		expected []string
@@ -493,7 +493,7 @@ func TestToSlice(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			tempDir := t.TempDir()
 			path := filepath.Join(tempDir, "test.txt")
@@ -510,7 +510,7 @@ func TestToSlice(t *testing.T) {
 }
 
 func TestFind(t *testing.T) {
-	tests := []struct {
+	testCases := []struct {
 		name     string
 		fileName string
 		wantErr  bool
@@ -527,7 +527,7 @@ func TestFind(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			// Create a temporary directory for each test case
 			testDir, err := os.MkdirTemp("", "testdir")
@@ -596,7 +596,7 @@ func TestListFilesR(t *testing.T) {
 }
 
 func TestWrite(t *testing.T) {
-	tests := []struct {
+	testCases := []struct {
 		name     string
 		input    string
 		expected string
@@ -609,7 +609,7 @@ func TestWrite(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			tempDir := t.TempDir()
 			path := filepath.Join(tempDir, "test.txt")
@@ -640,7 +640,7 @@ func TestSeekAndDestroy(t *testing.T) {
 		}
 	}
 
-	tests := []struct {
+	testCases := []struct {
 		name      string
 		path      string
 		pattern   string
@@ -660,7 +660,7 @@ func TestSeekAndDestroy(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			err := fileutils.SeekAndDestroy(tc.path, tc.pattern)
 

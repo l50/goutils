@@ -8,7 +8,7 @@ import (
 )
 
 func TestAnsiblePing(t *testing.T) {
-	tests := []struct {
+	testCases := []struct {
 		name      string
 		hostsFile string
 		wantErr   bool
@@ -25,7 +25,7 @@ func TestAnsiblePing(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			// Create a dummy hosts file for the valid case
 			if !tc.wantErr {

@@ -9,7 +9,7 @@ import (
 )
 
 func TestCancelAll(t *testing.T) {
-	tests := []struct {
+	testCases := []struct {
 		name    string
 		cancels []func()
 	}{
@@ -44,7 +44,7 @@ func TestCancelAll(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			// Call the function being tested.
 			web.CancelAll(tc.cancels...)
@@ -53,7 +53,7 @@ func TestCancelAll(t *testing.T) {
 }
 
 func TestGetRandomWait(t *testing.T) {
-	tests := []struct {
+	testCases := []struct {
 		name    string
 		minWait int
 		maxWait int
@@ -72,7 +72,7 @@ func TestGetRandomWait(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			_, err := web.GetRandomWait(tc.minWait, tc.maxWait)
 			if (err != nil) != tc.wantErr {
@@ -84,7 +84,7 @@ func TestGetRandomWait(t *testing.T) {
 }
 
 func TestIsTwoFacEnabled(t *testing.T) {
-	tests := []struct {
+	testCases := []struct {
 		name    string
 		options []web.LoginOption
 		want    bool
@@ -101,7 +101,7 @@ func TestIsTwoFacEnabled(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			loginOpts := web.SetLoginOptions(tc.options...)
 			if got := web.IsTwoFacEnabled(loginOpts); got != tc.want {
@@ -112,7 +112,7 @@ func TestIsTwoFacEnabled(t *testing.T) {
 }
 
 func TestIsLogMeOutEnabled(t *testing.T) {
-	tests := []struct {
+	testCases := []struct {
 		name    string
 		options []web.LoginOption
 		want    bool
@@ -129,7 +129,7 @@ func TestIsLogMeOutEnabled(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			loginOpts := web.SetLoginOptions(tc.options...)
 			if got := web.IsLogMeOutEnabled(loginOpts); got != tc.want {
@@ -140,7 +140,7 @@ func TestIsLogMeOutEnabled(t *testing.T) {
 }
 
 func TestSetLoginOptions(t *testing.T) {
-	tests := []struct {
+	testCases := []struct {
 		name        string
 		options     []web.LoginOption
 		twoFacValue bool
@@ -172,7 +172,7 @@ func TestSetLoginOptions(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			// This assumes there's an exported function in web package that allows checking the options
 			// As noted above, this is just for demonstrating how the tests would be structured.
@@ -189,7 +189,7 @@ func TestSetLoginOptions(t *testing.T) {
 }
 
 func TestWait(t *testing.T) {
-	tests := []struct {
+	testCases := []struct {
 		name    string
 		near    float64
 		wantErr bool
@@ -205,7 +205,7 @@ func TestWait(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			_, err := web.Wait(tc.near)
 			if (err != nil) != tc.wantErr {

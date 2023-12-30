@@ -11,42 +11,43 @@ import (
 	"time"
 
 	"github.com/l50/goutils/v2/logging"
+	"github.com/stretchr/testify/require"
 )
 
 func TestPrettyHandlerHandle(t *testing.T) {
-	tests := []struct {
+	testCases := []struct {
 		name     string
 		level    slog.Level
-		message  string
+		msg      string
 		expected string
 	}{
 		{
 			name:     "Info Level Log",
 			level:    slog.LevelInfo,
-			message:  "info level test message",
-			expected: "info level test message",
+			msg:      "info level test msg",
+			expected: "info level test msg",
 		},
 		{
 			name:     "Debug Level Log",
 			level:    slog.LevelDebug,
-			message:  "debug level test message",
-			expected: "debug level test message",
+			msg:      "debug level test msg",
+			expected: "debug level test msg",
 		},
 		{
 			name:     "Error Level Log",
 			level:    slog.LevelError,
-			message:  "error level test message",
-			expected: "error level test message",
+			msg:      "error level test msg",
+			expected: "error level test msg",
 		},
 		{
 			name:     "Warn Level Log",
 			level:    slog.LevelWarn,
-			message:  "warn level test message",
-			expected: "warn level test message",
+			msg:      "warn level test msg",
+			expected: "warn level test msg",
 		},
 	}
 
-	for _, tc := range tests {
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			// Create a buffer to capture the output
 			var buf strings.Builder
@@ -56,7 +57,7 @@ func TestPrettyHandlerHandle(t *testing.T) {
 			record := slog.Record{
 				Level:   tc.level,
 				Time:    time.Now(),
-				Message: tc.message,
+				Message: tc.msg,
 			}
 
 			// Call the handle method
@@ -65,7 +66,7 @@ func TestPrettyHandlerHandle(t *testing.T) {
 				t.Fatalf("Handle() error = %v", err)
 			}
 
-			// Check if the output contains the expected message
+			// Check if the output contains the expected msg
 			if !strings.Contains(buf.String(), tc.expected) {
 				t.Fatalf("Expected to find '%s' in the output, got '%s'", tc.expected, buf.String())
 			}
@@ -82,25 +83,25 @@ func (f failingJSONMarshal) MarshalJSON() ([]byte, error) {
 }
 
 func TestPrettyHandlerHandleMarshalError(t *testing.T) {
-	tests := []struct {
-		name    string
-		level   slog.Level
-		message string
+	testCases := []struct {
+		name  string
+		level slog.Level
+		msg   string
 	}{
 		{
-			name:    "Marshal error",
-			level:   slog.LevelInfo,
-			message: "test message",
+			name:  "Marshal error",
+			level: slog.LevelInfo,
+			msg:   "test msg",
 		},
 	}
 
-	for _, tc := range tests {
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			var buf strings.Builder
 			prettyHandler := logging.NewPrettyHandler(&buf, logging.PrettyHandlerOptions{})
 
 			// Create a log record using NewRecord and add the failing attribute.
-			record := slog.NewRecord(time.Now(), tc.level, tc.message, 0)
+			record := slog.NewRecord(time.Now(), tc.level, tc.msg, 0)
 			record.AddAttrs(slog.Any("failingAttr", failingJSONMarshal{}))
 
 			// Call the handle method and expect an error.
@@ -108,6 +109,55 @@ func TestPrettyHandlerHandleMarshalError(t *testing.T) {
 			if err == nil {
 				t.Errorf("Expected an error, but got none")
 			}
+		})
+	}
+}
+
+func TestPrettyHandlerNoColorCodes(t *testing.T) {
+	testCases := []struct {
+		name        string
+		level       slog.Level
+		msg         string
+		expectError bool
+	}{
+		{
+			name:        "Output should not contain color codes",
+			level:       slog.LevelInfo,
+			msg:         "info level test msg",
+			expectError: false,
+		},
+		{
+			name:        "Normal output should not be affected",
+			level:       slog.LevelInfo,
+			msg:         "info level test msg",
+			expectError: false,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			var buf strings.Builder
+			prettyHandler := logging.NewPrettyHandler(&buf, logging.PrettyHandlerOptions{})
+
+			// Create a log record
+			record := slog.Record{
+				Level:   tc.level,
+				Time:    time.Now(),
+				Message: tc.msg,
+			}
+
+			// Call the handle method
+			err := prettyHandler.Handle(context.Background(), record)
+			if err != nil {
+				t.Fatalf("Handle() error = %v", err)
+			}
+
+			// Check if the output does not contain ANSI color codes
+			output := buf.String()
+			if strings.Contains(output, "\u001b[") {
+				t.Fatalf("Output should not contain color codes, got '%s'", output)
+			}
+			require.Equal(t, tc.expectError, output)
 		})
 	}
 }

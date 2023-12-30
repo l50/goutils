@@ -29,7 +29,7 @@ func TestCreateLogFile(t *testing.T) {
 	normalFs := afero.NewMemMapFs()
 	errorFs := &errorFs{normalFs}
 
-	tests := []struct {
+	testCases := []struct {
 		name        string
 		logPath     string
 		fs          afero.Fs
@@ -91,7 +91,7 @@ func TestCreateLogFile(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			logInfo, err := logging.CreateLogFile(tc.fs, tc.logPath)
 			if tc.expectError {
@@ -113,7 +113,7 @@ func TestCreateLogFile(t *testing.T) {
 }
 
 func TestPlainLogger(t *testing.T) {
-	tests := []struct {
+	testCases := []struct {
 		name       string
 		level      slog.Level
 		fs         afero.Fs
@@ -171,7 +171,7 @@ func TestPlainLogger(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			// Create necessary directory for the test
 			err := tc.fs.MkdirAll(filepath.Dir("/tmp/test.log"), 0755)
@@ -193,7 +193,7 @@ func TestPlainLogger(t *testing.T) {
 }
 
 func TestColorLogger(t *testing.T) {
-	tests := []struct {
+	testCases := []struct {
 		name       string
 		level      slog.Level
 		fs         afero.Fs
@@ -251,7 +251,7 @@ func TestColorLogger(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			// Create necessary directory for the test
 			err := tc.fs.MkdirAll(filepath.Dir("/tmp/test.log"), 0755)
@@ -273,7 +273,7 @@ func TestColorLogger(t *testing.T) {
 }
 
 func TestConfigureLogger(t *testing.T) {
-	tests := []struct {
+	testCases := []struct {
 		name       string
 		level      slog.Level
 		fs         afero.Fs
@@ -332,7 +332,7 @@ func TestConfigureLogger(t *testing.T) {
 		}
 	}
 
-	for _, tc := range tests {
+	for _, tc := range testCases {
 		tc.fs = fs
 		t.Run(tc.name, func(t *testing.T) {
 			logger, err := logging.ConfigureLogger(tc.fs, tc.level, tc.logPath, tc.outputType)
@@ -353,7 +353,7 @@ func TestConfigureLogger(t *testing.T) {
 }
 
 func TestGlobalLogger(t *testing.T) {
-	tests := []struct {
+	testCases := []struct {
 		name       string
 		level      slog.Level
 		fs         afero.Fs
@@ -377,7 +377,7 @@ func TestGlobalLogger(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			// Create necessary directory for the test
 			err := tc.fs.MkdirAll(filepath.Dir(tc.logPath), 0755)
@@ -407,7 +407,7 @@ func TestGlobalLogger(t *testing.T) {
 }
 
 func TestLoggerOutput(t *testing.T) {
-	tests := []struct {
+	testCases := []struct {
 		name        string
 		level       slog.Level
 		fs          afero.Fs
@@ -435,7 +435,7 @@ func TestLoggerOutput(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			if err := tc.fs.MkdirAll(filepath.Dir(tc.logPath), 0755); err != nil {
 				t.Fatalf("Failed to create directory: %v", err)
