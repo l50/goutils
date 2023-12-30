@@ -11,7 +11,7 @@ import (
 )
 
 func TestUnzipAndZip(t *testing.T) {
-	tests := []struct {
+	testCases := []struct {
 		name     string
 		testFunc func(t *testing.T)
 	}{
@@ -29,7 +29,7 @@ func TestUnzipAndZip(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
+	for _, tc := range testCases {
 		t.Run(tc.name, tc.testFunc)
 	}
 }

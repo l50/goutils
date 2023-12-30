@@ -15,7 +15,7 @@ func TestInstallBrewDeps(t *testing.T) {
 		t.Skip("Skipping test, brew is not installed")
 	}
 
-	tests := []struct {
+	testCases := []struct {
 		name       string
 		pkgList    []string
 		shouldFail bool
@@ -32,7 +32,7 @@ func TestInstallBrewDeps(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			err := macos.InstallBrewDeps(tc.pkgList)
 			if tc.shouldFail {
