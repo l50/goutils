@@ -246,6 +246,16 @@ func TestStripANSI(t *testing.T) {
 			str:  "\x1B[4m\x1B[45m",
 			want: "",
 		},
+		{
+			name: "Complex ANSI codes",
+			str:  "\u001b[34m\u001b[0;32m    docker.ansible-attack-box: The following packages will be upgraded:\u001b[0m\n\u001b[0m",
+			want: "    docker.ansible-attack-box: The following packages will be upgraded:\n",
+		},
+		{
+			name: "ANSI codes with text",
+			str:  "\u001b[34m\u001b[0;32m    docker.ansible-attack-box:   bash python3-pip\u001b[0m\n\u001b[0m",
+			want: "    docker.ansible-attack-box:   bash python3-pip\n",
+		},
 	}
 
 	for _, tc := range testCases {
