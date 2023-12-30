@@ -4,7 +4,7 @@ import (
 	"github.com/spf13/afero"
 )
 
-// LogInfo represents parameters used to manage logging throughout
+// LogConfig represents parameters used to manage logging throughout
 // a program.
 //
 // **Attributes:**
@@ -13,7 +13,7 @@ import (
 // File: An afero.File object representing the log file.
 // FileName: A string representing the name of the log file.
 // Path: A string representing the full path to the log file.
-type LogInfo struct {
+type LogConfig struct {
 	Dir      string
 	File     afero.File
 	FileName string

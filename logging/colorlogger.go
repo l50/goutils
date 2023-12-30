@@ -13,11 +13,11 @@ import (
 //
 // **Attributes:**
 //
-// Info: LogInfo object containing information about the log file.
+// Info: LogConfig object containing information about the log file.
 // ColorAttribute: A color attribute for output styling.
 // Logger: The slog Logger instance used for logging operations.
 type ColorLogger struct {
-	Info           LogInfo
+	Info           LogConfig
 	ColorAttribute color.Attribute
 	Logger         *slog.Logger
 }

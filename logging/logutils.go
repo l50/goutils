@@ -41,22 +41,22 @@ const (
 //
 // **Returns:**
 //
-// LogInfo: A LogInfo struct with information about the log file,
+// LogConfig: A LogConfig struct with information about the log file,
 // including its directory, file pointer, file name, and path.
 // error: An error, if an issue occurs while creating the directory
 // or the log file.
-func CreateLogFile(fs afero.Fs, logPath string) (LogInfo, error) {
+func CreateLogFile(fs afero.Fs, logPath string) (LogConfig, error) {
 	logPath = strings.TrimSpace(logPath)
 
 	if logPath == "" {
-		return LogInfo{}, fmt.Errorf("logDir cannot be empty")
+		return LogConfig{}, fmt.Errorf("logDir cannot be empty")
 	}
 
 	if filepath.Ext(logPath) != ".log" {
 		logPath += ".log"
 	}
 
-	logInfo := LogInfo{
+	logInfo := LogConfig{
 		Dir:      filepath.Dir(logPath),
 		FileName: filepath.Base(logPath),
 		Path:     logPath,
@@ -64,13 +64,13 @@ func CreateLogFile(fs afero.Fs, logPath string) (LogInfo, error) {
 
 	if _, err := fs.Stat(logInfo.Path); os.IsNotExist(err) {
 		if err := fs.MkdirAll(logInfo.Dir, os.ModePerm); err != nil {
-			return LogInfo{}, fmt.Errorf("failed to create %s: %v", logInfo.Dir, err)
+			return LogConfig{}, fmt.Errorf("failed to create %s: %v", logInfo.Dir, err)
 		}
 	}
 
 	file, err := fs.OpenFile(logInfo.Path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
-		return LogInfo{}, fmt.Errorf("failed to create %s: %v", logInfo.Path, err)
+		return LogConfig{}, fmt.Errorf("failed to create %s: %v", logInfo.Path, err)
 	}
 	logInfo.File = file
 
@@ -125,7 +125,7 @@ func ConfigureLogger(fs afero.Fs, level slog.Level, path string, outputType Outp
 
 		colorAttribute := determineColorAttribute(level)
 		logger = &ColorLogger{
-			Info:           LogInfo{File: logFile, Path: path},
+			Info:           LogConfig{File: logFile, Path: path},
 			ColorAttribute: colorAttribute,
 			Logger:         slog.New(slogmulti.Fanout(fileHandler, stdoutHandler)),
 		}
@@ -134,7 +134,7 @@ func ConfigureLogger(fs afero.Fs, level slog.Level, path string, outputType Outp
 		// Standard JSON handler for PlainLogger without colorization
 		stdoutHandler = slog.NewJSONHandler(os.Stdout, opts)
 		logger = &PlainLogger{
-			Info:   LogInfo{File: logFile, Path: path},
+			Info:   LogConfig{File: logFile, Path: path},
 			Logger: slog.New(slogmulti.Fanout(fileHandler, stdoutHandler)),
 		}
 	}
@@ -142,31 +142,60 @@ func ConfigureLogger(fs afero.Fs, level slog.Level, path string, outputType Outp
 	return logger, nil
 }
 
-// InitLogging sets up logging with a single function call. It creates a log file
-// and configures the logger based on the specified parameters.
+// InitLogging is a convenience function that combines
+// the CreateLogFile and ConfigureLogger functions into one call.
+// It is useful for quickly setting up logging to disk.
 //
 // **Parameters:**
 //
 // fs: An afero.Fs instance for filesystem operations, allows mocking in tests.
-// logDir: The directory where the log file should be created.
-// logName: The name of the log file.
+// logPath: The path to the log file.
 // level: The logging level.
 // outputType: The output type of the logger (PlainOutput or ColorOutput).
+// logToDisk: A boolean indicating whether to log to disk or not.
 //
 // **Returns:**
 //
 // Logger: A configured Logger object.
 // error: An error if any issue occurs during initialization.
-func InitLogging(fs afero.Fs, logPath string, level slog.Level, outputType OutputType) (Logger, error) {
-	logInfo, err := CreateLogFile(fs, logPath)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create log file: %v", err)
+func InitLogging(fs afero.Fs, logPath string, level slog.Level, outputType OutputType, logToDisk bool) (Logger, error) {
+	cfg := LogConfig{
+		Path: logPath,
+	}
+	if logToDisk {
+		if cfg.Path == "" {
+			return nil, fmt.Errorf("logPath cannot be empty when logToDisk is true")
+		}
+		var err error
+		cfg, err = CreateLogFile(fs, logPath)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create log file: %v", err)
+		}
 	}
 
-	logger, err := ConfigureLogger(fs, level, logInfo.Path, outputType)
+	logger, err := ConfigureLogger(fs, level, cfg.Path, outputType)
 	if err != nil {
 		return nil, fmt.Errorf("failed to configure logger: %v", err)
 	}
 
 	return logger, nil
+}
+
+// LogAndReturnError logs the provided error message using the given logger and returns the error.
+//
+// This utility function is helpful for scenarios where an error needs to be both logged and returned.
+// It simplifies the code by combining these two actions into one call.
+//
+// **Parameters:**
+//
+// logger: The Logger instance used for logging the error.
+// errMsg: The error message to log and return.
+//
+// **Returns:**
+//
+// error: The error created from the errMsg, after it has been logged.
+func LogAndReturnError(logger Logger, errMsg string) error {
+	err := fmt.Errorf(errMsg)
+	logger.Error(err)
+	return err
 }

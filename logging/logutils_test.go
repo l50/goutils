@@ -2,8 +2,10 @@ package logging_test
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"log/slog"
@@ -408,22 +410,24 @@ func TestGlobalLogger(t *testing.T) {
 
 func TestLoggerOutput(t *testing.T) {
 	testCases := []struct {
-		name        string
-		level       slog.Level
-		fs          afero.Fs
-		logPath     string
-		outputType  logging.OutputType
-		logFunc     func(l logging.Logger)
-		errFunc     func(l logging.Logger)
-		expectError bool
-		expectedLog string
+		name         string
+		level        slog.Level
+		fs           afero.Fs
+		logPath      string
+		outputType   logging.OutputType
+		outputToDisk bool
+		logFunc      func(l logging.Logger)
+		errFunc      func(l logging.Logger)
+		expectError  bool
+		expectedLog  string
 	}{
 		{
-			name:       "Successful Logger Output",
-			level:      slog.LevelInfo,
-			fs:         afero.NewMemMapFs(),
-			logPath:    "/tmp/logs/test_logger_output.log",
-			outputType: logging.ColorOutput,
+			name:         "Successful Logger Output",
+			level:        slog.LevelInfo,
+			fs:           afero.NewMemMapFs(),
+			outputType:   logging.ColorOutput,
+			logPath:      "/tmp/logs/test_logger_output.log",
+			outputToDisk: true,
 			logFunc: func(l logging.Logger) {
 				l.Println("Test info color logger")
 			},
@@ -431,43 +435,112 @@ func TestLoggerOutput(t *testing.T) {
 				l.Error("Test info color logger error")
 			},
 			expectError: false,
-			expectedLog: "Test message\n",
+			expectedLog: "Test info color logger",
+		},
+		{
+			name:       "Successful Plain Logger Output",
+			level:      slog.LevelInfo,
+			fs:         afero.NewMemMapFs(),
+			outputType: logging.PlainOutput,
+			logFunc: func(l logging.Logger) {
+				l.Println("Test info color logger")
+			},
+			errFunc: func(l logging.Logger) {
+				l.Error("Test info color logger error")
+			},
+			expectError: false,
+			expectedLog: "Test info color logger",
 		},
 	}
-
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			if err := tc.fs.MkdirAll(filepath.Dir(tc.logPath), 0755); err != nil {
 				t.Fatalf("Failed to create directory: %v", err)
 			}
 
-			// Initialize logging with the memory file system
-			logger, err := logging.InitLogging(tc.fs, tc.logPath, tc.level, tc.outputType)
+			logger, err := logging.InitLogging(tc.fs, tc.logPath, tc.level, tc.outputType, tc.outputToDisk)
 			if (err != nil) != tc.expectError {
 				t.Fatalf("InitLogging() error = %v, expectError %v", err, tc.expectError)
 			}
 			defer logger.Close()
 
 			if !tc.expectError {
-				// Perform logging operations
-				logger.Println("Test message")
+				tc.logFunc(logger)
+				if tc.errFunc != nil {
+					tc.errFunc(logger)
+				}
 
-				// Now open the log file for reading
 				logFile, err := tc.fs.Open(tc.logPath)
 				if err != nil {
 					t.Fatalf("Failed to open log file: %v", err)
 				}
 				defer logFile.Close()
 
-				// buf, err := io.ReadAll(logFile)
-				// if err != nil {
-				// 	t.Fatalf("Failed to read log file: %v", err)
-				// }
+				buf, err := io.ReadAll(logFile)
+				if err != nil {
+					t.Fatalf("Failed to read log file: %v", err)
+				}
 
-				// // Assert on the file's content
-				// if string(buf) != tc.expectedLog {
-				// 	t.Errorf("Expected %q, got %q", tc.expectedLog, string(buf))
-				// }
+				logContent := string(buf)
+				// Check for the presence of specific log messages rather than exact content
+				expectedInfoLog := "Test info color logger"
+				expectedErrorLog := "Test info color logger error"
+				if !strings.Contains(logContent, expectedInfoLog) ||
+					!strings.Contains(logContent, expectedErrorLog) {
+					t.Errorf("Log file content does not contain the expected log messages")
+				}
+			}
+		})
+	}
+}
+
+type mockLogger struct {
+	lastLoggedError string
+}
+
+func (m *mockLogger) Error(v ...interface{}) {
+	m.lastLoggedError = fmt.Sprint(v...)
+}
+
+// Implement no-op for other methods of Logger interface
+func (m *mockLogger) Println(v ...interface{})               {}
+func (m *mockLogger) Printf(format string, v ...interface{}) {}
+func (m *mockLogger) Errorf(format string, v ...interface{}) {}
+func (m *mockLogger) Close() error                           { return nil }
+func (m *mockLogger) Debug(v ...interface{})                 {}
+func (m *mockLogger) Debugf(format string, v ...interface{}) {}
+
+func TestLogAndReturnError(t *testing.T) {
+	tests := []struct {
+		name    string
+		errMsg  string
+		wantErr string
+	}{
+		{
+			name:    "Standard Error",
+			errMsg:  "standard error occurred",
+			wantErr: "standard error occurred",
+		},
+		{
+			name:    "Empty Error Message",
+			errMsg:  "",
+			wantErr: "",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			mock := &mockLogger{}
+			err := logging.LogAndReturnError(mock, tc.errMsg)
+
+			if err.Error() != tc.wantErr {
+				t.Errorf("Expected error message '%s', got '%s'",
+					tc.wantErr, err.Error())
+			}
+
+			if mock.lastLoggedError != tc.wantErr {
+				t.Errorf("Expected logged error message '%s', got '%s'",
+					tc.wantErr, mock.lastLoggedError)
 			}
 		})
 	}

@@ -73,12 +73,15 @@ func ExampleCreateLogFile() {
 }
 
 func ExampleInitLogging() {
+	// The InitLogging function is a convenience function that combines
+	// the CreateLogFile and ConfigureLogger functions into one call.
+	// It is useful for quickly setting up logging to disk.
 	fs := afero.NewOsFs()
 	logDir := filepath.Join("/tmp", "logs")
 	logName := "test.log"
 	logPath := filepath.Join(logDir, logName)
 
-	logger, err := logging.InitLogging(fs, logPath, slog.LevelDebug, logging.PlainOutput)
+	logger, err := logging.InitLogging(fs, logPath, slog.LevelDebug, logging.PlainOutput, true)
 	if err != nil {
 		fmt.Printf("failed to initialize logging: %v", err)
 		return
