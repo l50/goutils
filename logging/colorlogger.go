@@ -2,7 +2,6 @@ package logging
 
 import (
 	"fmt"
-	"log"
 	"log/slog"
 
 	"github.com/fatih/color"
@@ -28,7 +27,7 @@ type ColorLogger struct {
 // of fmt.Println.
 func (l *ColorLogger) Println(v ...interface{}) {
 	// Format message with color and then log using slog
-	coloredOutput := color.New(l.ColorAttribute).SprintFunc()
+	coloredOutput := color.New(color.FgGreen).SprintFunc()
 	l.Logger.Info(coloredOutput(fmt.Sprintln(v...)))
 }
 
@@ -37,7 +36,7 @@ func (l *ColorLogger) Println(v ...interface{}) {
 // manner of fmt.Printf.
 func (l *ColorLogger) Printf(format string, v ...interface{}) {
 	// Format message with color and then log using slog
-	coloredOutput := color.New(l.ColorAttribute).SprintfFunc()
+	coloredOutput := color.New(color.FgGreen).SprintfFunc()
 	l.Logger.Info(coloredOutput(format, v...))
 }
 
@@ -69,14 +68,14 @@ func (l *ColorLogger) Close() error {
 // in the specified color. The arguments are handled in the manner
 // of fmt.Println.
 func (l *ColorLogger) Debug(v ...interface{}) {
-	log.SetOutput(l.Info.File)
-	color.New(l.ColorAttribute).Sprint(v...)
+	coloredOutput := color.New(color.FgYellow).SprintFunc()
+	l.Logger.Error(coloredOutput(fmt.Sprintln(v...)))
 }
 
 // Debugf for ColorLogger logs the provided formatted string as a debug
 // line in the specified color. The format and arguments are handled
 // in the manner of fmt.Printf.
 func (l *ColorLogger) Debugf(format string, v ...interface{}) {
-	log.SetOutput(l.Info.File)
-	color.New(l.ColorAttribute).Printf(format, v...)
+	coloredOutput := color.New(color.FgYellow).SprintFunc()
+	l.Logger.Error(coloredOutput(fmt.Sprintln(v...)))
 }
