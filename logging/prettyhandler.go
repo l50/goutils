@@ -3,9 +3,11 @@ package logging
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"log/slog"
+	"os"
 
 	"github.com/l50/goutils/v2/str"
 )
@@ -70,24 +72,27 @@ func (h *PrettyHandler) Handle(ctx context.Context, r slog.Record) error {
 	timeStr := r.Time.Format("[15:05:05.000]")
 	messageColor := colorizeMessage(r.Message, r.Level)
 
-	// Extract fields and marshal only if they exist
 	fields := extractFields(r)
+	var fieldsStr string
 	if len(fields) > 0 {
 		fields, err := json.MarshalIndent(fields, "", "  ")
 		if err != nil {
 			return err
 		}
-		// Convert fields from bytes to string
-		fieldsStr := string(fields)
+		fieldsStr = string(fields)
+	}
 
-		// Strip ANSI escape sequences
-		fieldStr := str.StripANSI(fieldsStr)
+	// Check if output is a file and handle accordingly
+	if _, isFile := h.l.Writer().(*os.File); isFile {
+		// Option 1: Keep color codes in file
+		// h.l.Println(timeStr, levelColor, messageColor, fieldsStr)
 
-		// Print with fields
-		h.l.Println(timeStr, r.Level, r.Message, fieldStr)
+		// Option 2: Strip color codes from file output
+		strippedMsg := str.StripANSI(fmt.Sprintf("%s %s %s", levelColor, messageColor, fieldsStr))
+		h.l.Println(timeStr, strippedMsg)
 	} else {
-		// Print without fields
-		h.l.Println(timeStr, levelColor, messageColor)
+		// Output to STDOUT with color
+		h.l.Println(timeStr, levelColor, messageColor, fieldsStr)
 	}
 
 	return nil
