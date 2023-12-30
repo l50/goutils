@@ -56,16 +56,17 @@ func ExampleCreateLogFile() {
 	logName := "test.log"
 	logPath := filepath.Join(logDir, logName)
 
-	logInfo, err := logging.CreateLogFile(fs, logPath)
+	fmt.Println("Creating log file...")
+	logCfg, err := logging.CreateLogFile(fs, logPath)
 	if err != nil {
 		fmt.Printf("failed to create log file: %v", err)
 		return
 	}
 
-	fmt.Printf("log file created at: %s", logInfo.Path)
+	fmt.Printf("Log file created at: %s", logCfg.Path)
 
 	// Clean up
-	if err := fs.Remove(logInfo.Path); err != nil {
+	if err := fs.Remove(logCfg.Path); err != nil {
 		fmt.Printf("failed to clean up: %v", err)
 	}
 

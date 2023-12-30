@@ -95,7 +95,7 @@ func TestCreateLogFile(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			logInfo, err := logging.CreateLogFile(tc.fs, tc.logPath)
+			logCfg, err := logging.CreateLogFile(tc.fs, tc.logPath)
 			if tc.expectError {
 				if err == nil {
 					t.Fatalf("expected error but got none")
@@ -106,8 +106,8 @@ func TestCreateLogFile(t *testing.T) {
 				}
 
 				expectedPath := tc.logPath
-				if logInfo.Path != expectedPath {
-					t.Fatalf("expected path %s but got %s", expectedPath, logInfo.Path)
+				if logCfg.Path != expectedPath {
+					t.Fatalf("expected path %s but got %s", expectedPath, logCfg.Path)
 				}
 			}
 		})
