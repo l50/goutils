@@ -10,96 +10,94 @@ import (
 )
 
 func plainLoggerExample() {
-	fs := afero.NewOsFs()
-	logger, err := logging.ConfigureLogger(fs, slog.LevelDebug, "/tmp/test.log", logging.PlainOutput)
+	cfg := logging.LogConfig{
+		Fs:         afero.NewOsFs(),
+		LogPath:    filepath.Join("/tmp", "test.log"),
+		Level:      slog.LevelDebug,
+		OutputType: logging.PlainOutput,
+		LogToDisk:  true,
+	}
+
+	logger, err := logging.InitLogging(&cfg)
 	if err != nil {
-		fmt.Printf("failed to configure logger: %v", err)
+		fmt.Printf("Failed to configure logger: %v", err)
 		return
 	}
-	defer logger.Close()
 
 	logger.Println("This is a log message")
 	logger.Error("This is an error log message")
 	logger.Errorf("This is a formatted error log message: %s", "Error details")
 
-	// Since we can't predict the log message, print a static message instead.
 	fmt.Println("Logger configured successfully.")
 }
 
 func colorLoggerExample() {
-	fs := afero.NewOsFs()
-	logger, err := logging.ConfigureLogger(fs, slog.LevelDebug, "/tmp/test.log", logging.ColorOutput)
+	cfg := logging.LogConfig{
+		Fs:         afero.NewOsFs(),
+		LogPath:    filepath.Join("/tmp", "test.log"),
+		Level:      slog.LevelDebug,
+		OutputType: logging.ColorOutput,
+		LogToDisk:  true,
+	}
+
+	logger, err := logging.InitLogging(&cfg)
 	if err != nil {
-		fmt.Printf("failed to configure logger: %v", err)
+		fmt.Printf("Failed to configure logger: %v", err)
 		return
 	}
-	defer logger.Close()
 
 	logger.Println("This is a log message")
 	logger.Error("This is an error log message")
 	logger.Errorf("This is a formatted error log message: %s", "Error details")
 
-	// Since we can't predict the log message, print a static message instead.
 	fmt.Println("Logger configured successfully.")
 }
 
-func ExampleConfigureLogger() {
+func ExampleLogConfig_ConfigureLogger() {
 	plainLoggerExample()
 	colorLoggerExample()
-
-	// Unpredictable output due to timestamps and structured logging
 }
 
-func ExampleCreateLogFile() {
-	fs := afero.NewOsFs()
-	logDir := filepath.Join("/tmp", "logs")
-	logName := "test.log"
-	logPath := filepath.Join(logDir, logName)
+func ExampleLogConfig_CreateLogFile() {
+	cfg := logging.LogConfig{
+		Fs:         afero.NewOsFs(),
+		LogPath:    filepath.Join("/tmp", "test.log"),
+		Level:      slog.LevelDebug,
+		OutputType: logging.ColorOutput,
+		LogToDisk:  true,
+	}
 
 	fmt.Println("Creating log file...")
-	logCfg, err := logging.CreateLogFile(fs, logPath)
-	if err != nil {
-		fmt.Printf("failed to create log file: %v", err)
+	if err := cfg.CreateLogFile(); err != nil {
+		fmt.Printf("Failed to create log file: %v", err)
 		return
 	}
 
-	fmt.Printf("Log file created at: %s", logCfg.Path)
+	fmt.Printf("Log file created at: %s", cfg.LogPath)
 
-	// Clean up
-	if err := fs.Remove(logCfg.Path); err != nil {
-		fmt.Printf("failed to clean up: %v", err)
+	if err := cfg.Fs.Remove(cfg.LogPath); err != nil {
+		fmt.Printf("Failed to clean up: %v", err)
 	}
-
-	// Unpredictable output due to timestamps and structured logging
 }
 
 func ExampleInitLogging() {
-	// The InitLogging function is a convenience function that combines
-	// the CreateLogFile and ConfigureLogger functions into one call.
-	// It is useful for quickly setting up logging to disk.
-	fs := afero.NewOsFs()
-	logDir := filepath.Join("/tmp", "logs")
-	logName := "test.log"
-	logPath := filepath.Join(logDir, logName)
+	logCfg := logging.LogConfig{
+		Fs:         afero.NewOsFs(),
+		LogPath:    filepath.Join("/tmp", "test.log"),
+		Level:      slog.LevelDebug,
+		OutputType: logging.ColorOutput,
+		LogToDisk:  true,
+	}
 
-	logger, err := logging.InitLogging(fs, logPath, slog.LevelDebug, logging.PlainOutput, true)
+	logger, err := logging.InitLogging(&logCfg)
 	if err != nil {
-		fmt.Printf("failed to initialize logging: %v", err)
+		fmt.Printf("Failed to initialize logging: %v", err)
 		return
 	}
-	defer logger.Close()
 
 	logger.Println("This is a log message")
 	logger.Error("This is an error log message")
 	logger.Errorf("This is a formatted error log message: %s", "Error details")
 
-	// Since we can't predict the log message, print a static message instead.
 	fmt.Println("Logger configured successfully.")
-
-	// Clean up
-	if err := fs.Remove(logPath); err != nil {
-		fmt.Printf("failed to clean up: %v", err)
-	}
-
-	// Unpredictable output due to timestamps and structured logging
 }

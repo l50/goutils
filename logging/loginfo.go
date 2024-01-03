@@ -1,6 +1,8 @@
 package logging
 
 import (
+	"log/slog"
+
 	"github.com/spf13/afero"
 )
 
@@ -9,13 +11,14 @@ import (
 //
 // **Attributes:**
 //
-// Dir: A string representing the directory where the log file is located.
-// File: An afero.File object representing the log file.
-// FileName: A string representing the name of the log file.
+// Fs: An afero.Fs object representing the file system.
 // Path: A string representing the full path to the log file.
+// Level: A slog.Level object representing the logging level.
+// LogToDisk: A boolean representing whether or not to log to disk.
 type LogConfig struct {
-	Dir      string
-	File     afero.File
-	FileName string
-	Path     string
+	Fs         afero.Fs
+	LogPath    string
+	Level      slog.Level
+	OutputType OutputType
+	LogToDisk  bool
 }
