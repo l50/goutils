@@ -18,16 +18,6 @@ designed to simplify common logging tasks.
 
 ## Functions
 
-### ColorLogger.Close()
-
-```go
-Close() error
-```
-
-Close for ColorLogger closes the log file.
-
----
-
 ### ColorLogger.Debug(...interface{})
 
 ```go
@@ -100,60 +90,10 @@ of fmt.Println.
 
 ---
 
-### ConfigureLogger(afero.Fs, slog.Level, string, OutputType)
+### InitLogging(*LogConfig)
 
 ```go
-ConfigureLogger(afero.Fs, slog.Level, string, OutputType) Logger, error
-```
-
-ConfigureLogger sets up a logger based on the provided logging level,
-file path, and output type. It supports both colorized and plain text
-logging output, selectable via the OutputType parameter. The logger
-writes log entries to both a file and standard output.
-
-**Parameters:**
-
-level: Logging level as a slog.Level.
-path: Path to the log file.
-outputType: Type of log output, either ColorOutput or PlainOutput.
-
-**Returns:**
-
-Logger: Configured Logger object based on provided parameters.
-error: An error, if an issue occurs while setting up the logger.
-
----
-
-### CreateLogFile(afero.Fs, string)
-
-```go
-CreateLogFile(afero.Fs, string) LogConfig, error
-```
-
-CreateLogFile creates a log file in a 'logs' subdirectory of the
-specified directory. The log file's name is the provided log name
-with the extension '.log'.
-
-**Parameters:**
-
-fs: An afero.Fs instance to mock filesystem for testing.
-logDir: A string for the directory where 'logs' subdirectory and
-log file should be created.
-logName: A string for the name of the log file to be created.
-
-**Returns:**
-
-LogConfig: A LogConfig struct with information about the log file,
-including its directory, file pointer, file name, and path.
-error: An error, if an issue occurs while creating the directory
-or the log file.
-
----
-
-### InitLogging(afero.Fs, string, slog.Level, OutputType, bool)
-
-```go
-InitLogging(afero.Fs, string, slog.Level, OutputType, bool) Logger, error
+InitLogging(*LogConfig) Logger, error
 ```
 
 InitLogging is a convenience function that combines
@@ -211,6 +151,56 @@ error: The error created from the errMsg, after it has been logged.
 
 ---
 
+### LogConfig.ConfigureLogger()
+
+```go
+ConfigureLogger() Logger, error
+```
+
+ConfigureLogger sets up a logger based on the provided logging level,
+file path, and output type. It supports both colorized and plain text
+logging output, selectable via the OutputType parameter. The logger
+writes log entries to both a file and standard output.
+
+**Parameters:**
+
+level: Logging level as a slog.Level.
+path: Path to the log file.
+outputType: Type of log output, either ColorOutput or PlainOutput.
+
+**Returns:**
+
+Logger: Configured Logger object based on provided parameters.
+error: An error, if an issue occurs while setting up the logger.
+
+---
+
+### LogConfig.CreateLogFile()
+
+```go
+CreateLogFile() error
+```
+
+CreateLogFile creates a log file in a 'logs' subdirectory of the
+specified directory. The log file's name is the provided log name
+with the extension '.log'.
+
+**Parameters:**
+
+fs: An afero.Fs instance to mock filesystem for testing.
+logDir: A string for the directory where 'logs' subdirectory and
+log file should be created.
+logName: A string for the name of the log file to be created.
+
+**Returns:**
+
+LogConfig: A LogConfig struct with information about the log file,
+including its directory, file pointer, file name, and path.
+error: An error, if an issue occurs while creating the directory
+or the log file.
+
+---
+
 ### NewPrettyHandler(io.Writer, PrettyHandlerOptions)
 
 ```go
@@ -229,16 +219,6 @@ opts: PrettyHandlerOptions for configuring the handler.
 **Returns:**
 
 *PrettyHandler: A new instance of PrettyHandler.
-
----
-
-### PlainLogger.Close()
-
-```go
-Close() error
-```
-
-Close for PlainLogger closes the log file.
 
 ---
 
@@ -310,6 +290,7 @@ Println(...interface{})
 Println for PlainLogger logs the provided arguments as a line using
 slog library.
 The arguments are converted to a string using fmt.Sprint.
+PlainLogger.go
 
 ---
 
