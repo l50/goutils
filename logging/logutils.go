@@ -116,8 +116,9 @@ func (cfg *LogConfig) ConfigureLogger() (Logger, error) {
 		prettyOpts := PrettyHandlerOptions{SlogOpts: *opts}
 		stdoutHandler = NewPrettyHandler(os.Stdout, prettyOpts)
 
+		colorAttribute := determineColorAttribute(cfg.Level)
 		// Determine color attribute for the log level
-		colorAttribute := colorizeLevel(cfg.Level)
+		// colorAttribute := (cfg.Level)
 		logger = &ColorLogger{
 			Info:           *cfg,
 			ColorAttribute: colorAttribute,

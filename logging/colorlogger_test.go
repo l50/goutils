@@ -8,7 +8,6 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/l50/goutils/v2/logging"
-	log "github.com/l50/goutils/v2/logging"
 	"github.com/spf13/afero"
 )
 
@@ -25,9 +24,9 @@ func TestColorLogger(t *testing.T) {
 		fs         afero.Fs
 		logConfig  logging.LogConfig
 		logName    string
-		logFunc    func(l log.Logger)
+		logFunc    func(l logging.Logger)
 		outputType logging.OutputType
-		errFunc    func(l log.Logger)
+		errFunc    func(l logging.Logger)
 	}{
 		{
 			name:  "Test PlainLogger Println",
@@ -36,25 +35,25 @@ func TestColorLogger(t *testing.T) {
 				l.Error("Test Plain Println logger error")
 			},
 			fs:         afero.NewMemMapFs(),
-			outputType: log.PlainOutput,
+			outputType: logging.PlainOutput,
 			logName:    "test_color_println.log",
 			logFunc: func(l logging.Logger) {
 				l.Println("Test Plain Println logger")
 			},
 		},
-		// {
-		// 	name:  "Test ColorLogger Printf",
-		// 	level: slog.LevelInfo,
-		// 	errFunc: func(l logging.Logger) {
-		// 		l.Errorf("Test %s logger error", "Color Printf")
-		// 	},
-		// 	fs:         afero.NewMemMapFs(),
-		// 	outputType: logging.ColorOutput,
-		// 	logName:    "test_color_printf.log",
-		// 	logFunc: func(l logging.Logger) {
-		// 		l.Println("Test Color Printf logger")
-		// 	},
-		// },
+		{
+			name:  "Test ColorLogger Printf",
+			level: slog.LevelInfo,
+			errFunc: func(l logging.Logger) {
+				l.Errorf("Test %s logger error", "Color Printf")
+			},
+			fs:         afero.NewMemMapFs(),
+			outputType: logging.ColorOutput,
+			logName:    "test_color_printf.log",
+			logFunc: func(l logging.Logger) {
+				l.Println("Test Color Printf logger")
+			},
+		},
 		{
 			name:  "Test ColorLogger Debug",
 			level: slog.LevelDebug,
@@ -64,7 +63,7 @@ func TestColorLogger(t *testing.T) {
 			fs:         afero.NewMemMapFs(),
 			outputType: logging.ColorOutput,
 			logName:    "test_color_debug.log",
-			logFunc: func(l log.Logger) {
+			logFunc: func(l logging.Logger) {
 				l.Debug("Test Color Debug logger")
 			},
 		},
@@ -123,7 +122,7 @@ func TestColorLogger(t *testing.T) {
 
 			colorLogger := &logging.ColorLogger{
 				Info:           cfg,
-				ColorAttribute: color.FgWhite,
+				ColorAttribute: color.FgGreen,
 				Logger:         slogLogger,
 			}
 

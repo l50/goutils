@@ -3,13 +3,13 @@ package logging
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"log/slog"
-	"os"
+	"time"
 
 	"github.com/fatih/color"
-	"github.com/mattn/go-isatty"
 )
 
 // PrettyHandlerOptions represents options used for configuring
@@ -68,33 +68,38 @@ func NewPrettyHandler(out io.Writer, opts PrettyHandlerOptions) *PrettyHandler {
 //
 // error: An error if any issue occurs during log handling.
 func (h *PrettyHandler) Handle(ctx context.Context, r slog.Record) error {
-	colorAttr := colorizeLevel(r.Level)
-	levelColor := color.New(colorAttr).Sprint(r.Level.String())
-	timeStr := r.Time.Format("[15:05:05.000]")
-	messageColor := color.New(colorAttr).Sprint(r.Message)
-
 	fields := extractFields(r)
+	fields["time"] = r.Time.Format(time.RFC3339Nano)
+	fields["level"] = colorizeLevel(r.Level, r.Level.String())
+	fields["msg"] = r.Message
 	var fieldsStr string
 	if len(fields) > 0 {
-		fieldsJSON, err := json.MarshalIndent(fields, "", "  ")
+		fields, err := json.MarshalIndent(fields, "", "  ")
 		if err != nil {
 			return err
 		}
-		fieldsStr = string(fieldsJSON)
+		fieldsStr = string(fields)
 	}
 
-	// Determine if output should have color
-	colorOutput := isatty.IsTerminal(os.Stdout.Fd()) || isatty.IsCygwinTerminal(os.Stdout.Fd())
-	// h.l.Println(timeStr, levelColor, messageColor, fieldsStr)
-	if _, isFile := h.l.Writer().(*os.File); isFile || !colorOutput {
-		// Strip color codes from file output or non-color terminals
-		// strippedMsg := str.StripANSI(fmt.Sprintf("%s %s %s", levelColor, messageColor, fieldsStr))
-		h.l.Println(timeStr, levelColor, messageColor, fieldsStr)
-		// h.l.Println(timeStr, strippedMsg)
-	} else {
-		// Output to STDOUT with color
-		h.l.Println(timeStr, levelColor, messageColor, fieldsStr)
+	fmt.Println(fieldsStr)
+
+	jsonData, err := json.Marshal(fields)
+	if err != nil {
+		return err
 	}
+	// // Check if output is a file and handle accordingly
+	// if _, isFile := h.l.Writer().(*os.File); isFile {
+	// 	// Strip color codes from file output
+	// 	strippedMsg := str.StripANSI(fieldsStr)
+	// 	fmt.Sprintf("%s %s %s", levelColor, messageColor, fieldsStr)
+	// 	h.l.Println(fields["time"], strippedMsg)
+	// } else {
+	// 	// Output to STDOUT with color
+	// 	h.l.Println(timeStr, levelColor, messageColor, fieldsStr)
+	// }
+
+	coloredOutput := h.colorizeBasedOnLevel(r.Level, string(jsonData))
+	h.l.Println(coloredOutput)
 
 	return nil
 }
@@ -108,17 +113,17 @@ func extractFields(r slog.Record) map[string]interface{} {
 	return fields
 }
 
-func colorizeLevel(level slog.Level) color.Attribute {
+func (h *PrettyHandler) colorizeBasedOnLevel(level slog.Level, message string) string {
+	var colorMessage string
 	switch level {
-	case slog.LevelDebug:
-		return color.FgMagenta
 	case slog.LevelInfo:
-		return color.FgBlue
-	case slog.LevelWarn:
-		return color.FgYellow
+		colorMessage = color.New(color.FgBlue).Sprint(message)
 	case slog.LevelError:
-		return color.FgRed
+		colorMessage = color.New(color.FgRed).Sprint(message)
+	case slog.LevelDebug:
+		colorMessage = color.New(color.FgMagenta).Sprint(message)
 	default:
-		return color.Reset
+		colorMessage = message
 	}
+	return colorMessage
 }
