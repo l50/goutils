@@ -43,7 +43,7 @@ func (l *ColorLogger) Printf(format string, v ...interface{}) {
 // in the specified color. The arguments are handled in the manner
 // of fmt.Println.
 func (l *ColorLogger) Error(v ...interface{}) {
-	coloredOutput := color.New(color.FgRed).SprintFunc()
+	coloredOutput := color.New(l.ColorAttribute).SprintFunc()
 	l.Logger.Error(coloredOutput(fmt.Sprintln(v...)))
 }
 
@@ -51,7 +51,7 @@ func (l *ColorLogger) Error(v ...interface{}) {
 // error line in the specified color. The format and arguments are handled
 // in the manner of fmt.Printf.
 func (l *ColorLogger) Errorf(format string, v ...interface{}) {
-	coloredOutput := color.New(color.FgRed).SprintfFunc()
+	coloredOutput := color.New(l.ColorAttribute).SprintfFunc()
 	l.Logger.Error(coloredOutput(format, v...))
 }
 
@@ -59,14 +59,14 @@ func (l *ColorLogger) Errorf(format string, v ...interface{}) {
 // in the specified color. The arguments are handled in the manner
 // of fmt.Println.
 func (l *ColorLogger) Debug(v ...interface{}) {
-	coloredOutput := color.New(color.FgYellow).SprintFunc()
-	l.Logger.Error(coloredOutput(fmt.Sprintln(v...)))
+	coloredOutput := color.New(l.ColorAttribute).SprintFunc()
+	l.Logger.Debug(coloredOutput(fmt.Sprintln(v...)))
 }
 
 // Debugf for ColorLogger logs the provided formatted string as a debug
 // line in the specified color. The format and arguments are handled
 // in the manner of fmt.Printf.
 func (l *ColorLogger) Debugf(format string, v ...interface{}) {
-	coloredOutput := color.New(color.FgYellow).SprintFunc()
-	l.Logger.Error(coloredOutput(fmt.Sprintln(v...)))
+	coloredOutput := color.New(l.ColorAttribute).SprintfFunc()
+	l.Logger.Debug(coloredOutput(fmt.Sprintf(format, v...)))
 }
