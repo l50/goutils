@@ -211,22 +211,22 @@ func FixCodeBlocks(language string, filepath string) error {
 
 // TestLoggerOutput tests the output of the logger
 func TestLoggerOutput() {
-	// Direct color output test
-	color.New(color.FgCyan).Println("Direct color test message")
-
 	// Logger test
 	cfg := logging.LogConfig{
-		Level:      slog.LevelInfo,
+		Fs:         afero.NewMemMapFs(),
+		Level:      slog.LevelDebug,
 		OutputType: logging.ColorOutput,
 		LogToDisk:  false,
 	}
 
-	logger, err := logging.InitLogging(&cfg)
+	log, err := logging.InitLogging(&cfg)
 	if err != nil {
 		fmt.Println("Error initializing logger:", err)
 		return
 	}
 
-	logger.Println("This is a test info message")
-	logger.Error("This is a test error message")
+	log.Println("This is a test info message")
+	log.Error("This is a test error message")
+	log.Debugf("This is a test debug message")
+	log.Errorf("This is a test %s error message", "formatted")
 }

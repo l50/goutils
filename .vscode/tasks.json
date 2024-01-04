@@ -9,7 +9,7 @@
     {
       "label": "delete mage_output_file.go",
       "type": "shell",
-      "command": "rm -f mage_output_file.go"
+      "command": "rm -f magefiles/mage_output_file.go"
     }
   ]
 }

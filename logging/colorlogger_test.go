@@ -121,7 +121,7 @@ func TestColorLogger(t *testing.T) {
 			}
 
 			colorLogger := &logging.ColorLogger{
-				Info:           cfg,
+				Cfg:            cfg,
 				ColorAttribute: color.FgGreen,
 				Logger:         slogLogger,
 			}

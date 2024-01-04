@@ -242,7 +242,6 @@ func TestGlobalLogger(t *testing.T) {
 				}
 			}()
 
-			// Use the logName specified in each test case
 			cfg := logging.LogConfig{
 				Fs:         tc.fs,
 				LogPath:    tc.logName,

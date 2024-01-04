@@ -17,7 +17,7 @@ import (
 // ColorAttribute: A color attribute for output styling.
 // Logger: The slog Logger instance used for logging operations.
 type ColorLogger struct {
-	Info           LogConfig
+	Cfg            LogConfig
 	ColorAttribute color.Attribute
 	Logger         *slog.Logger
 }

@@ -94,6 +94,7 @@ func (cfg *LogConfig) ConfigureLogger() (Logger, error) {
 	var logFile afero.File
 	var err error
 	var fileHandler slog.Handler
+	var stdoutHandler slog.Handler
 
 	opts := &slog.HandlerOptions{
 		Level: cfg.Level,
@@ -107,32 +108,38 @@ func (cfg *LogConfig) ConfigureLogger() (Logger, error) {
 		fileHandler = slog.NewJSONHandler(logFile, opts)
 	}
 
-	var stdoutHandler slog.Handler
-	var logger Logger
-
-	switch cfg.OutputType {
-	case ColorOutput:
-		// PrettyHandler for colorized output in console
+	if cfg.OutputType == ColorOutput {
 		prettyOpts := PrettyHandlerOptions{SlogOpts: *opts}
 		stdoutHandler = NewPrettyHandler(os.Stdout, prettyOpts)
-
-		colorAttribute := determineColorAttribute(cfg.Level)
-		// Determine color attribute for the log level
-		// colorAttribute := (cfg.Level)
-		logger = &ColorLogger{
-			Info:           *cfg,
-			ColorAttribute: colorAttribute,
-			Logger:         slog.New(slogmulti.Fanout(fileHandler, stdoutHandler)),
-		}
-	case PlainOutput:
+	} else {
 		stdoutHandler = slog.NewJSONHandler(os.Stdout, opts)
-		handlers := []slog.Handler{stdoutHandler}
-		if cfg.LogToDisk {
-			handlers = append(handlers, fileHandler)
+	}
+
+	var handlers []slog.Handler
+	if fileHandler != nil {
+		handlers = append(handlers, fileHandler)
+	}
+	if stdoutHandler != nil {
+		handlers = append(handlers, stdoutHandler)
+	}
+
+	if len(handlers) == 0 {
+		return nil, fmt.Errorf("no valid handlers available for logger")
+	}
+
+	multiHandler := slog.New(slogmulti.Fanout(handlers...))
+	var logger Logger
+	if cfg.OutputType == ColorOutput {
+		colorAttribute := determineColorAttribute(cfg.Level)
+		logger = &ColorLogger{
+			Cfg:            *cfg,
+			ColorAttribute: colorAttribute,
+			Logger:         multiHandler,
 		}
+	} else {
 		logger = &PlainLogger{
 			Info:   *cfg,
-			Logger: slog.New(slogmulti.Fanout(handlers...)),
+			Logger: multiHandler,
 		}
 	}
 
