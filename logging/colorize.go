@@ -3,8 +3,6 @@ package logging
 import (
 	"fmt"
 	"log/slog"
-
-	"github.com/fatih/color"
 )
 
 // ANSI color codes
@@ -49,20 +47,4 @@ func colorizeLevel(level slog.Level, levelStr string) string {
 		colorCode = white
 	}
 	return colorize(colorCode, levelStr+":")
-
-}
-
-func determineColorAttribute(level slog.Level) color.Attribute {
-	switch level {
-	case slog.LevelDebug:
-		return color.FgMagenta
-	case slog.LevelInfo:
-		return color.FgBlue
-	case slog.LevelWarn:
-		return color.FgYellow
-	case slog.LevelError:
-		return color.FgRed
-	default:
-		return color.Reset
-	}
 }
