@@ -93,45 +93,45 @@ func (cfg *LogConfig) ConfigureLogger() (Logger, error) {
 
 	var logFile afero.File
 	var err error
-	if cfg.LogToDisk {
-		logFile, err = cfg.Fs.OpenFile(cfg.LogPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
-		if err != nil {
-			return nil, err
-		}
-	}
+	var fileHandler slog.Handler
 
 	opts := &slog.HandlerOptions{
 		Level: cfg.Level,
 	}
 
-	// File logger
-	fileHandler := slog.NewJSONHandler(logFile, opts)
+	if cfg.LogToDisk {
+		logFile, err = cfg.Fs.OpenFile(cfg.LogPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+		if err != nil {
+			return nil, err
+		}
+		fileHandler = slog.NewJSONHandler(logFile, opts)
+	}
 
 	var stdoutHandler slog.Handler
 	var logger Logger
 
 	switch cfg.OutputType {
 	case ColorOutput:
-		// Create a plain JSON handler for file logging to avoid color codes in the file
-		fileHandler := slog.NewJSONHandler(logFile, opts)
-
 		// PrettyHandler for colorized output in console
 		prettyOpts := PrettyHandlerOptions{SlogOpts: *opts}
 		stdoutHandler = NewPrettyHandler(os.Stdout, prettyOpts)
 
-		colorAttribute := determineColorAttribute(cfg.Level)
+		// Determine color attribute for the log level
+		colorAttribute := colorizeLevel(cfg.Level)
 		logger = &ColorLogger{
 			Info:           *cfg,
 			ColorAttribute: colorAttribute,
 			Logger:         slog.New(slogmulti.Fanout(fileHandler, stdoutHandler)),
 		}
-
 	case PlainOutput:
-		// Standard JSON handler for PlainLogger without colorization
 		stdoutHandler = slog.NewJSONHandler(os.Stdout, opts)
+		handlers := []slog.Handler{stdoutHandler}
+		if cfg.LogToDisk {
+			handlers = append(handlers, fileHandler)
+		}
 		logger = &PlainLogger{
 			Info:   *cfg,
-			Logger: slog.New(slogmulti.Fanout(fileHandler, stdoutHandler)),
+			Logger: slog.New(slogmulti.Fanout(handlers...)),
 		}
 	}
 

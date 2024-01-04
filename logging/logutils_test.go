@@ -3,6 +3,7 @@ package logging_test
 import (
 	"fmt"
 	"io"
+	"log"
 	"log/slog"
 	"os"
 	"path/filepath"
@@ -10,7 +11,6 @@ import (
 	"testing"
 
 	"github.com/l50/goutils/v2/logging"
-	log "github.com/l50/goutils/v2/logging"
 	"github.com/spf13/afero"
 )
 
@@ -135,7 +135,7 @@ func TestConfigureLogger(t *testing.T) {
 			outputType: logging.ColorOutput,
 			logName:    "test_info_color.log",
 			logFunc: func(l logging.Logger) {
-				l.Println("Test info color logger")
+				log.Println("Test info color logger")
 			},
 			errFunc: func(l logging.Logger) {
 				l.Error("Test info color logger error")
@@ -289,7 +289,7 @@ func TestLoggerOutput(t *testing.T) {
 			name:         "Successful Logger Output",
 			level:        slog.LevelInfo,
 			fs:           afero.NewMemMapFs(),
-			outputType:   log.ColorOutput,
+			outputType:   logging.ColorOutput,
 			logName:      "test_logger_output.log",
 			outputToDisk: true,
 			logFunc: func(l logging.Logger) {

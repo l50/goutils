@@ -5,6 +5,7 @@ package main
 
 import (
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 
@@ -14,6 +15,7 @@ import (
 	"github.com/l50/goutils/v2/docs"
 	fileutils "github.com/l50/goutils/v2/file/fileutils"
 	"github.com/l50/goutils/v2/git"
+	"github.com/l50/goutils/v2/logging"
 	"github.com/l50/goutils/v2/sys"
 	"github.com/magefile/mage/sh"
 	"github.com/spf13/afero"
@@ -205,4 +207,26 @@ func FixCodeBlocks(language string, filepath string) error {
 	}
 
 	return nil
+}
+
+// TestLoggerOutput tests the output of the logger
+func TestLoggerOutput() {
+	// Direct color output test
+	color.New(color.FgCyan).Println("Direct color test message")
+
+	// Logger test
+	cfg := logging.LogConfig{
+		Level:      slog.LevelInfo,
+		OutputType: logging.ColorOutput,
+		LogToDisk:  false,
+	}
+
+	logger, err := logging.InitLogging(&cfg)
+	if err != nil {
+		fmt.Println("Error initializing logger:", err)
+		return
+	}
+
+	logger.Println("This is a test info message")
+	logger.Error("This is a test error message")
 }
