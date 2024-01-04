@@ -26,8 +26,7 @@ type ColorLogger struct {
 // in the specified color. The arguments are handled in the manner
 // of fmt.Println.
 func (l *ColorLogger) Println(v ...interface{}) {
-	// Format message with color and then log using slog
-	coloredOutput := color.New(color.FgGreen).SprintFunc()
+	coloredOutput := color.New(l.ColorAttribute).SprintFunc()
 	l.Logger.Info(coloredOutput(fmt.Sprintln(v...)))
 }
 
@@ -36,7 +35,7 @@ func (l *ColorLogger) Println(v ...interface{}) {
 // manner of fmt.Printf.
 func (l *ColorLogger) Printf(format string, v ...interface{}) {
 	// Format message with color and then log using slog
-	coloredOutput := color.New(color.FgGreen).SprintfFunc()
+	coloredOutput := color.New(l.ColorAttribute).SprintfFunc()
 	l.Logger.Info(coloredOutput(format, v...))
 }
 

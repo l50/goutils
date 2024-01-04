@@ -11,6 +11,7 @@ require (
 	github.com/glendc/go-external-ip v0.1.0
 	github.com/go-git/go-git/v5 v5.11.0
 	github.com/magefile/mage v1.15.0
+	github.com/mattn/go-isatty v0.0.20
 	github.com/otiai10/copy v1.14.0
 	github.com/samber/slog-multi v1.0.2
 	github.com/spf13/afero v1.11.0
@@ -40,7 +41,6 @@ require (
 	github.com/kevinburke/ssh_config v1.2.0 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
-	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/pjbgf/sha1cd v0.3.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/samber/lo v1.39.0 // indirect

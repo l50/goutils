@@ -3,13 +3,13 @@ package logging
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"log"
 	"log/slog"
 	"os"
 
-	"github.com/l50/goutils/v2/str"
+	"github.com/fatih/color"
+	"github.com/mattn/go-isatty"
 )
 
 // PrettyHandlerOptions represents options used for configuring
@@ -68,28 +68,29 @@ func NewPrettyHandler(out io.Writer, opts PrettyHandlerOptions) *PrettyHandler {
 //
 // error: An error if any issue occurs during log handling.
 func (h *PrettyHandler) Handle(ctx context.Context, r slog.Record) error {
-	levelColor := colorizeLevel(r.Level)
+	colorAttr := colorizeLevel(r.Level)
+	levelColor := color.New(colorAttr).Sprint(r.Level.String())
 	timeStr := r.Time.Format("[15:05:05.000]")
-	messageColor := colorizeMessage(r.Message, r.Level)
+	messageColor := color.New(colorAttr).Sprint(r.Message)
 
 	fields := extractFields(r)
 	var fieldsStr string
 	if len(fields) > 0 {
-		fields, err := json.MarshalIndent(fields, "", "  ")
+		fieldsJSON, err := json.MarshalIndent(fields, "", "  ")
 		if err != nil {
 			return err
 		}
-		fieldsStr = string(fields)
+		fieldsStr = string(fieldsJSON)
 	}
 
-	// Check if output is a file and handle accordingly
-	if _, isFile := h.l.Writer().(*os.File); isFile {
-		// Option 1: Keep color codes in file
-		// h.l.Println(timeStr, levelColor, messageColor, fieldsStr)
-
-		// Option 2: Strip color codes from file output
-		strippedMsg := str.StripANSI(fmt.Sprintf("%s %s %s", levelColor, messageColor, fieldsStr))
-		h.l.Println(timeStr, strippedMsg)
+	// Determine if output should have color
+	colorOutput := isatty.IsTerminal(os.Stdout.Fd()) || isatty.IsCygwinTerminal(os.Stdout.Fd())
+	// h.l.Println(timeStr, levelColor, messageColor, fieldsStr)
+	if _, isFile := h.l.Writer().(*os.File); isFile || !colorOutput {
+		// Strip color codes from file output or non-color terminals
+		// strippedMsg := str.StripANSI(fmt.Sprintf("%s %s %s", levelColor, messageColor, fieldsStr))
+		h.l.Println(timeStr, levelColor, messageColor, fieldsStr)
+		// h.l.Println(timeStr, strippedMsg)
 	} else {
 		// Output to STDOUT with color
 		h.l.Println(timeStr, levelColor, messageColor, fieldsStr)
@@ -105,4 +106,19 @@ func extractFields(r slog.Record) map[string]interface{} {
 		return true
 	})
 	return fields
+}
+
+func colorizeLevel(level slog.Level) color.Attribute {
+	switch level {
+	case slog.LevelDebug:
+		return color.FgMagenta
+	case slog.LevelInfo:
+		return color.FgBlue
+	case slog.LevelWarn:
+		return color.FgYellow
+	case slog.LevelError:
+		return color.FgRed
+	default:
+		return color.Reset
+	}
 }
