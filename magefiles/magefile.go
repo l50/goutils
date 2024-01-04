@@ -216,7 +216,8 @@ func TestLoggerOutput() {
 		Fs:         afero.NewMemMapFs(),
 		Level:      slog.LevelDebug,
 		OutputType: logging.ColorOutput,
-		LogToDisk:  false,
+		LogToDisk:  true,
+		LogPath:    "./test.log",
 	}
 
 	log, err := logging.InitLogging(&cfg)

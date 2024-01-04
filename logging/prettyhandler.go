@@ -71,8 +71,9 @@ func NewPrettyHandler(out io.Writer, opts PrettyHandlerOptions) *PrettyHandler {
 // error: An error if any issue occurs during log handling.
 func (h *PrettyHandler) Handle(ctx context.Context, r slog.Record) error {
 	fields := extractFields(r)
-	fields["time"] = r.Time.Format(time.RFC3339Nano)
+	fields["time"] = r.Time.Format(time.RFC1123)
 	fields["level"] = r.Level.String()
+	// Strip existing ANSI codes from the message
 	fields["msg"] = r.Message
 
 	// Marshal fields to JSON
@@ -84,14 +85,15 @@ func (h *PrettyHandler) Handle(ctx context.Context, r slog.Record) error {
 	// Check if the output is to a terminal or a file
 	_, isFile := h.l.Writer().(*os.File)
 	isTerminal := isatty.IsTerminal(os.Stdout.Fd()) || isatty.IsCygwinTerminal(os.Stdout.Fd())
+	cleanMessage := str.StripANSI(r.Message)
 
 	if isFile && !isTerminal {
 		// Strip color codes from file output and print
-		strippedMsg := str.StripANSI(string(jsonData))
-		h.l.Println(strippedMsg)
+		// h.l.Println(cleanMessage)
+		h.l.Println(string(jsonData))
 	} else {
 		// Output to STDOUT with color and print
-		coloredOutput := h.colorizeBasedOnLevel(r.Level, string(jsonData))
+		coloredOutput := h.colorizeBasedOnLevel(r.Level, cleanMessage)
 		h.l.Println(coloredOutput)
 	}
 
