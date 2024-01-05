@@ -8,7 +8,7 @@ import (
 )
 
 func TestGenRandom(t *testing.T) {
-	tests := []struct {
+	testCases := []struct {
 		name    string
 		length  int
 		wantErr bool
@@ -25,7 +25,7 @@ func TestGenRandom(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			got, err := str.GenRandom(tc.length)
 			if (err != nil) != tc.wantErr {
@@ -40,7 +40,7 @@ func TestGenRandom(t *testing.T) {
 }
 
 func TestInSlice(t *testing.T) {
-	tests := []struct {
+	testCases := []struct {
 		name       string
 		strToFind  string
 		inputSlice []string
@@ -72,7 +72,7 @@ func TestInSlice(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			result := str.InSlice(tc.strToFind, tc.inputSlice)
 			if result != tc.expected {
@@ -83,7 +83,7 @@ func TestInSlice(t *testing.T) {
 }
 
 func TestToInt64(t *testing.T) {
-	tests := []struct {
+	testCases := []struct {
 		name    string
 		input   string
 		wantErr bool
@@ -100,7 +100,7 @@ func TestToInt64(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			_, err := str.ToInt64(tc.input)
 			if (err != nil) != tc.wantErr {
@@ -111,7 +111,7 @@ func TestToInt64(t *testing.T) {
 }
 
 func TestIsNumeric(t *testing.T) {
-	tests := []struct {
+	testCases := []struct {
 		name     string
 		input    string
 		expected bool
@@ -138,7 +138,7 @@ func TestIsNumeric(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			result := str.IsNumeric(tc.input)
 			if result != tc.expected {
@@ -149,7 +149,7 @@ func TestIsNumeric(t *testing.T) {
 }
 
 func TestToSlice(t *testing.T) {
-	tests := []struct {
+	testCases := []struct {
 		name     string
 		delimStr string
 		delim    string
@@ -163,7 +163,7 @@ func TestToSlice(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			got := str.ToSlice(tc.delimStr, tc.delim)
 			if !reflect.DeepEqual(got, tc.want) {
@@ -174,7 +174,7 @@ func TestToSlice(t *testing.T) {
 }
 
 func TestSlicesEqual(t *testing.T) {
-	tests := []struct {
+	testCases := []struct {
 		name string
 		a    []string
 		b    []string
@@ -200,11 +200,69 @@ func TestSlicesEqual(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			got := str.SlicesEqual(tc.a, tc.b)
 			if got != tc.want {
 				t.Errorf("SlicesEqual() = %v, want %v", got, tc.want)
+			}
+		})
+	}
+}
+
+func TestStripANSI(t *testing.T) {
+	testCases := []struct {
+		name string
+		str  string
+		want string
+	}{
+		{
+			name: "No ANSI codes",
+			str:  "Hello, world!",
+			want: "Hello, world!",
+		},
+		{
+			name: "Single ANSI code",
+			str:  "\x1B[31mHello, world!\x1B[0m",
+			want: "Hello, world!",
+		},
+		{
+			name: "Multiple ANSI codes",
+			str:  "\x1B[1m\x1B[34mBold and blue\x1B[0m text",
+			want: "Bold and blue text",
+		},
+		{
+			name: "Nested ANSI codes",
+			str:  "Normal \x1B[32mGreen \x1B[1mBold green\x1B[0m Normal",
+			want: "Normal Green Bold green Normal",
+		},
+		{
+			name: "Incomplete ANSI code",
+			str:  "Hello \x1B[33mYellow",
+			want: "Hello Yellow",
+		},
+		{
+			name: "Only ANSI codes",
+			str:  "\x1B[4m\x1B[45m",
+			want: "",
+		},
+		{
+			name: "Complex ANSI codes",
+			str:  "\u001b[34m\u001b[0;32m    docker.ansible-attack-box: The following packages will be upgraded:\u001b[0m\n\u001b[0m",
+			want: "    docker.ansible-attack-box: The following packages will be upgraded:\n",
+		},
+		{
+			name: "ANSI codes with text",
+			str:  "\u001b[34m\u001b[0;32m    docker.ansible-attack-box:   bash python3-pip\u001b[0m\n\u001b[0m",
+			want: "    docker.ansible-attack-box:   bash python3-pip\n",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := str.StripANSI(tc.str)
+			if got != tc.want {
+				t.Errorf("StripANSI(%q) = %q, want %q", tc.str, got, tc.want)
 			}
 		})
 	}

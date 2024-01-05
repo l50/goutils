@@ -25,7 +25,7 @@ var (
 )
 
 func TestAddFile(t *testing.T) {
-	tests := []struct {
+	testCases := []struct {
 		name      string
 		filePath  string
 		expectErr bool
@@ -42,7 +42,7 @@ func TestAddFile(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			filename, err := str.GenRandom(10)
 			require.NoError(t, err)
@@ -72,7 +72,7 @@ func TestAddFile(t *testing.T) {
 }
 
 func TestCommit(t *testing.T) {
-	tests := []struct {
+	testCases := []struct {
 		name string
 		file string
 		msg  string
@@ -89,7 +89,7 @@ func TestCommit(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			testRepo, repoPath, err := createGitRepoWithCommit(tc.file, tc.msg)
 			require.NoError(t, err)
@@ -112,7 +112,7 @@ func TestCommit(t *testing.T) {
 }
 
 func TestCloneRepo(t *testing.T) {
-	tests := []struct {
+	testCases := []struct {
 		name      string
 		url       string
 		clonePath string
@@ -132,7 +132,7 @@ func TestCloneRepo(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 
 			testPath, err := os.MkdirTemp("", "test-temp")
@@ -156,7 +156,7 @@ func TestCloneRepo(t *testing.T) {
 }
 
 func TestPush(t *testing.T) {
-	tests := []struct {
+	testCases := []struct {
 		name      string
 		url       string
 		auth      transport.AuthMethod
@@ -168,7 +168,7 @@ func TestPush(t *testing.T) {
 			expectErr: true,
 		},
 	}
-	for _, tc := range tests {
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			testPath, err := os.MkdirTemp("", "test-temp")
 			if err != nil {
@@ -203,7 +203,7 @@ func TestPush(t *testing.T) {
 }
 
 func TestGetTagsAndGlobalUserCfg(t *testing.T) {
-	tests := []struct {
+	testCases := []struct {
 		name string
 		file string
 		fn   interface{}
@@ -218,7 +218,7 @@ func TestGetTagsAndGlobalUserCfg(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			filename, err := str.GenRandom(10)
 			require.NoError(t, err)
@@ -244,7 +244,7 @@ func TestGetTagsAndGlobalUserCfg(t *testing.T) {
 }
 
 func TestCreateTag(t *testing.T) {
-	tests := []struct {
+	testCases := []struct {
 		name string
 		tag  string
 		err  error
@@ -256,7 +256,7 @@ func TestCreateTag(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			// Create a temporary git repository
 			filename, err := str.GenRandom(10)
@@ -277,7 +277,7 @@ func TestCreateTag(t *testing.T) {
 }
 
 func TestDeleteTag(t *testing.T) {
-	tests := []struct {
+	testCases := []struct {
 		name      string
 		tag       string
 		expectErr bool
@@ -289,7 +289,7 @@ func TestDeleteTag(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			filename, err := str.GenRandom(10)
 			require.NoError(t, err)
@@ -315,7 +315,7 @@ func TestDeleteTag(t *testing.T) {
 }
 
 func TestPushTag(t *testing.T) {
-	tests := []struct {
+	testCases := []struct {
 		name      string
 		url       string
 		tag       string
@@ -336,7 +336,7 @@ func TestPushTag(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			testPath, err := os.MkdirTemp("", "test-temp")
 			require.NoError(t, err)
@@ -373,7 +373,7 @@ func TestPushTag(t *testing.T) {
 }
 
 func TestDeletePushedTag(t *testing.T) {
-	tests := []struct {
+	testCases := []struct {
 		name      string
 		url       string
 		tag       string
@@ -394,7 +394,7 @@ func TestDeletePushedTag(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			testPath, err := os.MkdirTemp("", "test-temp")
 			require.NoError(t, err)
@@ -431,7 +431,7 @@ func TestDeletePushedTag(t *testing.T) {
 }
 
 func TestPullRepos(t *testing.T) {
-	tests := []struct {
+	testCases := []struct {
 		name string
 	}{
 		{
@@ -439,7 +439,7 @@ func TestPullRepos(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 
 			defer cleanup(t)

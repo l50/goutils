@@ -11,7 +11,7 @@ import (
 )
 
 func TestGetContext(t *testing.T) {
-	tests := []struct {
+	testCases := []struct {
 		name   string
 		driver cdpu.Driver
 		want   context.Context
@@ -23,7 +23,7 @@ func TestGetContext(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			if got := tc.driver.GetContext(); got != tc.want {
 				t.Errorf("GetContext() = %v, want %v", got, tc.want)
@@ -33,7 +33,7 @@ func TestGetContext(t *testing.T) {
 }
 
 func TestSetContext(t *testing.T) {
-	tests := []struct {
+	testCases := []struct {
 		name     string
 		driver   cdpu.Driver
 		newCtx   context.Context
@@ -47,7 +47,7 @@ func TestSetContext(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			tc.driver.SetContext(tc.newCtx)
 			if got := tc.driver.GetContext(); got != tc.expected {
@@ -58,7 +58,7 @@ func TestSetContext(t *testing.T) {
 }
 
 func TestInit(t *testing.T) {
-	tests := []struct {
+	testCases := []struct {
 		name             string
 		headless         bool
 		ignoreCertErrors bool
@@ -70,7 +70,7 @@ func TestInit(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			browser, err := cdpu.Init(tc.headless, tc.ignoreCertErrors)
 			if err != nil {
@@ -84,7 +84,7 @@ func TestInit(t *testing.T) {
 }
 
 func TestNavigate(t *testing.T) {
-	tests := []struct {
+	testCases := []struct {
 		name       string
 		headless   bool
 		ignoreCert bool
@@ -104,7 +104,7 @@ func TestNavigate(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			// Initialize the chrome browser
 			browser, err := cdpu.Init(tc.headless, tc.ignoreCert)
@@ -140,7 +140,7 @@ func TestNavigate(t *testing.T) {
 }
 
 func TestScreenShot(t *testing.T) {
-	tests := []struct {
+	testCases := []struct {
 		name       string
 		headless   bool
 		ignoreCert bool
@@ -156,7 +156,7 @@ func TestScreenShot(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			// Initialize the chrome browser
 			browser, err := cdpu.Init(true, true)
@@ -208,7 +208,7 @@ func TestScreenShot(t *testing.T) {
 }
 
 func TestGetPageSource(t *testing.T) {
-	tests := []struct {
+	testCases := []struct {
 		name       string
 		headless   bool
 		ignoreCert bool
@@ -222,7 +222,7 @@ func TestGetPageSource(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			// Initialize the chrome browser
 			browser, err := cdpu.Init(tc.headless, tc.ignoreCert)
@@ -270,7 +270,7 @@ func TestGetPageSource(t *testing.T) {
 }
 
 func TestSaveCookiesToDisk(t *testing.T) {
-	tests := []struct {
+	testCases := []struct {
 		name       string
 		filePath   string
 		headless   bool
@@ -296,7 +296,7 @@ func TestSaveCookiesToDisk(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			// Initialize the chrome browser
 			browser, err := cdpu.Init(tc.headless, tc.ignoreCert)

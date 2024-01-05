@@ -93,6 +93,24 @@ bool: true if slices are equal, false otherwise.
 
 ---
 
+### StripANSI(string)
+
+```go
+StripANSI(string) string
+```
+
+StripANSI removes ANSI escape codes from a string.
+
+**Parameters:**
+
+str: String to remove ANSI escape codes from.
+
+**Returns:**
+
+string: String with ANSI escape codes removed.
+
+---
+
 ### ToInt64(string)
 
 ```go

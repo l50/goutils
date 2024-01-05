@@ -3,6 +3,7 @@ package str
 import (
 	"crypto/rand"
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 )
@@ -119,4 +120,18 @@ func SlicesEqual(a, b []string) bool {
 	}
 
 	return true
+}
+
+// StripANSI removes ANSI escape codes from a string.
+//
+// **Parameters:**
+//
+// str: String to remove ANSI escape codes from.
+//
+// **Returns:**
+//
+// string: String with ANSI escape codes removed.
+func StripANSI(str string) string {
+	re := regexp.MustCompile(`\x1B\[[0-9;]*[a-zA-Z]`)
+	return re.ReplaceAllString(str, "")
 }

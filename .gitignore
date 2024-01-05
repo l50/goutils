@@ -6,3 +6,4 @@ coverage-all.out
 
 # Experimentation File
 bla
+*.log

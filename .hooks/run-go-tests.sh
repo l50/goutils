@@ -7,12 +7,14 @@ RETURN_CODE=0
 
 TIMESTAMP=$(date +"%Y%m%d%H%M%S")
 LOGFILE="/tmp/goutils-unit-test-results-$TIMESTAMP.log"
+MODULE_ROOT=$(go list -m -f "{{.Dir}}")
 
 if [[ -z "${TESTS_TO_RUN}" ]]; then
     echo "No tests input" | tee -a "$LOGFILE"
     echo "Example - Run all shorter collection of tests: bash run-go-tests.sh short" | tee -a "$LOGFILE"
     echo "Example - Run all tests: bash run-go-tests.sh all" | tee -a "$LOGFILE"
     echo "Example - Run coverage for a specific version: bash run-go-tests.sh coverage" | tee -a "$LOGFILE"
+    echo "Example - Run tests for modified files: bash run-go-tests.sh modified" | tee -a "$LOGFILE"
     exit 1
 fi
 
@@ -31,6 +33,27 @@ run_tests() {
         go test -v -race -failfast ./... 2>&1 | tee -a "$LOGFILE"
     elif [[ "${TESTS_TO_RUN}" == 'short' ]] && [[ "${GITHUB_ACTIONS}" != "true" ]]; then
         go test -v -short -failfast -race ./... 2>&1 | tee -a "$LOGFILE"
+    elif [[ "${TESTS_TO_RUN}" == 'modified' ]]; then
+        # Run tests for modified files
+        local modified_files
+        IFS=$'\n' read -r -a modified_files <<< "$(git diff --name-only --cached | grep '\.go$')"
+
+        local pkg_dirs=()
+
+        for file in "${modified_files[@]}"; do
+            local pkg_dir
+            pkg_dir=$(dirname "$file")
+            pkg_dir=${pkg_dir#"$MODULE_ROOT/"}
+            pkg_dirs+=("$pkg_dir")
+        done
+
+        # Remove duplicate package directories
+        IFS=$'\n' read -r -a pkg_dirs <<< "$(sort -u <<< "${pkg_dirs[*]}")"
+        unset IFS
+
+        for dir in "${pkg_dirs[@]}"; do
+            go test -v -race -failfast "./$dir/..." 2>&1 | tee -a "$LOGFILE"
+        done
     else
         if [[ "${GITHUB_ACTIONS}" != 'true' ]]; then
             go test -v -failfast -race "./.../${TESTS_TO_RUN}" 2>&1 | tee -a "$LOGFILE"

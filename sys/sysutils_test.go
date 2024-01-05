@@ -47,7 +47,7 @@ func TestCd(t *testing.T) {
 	}()
 
 	// Setup test cases
-	tests := []struct {
+	testCases := []struct {
 		name       string
 		path       string
 		expectErr  bool
@@ -66,7 +66,7 @@ func TestCd(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			err := sys.Cd(tc.path)
 
@@ -106,7 +106,7 @@ func TestCd(t *testing.T) {
 }
 
 func TestCmdExists(t *testing.T) {
-	tests := []struct {
+	testCases := []struct {
 		name   string
 		cmd    string
 		expect bool
@@ -123,7 +123,7 @@ func TestCmdExists(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			result := sys.CmdExists(tc.cmd)
 			if result != tc.expect {
@@ -134,7 +134,7 @@ func TestCmdExists(t *testing.T) {
 }
 
 func TestCp(t *testing.T) {
-	tests := []struct {
+	testCases := []struct {
 		name    string
 		src     string
 		dst     string
@@ -166,7 +166,7 @@ func TestCp(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			if tc.setup != nil {
 				if err := tc.setup(); err != nil {
@@ -311,7 +311,7 @@ func TestExpandHomeDir(t *testing.T) {
 }
 
 func TestGetHomeDir(t *testing.T) {
-	tests := []struct {
+	testCases := []struct {
 		name    string
 		wantErr bool
 	}{
@@ -321,7 +321,7 @@ func TestGetHomeDir(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			_, err := sys.GetHomeDir()
 			if (err != nil) != tc.wantErr {
@@ -332,7 +332,7 @@ func TestGetHomeDir(t *testing.T) {
 }
 
 func TestGetSSHPubKey(t *testing.T) {
-	tests := []struct {
+	testCases := []struct {
 		name        string
 		keyName     string
 		password    string
@@ -352,7 +352,7 @@ func TestGetSSHPubKey(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			// Create a temporary directory for each test case
 			tempDir, err := os.MkdirTemp("", "ssh")
@@ -395,7 +395,7 @@ mBHN1Q5WnMgThkJxEJbRAAAABm5vbmFtZQECAwQFBgc=
 }
 
 func TestGwd(t *testing.T) {
-	tests := []struct {
+	testCases := []struct {
 		name string
 	}{
 		{
@@ -403,7 +403,7 @@ func TestGwd(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			// Create a temporary directory
 			tempDir := t.TempDir()
@@ -423,7 +423,7 @@ func TestGwd(t *testing.T) {
 }
 
 func TestGetFutureTime(t *testing.T) {
-	tests := []struct {
+	testCases := []struct {
 		name      string
 		years     int
 		months    int
@@ -439,7 +439,7 @@ func TestGetFutureTime(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			result := sys.GetFutureTime(tc.years, tc.months, tc.days)
 			assert.Equal(t, tc.expResult.Year(), result.Year())
@@ -460,7 +460,7 @@ func (p *MockRuntimeInfoProvider) GetArch() string {
 }
 
 func TestGetOSAndArch(t *testing.T) {
-	tests := []struct {
+	testCases := []struct {
 		name        string
 		provider    sys.RuntimeInfoProvider
 		expectOS    string
@@ -483,7 +483,7 @@ func TestGetOSAndArch(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			osName, archName, err := sys.GetOSAndArch(tc.provider)
 			if tc.expectError && err == nil {
@@ -503,7 +503,7 @@ func TestGetOSAndArch(t *testing.T) {
 }
 
 func TestIsDirEmpty(t *testing.T) {
-	tests := []struct {
+	testCases := []struct {
 		name       string
 		setup      func(tmpDir string) (string, error) // Setup function now returns a string (path)
 		isEmpty    bool
@@ -573,7 +573,7 @@ func TestIsDirEmpty(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			tmpDir, err := os.MkdirTemp("", "test")
 			if err != nil {
@@ -610,7 +610,7 @@ func TestIsDirEmpty(t *testing.T) {
 }
 
 func TestKillProcess(t *testing.T) {
-	tests := []struct {
+	testCases := []struct {
 		name   string
 		pid    int
 		signal sys.Signal
@@ -636,7 +636,7 @@ func TestKillProcess(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			// Run a process to kill
 			cmd := exec.Command("go", "run", "-e", `
@@ -720,7 +720,7 @@ func (m *MockFileInfo) ModTime() time.Time { return time.Now() }
 func (m *MockFileInfo) Sys() interface{}   { return nil }
 
 func TestRmRf(t *testing.T) {
-	tests := []struct {
+	testCases := []struct {
 		name    string
 		file    fileutils.File
 		wantErr bool
@@ -787,7 +787,7 @@ func TestRmRf(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			err := sys.RmRf(tc.file)
 			if (err != nil) != tc.wantErr {
@@ -833,7 +833,7 @@ func TestGetTempPath(t *testing.T) {
 }
 
 func TestRunCommand(t *testing.T) {
-	tests := []struct {
+	testCases := []struct {
 		name       string
 		cmd        string
 		args       []string
@@ -862,7 +862,7 @@ func TestRunCommand(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			output, err := sys.RunCommand(tc.cmd, tc.args...)
 			if (err != nil) != tc.wantError {
@@ -879,7 +879,7 @@ func TestRunCommand(t *testing.T) {
 }
 
 func TestRunCommandWithTimeout(t *testing.T) {
-	tests := []struct {
+	testCases := []struct {
 		name    string
 		timeout int
 		cmd     string
@@ -909,7 +909,7 @@ func TestRunCommandWithTimeout(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			_, err := sys.RunCommandWithTimeout(tc.timeout, tc.cmd, tc.args...)
 			if (err != nil) != tc.wantErr {

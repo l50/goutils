@@ -22,7 +22,7 @@ func (m *MockClient) Do(req *http.Request) (*http.Response, error) {
 }
 
 func TestGetDNSRecords(t *testing.T) {
-	tests := []struct {
+	testCases := []struct {
 		name         string
 		cf           cloudflare.Cloudflare
 		responseBody string
@@ -48,7 +48,7 @@ func TestGetDNSRecords(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			err := cloudflare.GetDNSRecords(tc.cf)
 			if tc.expectedErr != nil {

@@ -7,7 +7,7 @@
       "request": "launch",
       "mode": "auto",
       "program": "${workspaceFolder}/magefiles/mage_output_file.go",
-      "args": ["generatePackageDocs"],
+      "args": ["testLoggerOutput"],
       // Pass magefile as a separate argument,
       // VSCode doesn't allow more than one file in "program".
       "buildFlags": "magefile.go",

@@ -90,72 +90,23 @@ of fmt.Println.
 
 ---
 
-### ConfigureLogger(afero.Fs, slog.Level, string, OutputType)
+### InitLogging(*LogConfig)
 
 ```go
-ConfigureLogger(afero.Fs, slog.Level, string, OutputType) Logger, error
+InitLogging(*LogConfig) Logger, error
 ```
 
-ConfigureLogger sets up a logger based on the provided logging level,
-file path, and output type. It supports both colorized and plain text
-logging output, selectable via the OutputType parameter. The logger
-writes log entries to both a file and standard output.
-
-**Parameters:**
-
-level: Logging level as a slog.Level.
-path: Path to the log file.
-outputType: Type of log output, either ColorOutput or PlainOutput.
-
-**Returns:**
-
-Logger: Configured Logger object based on provided parameters.
-error: An error, if an issue occurs while setting up the logger.
-
----
-
-### CreateLogFile(afero.Fs, string)
-
-```go
-CreateLogFile(afero.Fs, string) LogInfo, error
-```
-
-CreateLogFile creates a log file in a 'logs' subdirectory of the
-specified directory. The log file's name is the provided log name
-with the extension '.log'.
-
-**Parameters:**
-
-fs: An afero.Fs instance to mock filesystem for testing.
-logDir: A string for the directory where 'logs' subdirectory and
-log file should be created.
-logName: A string for the name of the log file to be created.
-
-**Returns:**
-
-LogInfo: A LogInfo struct with information about the log file,
-including its directory, file pointer, file name, and path.
-error: An error, if an issue occurs while creating the directory
-or the log file.
-
----
-
-### InitLogging(afero.Fs, string, slog.Level, OutputType)
-
-```go
-InitLogging(afero.Fs, string, slog.Level, OutputType) Logger, error
-```
-
-InitLogging sets up logging with a single function call. It creates a log file
-and configures the logger based on the specified parameters.
+InitLogging is a convenience function that combines
+the CreateLogFile and ConfigureLogger functions into one call.
+It is useful for quickly setting up logging to disk.
 
 **Parameters:**
 
 fs: An afero.Fs instance for filesystem operations, allows mocking in tests.
-logDir: The directory where the log file should be created.
-logName: The name of the log file.
+logPath: The path to the log file.
 level: The logging level.
 outputType: The output type of the logger (PlainOutput or ColorOutput).
+logToDisk: A boolean indicating whether to log to disk or not.
 
 **Returns:**
 
@@ -178,6 +129,121 @@ Logger: The global Logger instance.
 
 ---
 
+### LogAndReturnError(Logger, string)
+
+```go
+LogAndReturnError(Logger, string) error
+```
+
+LogAndReturnError logs the provided error message using the given logger and returns the error.
+
+This utility function is helpful for scenarios where an error needs to be both logged and returned.
+It simplifies the code by combining these two actions into one call.
+
+**Parameters:**
+
+logger: The Logger instance used for logging the error.
+errMsg: The error message to log and return.
+
+**Returns:**
+
+error: The error created from the errMsg, after it has been logged.
+
+---
+
+### LogConfig.ConfigureLogger()
+
+```go
+ConfigureLogger() Logger, error
+```
+
+ConfigureLogger sets up a logger based on the provided logging level,
+file path, and output type. It supports both colorized and plain text
+logging output, selectable via the OutputType parameter. The logger
+writes log entries to both a file and standard output.
+
+**Parameters:**
+
+level: Logging level as a slog.Level.
+path: Path to the log file.
+outputType: Type of log output, either ColorOutput or PlainOutput.
+
+**Returns:**
+
+Logger: Configured Logger object based on provided parameters.
+error: An error, if an issue occurs while setting up the logger.
+
+---
+
+### LogConfig.CreateLogFile()
+
+```go
+CreateLogFile() error
+```
+
+CreateLogFile creates a log file in a 'logs' subdirectory of the
+specified directory. The log file's name is the provided log name
+with the extension '.log'.
+
+**Parameters:**
+
+fs: An afero.Fs instance to mock filesystem for testing.
+logDir: A string for the directory where 'logs' subdirectory and
+log file should be created.
+logName: A string for the name of the log file to be created.
+
+**Returns:**
+
+LogConfig: A LogConfig struct with information about the log file,
+including its directory, file pointer, file name, and path.
+error: An error, if an issue occurs while creating the directory
+or the log file.
+
+---
+
+### NewColorLogger(LogConfig, color.Attribute, *slog.Logger)
+
+```go
+NewColorLogger(LogConfig, color.Attribute, *slog.Logger) *ColorLogger, error
+```
+
+NewColorLogger creates a new ColorLogger instance with the specified
+LogConfig, color attribute, and slog.Logger.
+
+**Parameters:**
+
+cfg: LogConfig object containing information about the log file.
+colorAttr: A color attribute for output styling.
+logger: The slog Logger instance used for logging operations.
+
+**Returns:**
+
+*ColorLogger: A new instance of ColorLogger.
+error: An error if any issue occurs during initialization.
+
+---
+
+### NewPlainLogger(LogConfig, *slog.Logger)
+
+```go
+NewPlainLogger(LogConfig, *slog.Logger) *PlainLogger, error
+```
+
+NewPlainLogger creates a new PlainLogger instance with the specified
+LogConfig and slog.Logger.
+
+**Parameters:**
+
+cfg: LogConfig object containing information about the log file.
+logger: The slog Logger instance used for logging operations.
+
+**Returns:**
+
+*PlainLogger: A new instance of PlainLogger.
+error: An error if any issue occurs during initialization.
+
+---
+
 ### NewPrettyHandler(io.Writer, PrettyHandlerOptions)
 
 ```go
@@ -185,8 +251,8 @@ NewPrettyHandler(io.Writer, PrettyHandlerOptions) *PrettyHandler
 ```
 
 NewPrettyHandler creates a new PrettyHandler with specified output
-writer and options. It configures a PrettyHandler for colorized
-logging output.
+writer and options. It configures the PrettyHandler for handling
+log messages with optional colorization and structured formatting.
 
 **Parameters:**
 
@@ -267,6 +333,7 @@ Println(...interface{})
 Println for PlainLogger logs the provided arguments as a line using
 slog library.
 The arguments are converted to a string using fmt.Sprint.
+PlainLogger.go
 
 ---
 
@@ -276,9 +343,9 @@ The arguments are converted to a string using fmt.Sprint.
 Handle(context.Context, slog.Record) error
 ```
 
-Handle formats and outputs a log message for PrettyHandler. It
-colorizes the log level, message, and adds structured fields
-to the log output.
+Handle processes and outputs a log record using the PrettyHandler.
+It supports both colorized and non-colorized log messages and can
+output in JSON format if not writing to a terminal.
 
 **Parameters:**
 

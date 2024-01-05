@@ -10,7 +10,7 @@ import (
 )
 
 func TestTree(t *testing.T) {
-	tests := []struct {
+	testCases := []struct {
 		name      string
 		fs        afero.Fs
 		dirPath   string
@@ -61,7 +61,7 @@ file
 		},
 	}
 
-	for _, tc := range tests {
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			var buf bytes.Buffer
 			err := aferoutils.Tree(tc.fs, tc.dirPath, tc.prefix, tc.indent, &buf)

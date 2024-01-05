@@ -20,7 +20,7 @@ var repo = docs.Repo{
 func TestCreatePackageDocs(t *testing.T) {
 	templatePath := filepath.Join("magefiles", "tmpl", "README.md.tmpl")
 
-	tests := []struct {
+	testCases := []struct {
 		name          string
 		repo          docs.Repo
 		templatePath  string
@@ -145,7 +145,7 @@ func TestCreatePackageDocs(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			fs := tc.setupFs()
 
