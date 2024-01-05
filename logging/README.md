@@ -201,6 +201,49 @@ or the log file.
 
 ---
 
+### NewColorLogger(LogConfig, color.Attribute, *slog.Logger)
+
+```go
+NewColorLogger(LogConfig, color.Attribute, *slog.Logger) *ColorLogger, error
+```
+
+NewColorLogger creates a new ColorLogger instance with the specified
+LogConfig, color attribute, and slog.Logger.
+
+**Parameters:**
+
+cfg: LogConfig object containing information about the log file.
+colorAttr: A color attribute for output styling.
+logger: The slog Logger instance used for logging operations.
+
+**Returns:**
+
+*ColorLogger: A new instance of ColorLogger.
+error: An error if any issue occurs during initialization.
+
+---
+
+### NewPlainLogger(LogConfig, *slog.Logger)
+
+```go
+NewPlainLogger(LogConfig, *slog.Logger) *PlainLogger, error
+```
+
+NewPlainLogger creates a new PlainLogger instance with the specified
+LogConfig and slog.Logger.
+
+**Parameters:**
+
+cfg: LogConfig object containing information about the log file.
+logger: The slog Logger instance used for logging operations.
+
+**Returns:**
+
+*PlainLogger: A new instance of PlainLogger.
+error: An error if any issue occurs during initialization.
+
+---
+
 ### NewPrettyHandler(io.Writer, PrettyHandlerOptions)
 
 ```go

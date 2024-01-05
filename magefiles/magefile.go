@@ -213,7 +213,7 @@ func FixCodeBlocks(language string, filepath string) error {
 func TestLoggerOutput() {
 	// Logger test
 	cfg := logging.LogConfig{
-		Fs:         afero.NewMemMapFs(),
+		Fs:         afero.NewOsFs(),
 		Level:      slog.LevelDebug,
 		OutputType: logging.ColorOutput,
 		LogToDisk:  true,
@@ -227,7 +227,9 @@ func TestLoggerOutput() {
 	}
 
 	log.Println("This is a test info message")
+	log.Printf("This is a test %s info message", "formatted")
 	log.Error("This is a test error message")
 	log.Debugf("This is a test debug message")
 	log.Errorf("This is a test %s error message", "formatted")
+	log.Println("{\"time\":\"2024-01-03T23:12:35.937476-07:00\",\"level\":\"ERROR\",\"msg\":\"\\u001b[35mThis is a test formatted error message\\u001b[0m\"}")
 }
