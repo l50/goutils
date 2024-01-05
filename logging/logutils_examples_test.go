@@ -81,23 +81,24 @@ func ExampleLogConfig_CreateLogFile() {
 }
 
 func ExampleInitLogging() {
-	logCfg := logging.LogConfig{
+	cfg := logging.LogConfig{
 		Fs:         afero.NewOsFs(),
-		LogPath:    filepath.Join("/tmp", "test.log"),
 		Level:      slog.LevelDebug,
 		OutputType: logging.ColorOutput,
 		LogToDisk:  true,
+		LogPath:    filepath.Join("/tmp", "test.log"),
 	}
 
-	logger, err := logging.InitLogging(&logCfg)
+	log, err := logging.InitLogging(&cfg)
 	if err != nil {
-		fmt.Printf("Failed to initialize logging: %v", err)
+		fmt.Println("Error initializing logger:", err)
 		return
 	}
 
-	logger.Println("This is a log message")
-	logger.Error("This is an error log message")
-	logger.Errorf("This is a formatted error log message: %s", "Error details")
-
-	fmt.Println("Logger configured successfully.")
+	log.Println("This is a test info message")
+	log.Printf("This is a test %s info message", "formatted")
+	log.Error("This is a test error message")
+	log.Debugf("This is a test debug message")
+	log.Errorf("This is a test %s error message", "formatted")
+	log.Println("{\"time\":\"2024-01-03T23:12:35.937476-07:00\",\"level\":\"ERROR\",\"msg\":\"\\u001b[1;32m==> docker.ansible-attack-box: Starting docker container...\\u001b[0m\"}")
 }
