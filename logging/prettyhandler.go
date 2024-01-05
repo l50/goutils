@@ -3,6 +3,7 @@ package logging
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"log/slog"
@@ -70,61 +71,41 @@ func NewPrettyHandler(out io.Writer, opts PrettyHandlerOptions) *PrettyHandler {
 //
 // error: An error if any issue occurs during log handling.
 func (h *PrettyHandler) Handle(ctx context.Context, r slog.Record) error {
-	fields := extractFields(r)
-	fields["time"] = r.Time.Format(time.RFC1123)
-	fields["level"] = r.Level.String()
-	// Strip existing ANSI codes from the message
-	fields["msg"] = r.Message
+	fields := make(map[string]interface{}, 0)
+	fields["time"] = time.Now().Format(time.RFC3339Nano)
+	fields["msg"] = str.StripANSI(r.Message)
 
-	// Marshal fields to JSON
-	jsonData, err := json.MarshalIndent(fields, "", "  ")
-	if err != nil {
-		return err
-	}
-
-	// Check if the output is to a terminal or a file
+	// Determine if output is to a terminal or file
 	_, isFile := h.l.Writer().(*os.File)
 	isTerminal := isatty.IsTerminal(os.Stdout.Fd()) || isatty.IsCygwinTerminal(os.Stdout.Fd())
-	cleanMessage := str.StripANSI(r.Message)
 
+	var finalLogMsg string
 	if isFile && !isTerminal {
-		// Strip color codes from file output and print
-		// h.l.Println(cleanMessage)
-		h.l.Println(string(jsonData))
+		jsonData, err := json.MarshalIndent(fields, "", "  ")
+		if err != nil {
+			return err
+		}
+		finalLogMsg = string(jsonData)
 	} else {
-		// Output to STDOUT with color and print
-		coloredOutput := h.colorizeBasedOnLevel(r.Level, cleanMessage)
-		h.l.Println(coloredOutput)
+		coloredLevel := h.colorizeBasedOnLevel(r.Level)
+
+		finalLogMsg = fmt.Sprintf("[%s] [%s] %s", fields["time"], coloredLevel, fields["msg"])
 	}
+
+	h.l.Println(finalLogMsg)
 
 	return nil
 }
 
-func extractFields(r slog.Record) map[string]interface{} {
-	fields := make(map[string]interface{}, r.NumAttrs())
-	r.Attrs(func(a slog.Attr) bool {
-		fields[a.Key] = a.Value.Any()
-		return true
-	})
-	return fields
-}
-
-func (h *PrettyHandler) colorizeBasedOnLevel(level slog.Level, message string) string {
-	// Check if the output is a terminal
-	isTerminal := isatty.IsTerminal(os.Stdout.Fd()) || isatty.IsCygwinTerminal(os.Stdout.Fd())
-
-	if !isTerminal {
-		return message // No color if not a terminal
-	}
-
+func (h *PrettyHandler) colorizeBasedOnLevel(level slog.Level) string {
+	// Create a new color object based on the log level
 	colorAttr := determineColorAttribute(level)
-	if colorAttr == color.Reset {
-		return message // No color for default case
-	}
+	c := color.New(colorAttr)
 
-	coloredOutput := color.New(colorAttr).Sprint(message)
-	// fmt.Printf("Original Message: %s, Colored Message: %s\n", message, coloredOutput) // Debug print
-	return coloredOutput
+	// Apply color only to the level part
+	coloredLevel := c.Sprint(level.String())
+
+	return coloredLevel
 }
 
 func determineColorAttribute(level slog.Level) color.Attribute {
