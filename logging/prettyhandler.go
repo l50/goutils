@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/fatih/color"
-	"github.com/l50/goutils/v2/str"
 	"github.com/mattn/go-isatty"
 )
 
@@ -71,28 +70,41 @@ func NewPrettyHandler(out io.Writer, opts PrettyHandlerOptions) *PrettyHandler {
 //
 // error: An error if any issue occurs during log handling.
 func (h *PrettyHandler) Handle(ctx context.Context, r slog.Record) error {
-	fields := make(map[string]interface{}, 0)
-	fields["time"] = time.Now().Format(time.RFC3339Nano)
-	fields["msg"] = str.StripANSI(r.Message)
+	var fields map[string]interface{}
+
+	// Check if the message is in JSON format
+	if json.Valid([]byte(r.Message)) {
+		// Parse the JSON message into the fields map
+		if err := json.Unmarshal([]byte(r.Message), &fields); err != nil {
+			return err
+		}
+	} else {
+		// If not JSON, use the existing structure
+		fields = make(map[string]interface{})
+		fields["time"] = time.Now().Format(time.RFC3339Nano)
+		fields["level"] = r.Level.String()
+		fields["msg"] = r.Message
+	}
 
 	// Determine if output is to a terminal or file
 	_, isFile := h.l.Writer().(*os.File)
 	isTerminal := isatty.IsTerminal(os.Stdout.Fd()) || isatty.IsCygwinTerminal(os.Stdout.Fd())
 
 	var finalLogMsg string
-	if isFile && !isTerminal {
+	switch {
+	case isFile && !isTerminal:
+		// Output as JSON for file or non-terminal outputs
 		jsonData, err := json.MarshalIndent(fields, "", "  ")
 		if err != nil {
 			return err
 		}
-		finalLogMsg = string(jsonData)
-	} else {
-		coloredLevel := h.colorizeBasedOnLevel(r.Level)
-
-		finalLogMsg = fmt.Sprintf("[%s] [%s] %s", fields["time"], coloredLevel, fields["msg"])
+		h.l.Println(string(jsonData))
+	default:
+		// Always colorize the level
+		// if ansi data already exists in the message, keep it.
+		finalLogMsg = fmt.Sprintf("[%s] [%s] %s", fields["time"], h.colorizeBasedOnLevel(r.Level), fields["msg"])
+		h.l.Println(finalLogMsg)
 	}
-
-	h.l.Println(finalLogMsg)
 
 	return nil
 }
