@@ -251,8 +251,8 @@ NewPrettyHandler(io.Writer, PrettyHandlerOptions) *PrettyHandler
 ```
 
 NewPrettyHandler creates a new PrettyHandler with specified output
-writer and options. It configures a PrettyHandler for colorized
-logging output.
+writer and options. It configures the PrettyHandler for handling
+log messages with optional colorization and structured formatting.
 
 **Parameters:**
 
@@ -343,9 +343,9 @@ PlainLogger.go
 Handle(context.Context, slog.Record) error
 ```
 
-Handle formats and outputs a log message for PrettyHandler. It
-colorizes the log level, message, and adds structured fields
-to the log output.
+Handle processes and outputs a log record using the PrettyHandler.
+It supports both colorized and non-colorized log messages and can
+output in JSON format if not writing to a terminal.
 
 **Parameters:**
 
