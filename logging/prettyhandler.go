@@ -153,7 +153,7 @@ func (h *PrettyHandler) parseLogRecord(r slog.Record) (map[string]interface{}, e
 	} else {
 		// Consider non-JSON messages as valid and create a field map
 		fields = map[string]interface{}{
-			"time":  r.Time.Format(time.RFC3339Nano),
+			"time":  r.Time.Format(time.DateTime),
 			"level": r.Level.String(),
 			"msg":   r.Message,
 		}
