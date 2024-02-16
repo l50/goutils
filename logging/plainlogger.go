@@ -78,3 +78,17 @@ func (l *PlainLogger) Debug(v ...interface{}) {
 func (l *PlainLogger) Debugf(format string, v ...interface{}) {
 	l.Logger.Log(context.Background(), slog.LevelDebug, fmt.Sprintf(format, v...))
 }
+
+// Warn for PlainLogger logs the provided arguments as a warning line
+// using slog library.
+// The arguments are converted to a string using fmt.Sprint.
+func (l *PlainLogger) Warn(v ...interface{}) {
+	l.Logger.Log(context.Background(), slog.LevelWarn, fmt.Sprintln(v...))
+}
+
+// Warnf for PlainLogger logs the provided formatted string as a warning
+// line using slog library.
+// The format and arguments are handled in the manner of fmt.Printf.
+func (l *PlainLogger) Warnf(format string, v ...interface{}) {
+	l.Logger.Log(context.Background(), slog.LevelWarn, fmt.Sprintf(format, v...))
+}

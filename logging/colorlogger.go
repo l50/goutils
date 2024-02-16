@@ -93,3 +93,16 @@ func (l *ColorLogger) Debug(v ...interface{}) {
 func (l *ColorLogger) Debugf(format string, v ...interface{}) {
 	l.Logger.Log(context.Background(), slog.LevelDebug, fmt.Sprintf(format, v...))
 }
+
+// Warn for ColorLogger logs the provided arguments as a warning line
+// in the specified color. The arguments are handled in the manner of fmt.Println.
+func (l *ColorLogger) Warn(v ...interface{}) {
+	l.Logger.Log(context.Background(), slog.LevelWarn, fmt.Sprint(v...))
+}
+
+// Warnf for ColorLogger logs the provided formatted string as a warning
+// line in the specified color. The format and arguments are handled in the
+// manner of fmt.Printf.
+func (l *ColorLogger) Warnf(format string, v ...interface{}) {
+	l.Logger.Log(context.Background(), slog.LevelWarn, fmt.Sprintf(format, v...))
+}

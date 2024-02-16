@@ -24,6 +24,8 @@ func L() Logger {
 // Errorf: Logs a formatted error message.
 // Debug: Logs a debug message.
 // Debugf: Logs a formatted debug message.
+// Warn: Logs a warning message.
+// Warnf: Logs a formatted warning message.
 type Logger interface {
 	Println(v ...interface{})
 	Printf(format string, v ...interface{})
@@ -31,4 +33,6 @@ type Logger interface {
 	Errorf(format string, v ...interface{})
 	Debug(v ...interface{})
 	Debugf(format string, v ...interface{})
+	Warn(v ...interface{})
+	Warnf(format string, v ...interface{})
 }
