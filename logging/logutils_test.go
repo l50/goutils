@@ -373,6 +373,8 @@ func (m *mockLogger) Errorf(format string, v ...interface{}) {}
 func (m *mockLogger) Close() error                           { return nil }
 func (m *mockLogger) Debug(v ...interface{})                 {}
 func (m *mockLogger) Debugf(format string, v ...interface{}) {}
+func (m *mockLogger) Warn(v ...interface{})                  {}
+func (m *mockLogger) Warnf(format string, v ...interface{})  {}
 
 func TestLogAndReturnError(t *testing.T) {
 	tests := []struct {

@@ -51,14 +51,15 @@ func TestColorLogger(t *testing.T) {
 			outputType: logging.ColorOutput,
 			logName:    "test_color_printf.log",
 			logFunc: func(l logging.Logger) {
-				l.Println("Test Color Printf logger")
+				logType := "Color Printf"
+				l.Printf("Test %s logger", logType)
 			},
 		},
 		{
 			name:  "Test ColorLogger Debug",
 			level: slog.LevelDebug,
 			errFunc: func(l logging.Logger) {
-				l.Debug("Test Color Debug logger with error")
+				l.Error("Test Color Debug logger with error")
 			},
 			fs:         afero.NewMemMapFs(),
 			outputType: logging.ColorOutput,
@@ -71,13 +72,39 @@ func TestColorLogger(t *testing.T) {
 			name:  "Test ColorLogger Debugf",
 			level: slog.LevelDebug,
 			errFunc: func(l logging.Logger) {
-				l.Debugf("Test %s logger with error", "Color Debugf")
+				l.Errorf("Test %s logger with error", "Color Debugf")
 			},
 			fs:         afero.NewMemMapFs(),
 			outputType: logging.ColorOutput,
 			logName:    "test_color_debugf.log",
 			logFunc: func(l logging.Logger) {
-				l.Debug("Test ColorDebugf logger")
+				l.Debugf("Test ColorDebugf logger")
+			},
+		},
+		{
+			name:  "Test ColorLogger Warn",
+			level: slog.LevelWarn,
+			errFunc: func(l logging.Logger) {
+				l.Error("Test Color Warn logger with error")
+			},
+			fs:         afero.NewMemMapFs(),
+			outputType: logging.ColorOutput,
+			logName:    "test_color_warn.log",
+			logFunc: func(l logging.Logger) {
+				l.Warn("Test Color Warn logger")
+			},
+		},
+		{
+			name:  "Test ColorLogger Warnf",
+			level: slog.LevelWarn,
+			errFunc: func(l logging.Logger) {
+				l.Errorf("Test %s logger with error", "Color Warnf")
+			},
+			fs:         afero.NewMemMapFs(),
+			outputType: logging.ColorOutput,
+			logName:    "test_color_warnf.log",
+			logFunc: func(l logging.Logger) {
+				l.Warnf("Test %s logger", "Color Warnf")
 			},
 		},
 	}

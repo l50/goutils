@@ -1,9 +1,16 @@
-# File created for debugging with vscode
-mage_output_file.go
+# Custom attributes files created by macOS
+.DS_Store
 
+# Used for testing actions locally with act
+.secrets
+
+# Ignore .env file containing credentials, API keys, tokens, passwords, etc.
+*.env
+
+# Log files
+*.log
 # Code coverage output file
 coverage-all.out
 
-# Experimentation File
-bla
-*.log
+# File created for debugging with vscode
+mage_output_file.go
