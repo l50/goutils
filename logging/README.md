@@ -90,6 +90,29 @@ of fmt.Println.
 
 ---
 
+### ColorLogger.Warn(...interface{})
+
+```go
+Warn(...interface{})
+```
+
+Warn for ColorLogger logs the provided arguments as a warning line
+in the specified color. The arguments are handled in the manner of fmt.Println.
+
+---
+
+### ColorLogger.Warnf(string, ...interface{})
+
+```go
+Warnf(string, ...interface{})
+```
+
+Warnf for ColorLogger logs the provided formatted string as a warning
+line in the specified color. The format and arguments are handled in the
+manner of fmt.Printf.
+
+---
+
 ### InitLogging(*LogConfig)
 
 ```go
@@ -334,6 +357,30 @@ Println for PlainLogger logs the provided arguments as a line using
 slog library.
 The arguments are converted to a string using fmt.Sprint.
 PlainLogger.go
+
+---
+
+### PlainLogger.Warn(...interface{})
+
+```go
+Warn(...interface{})
+```
+
+Warn for PlainLogger logs the provided arguments as a warning line
+using slog library.
+The arguments are converted to a string using fmt.Sprint.
+
+---
+
+### PlainLogger.Warnf(string, ...interface{})
+
+```go
+Warnf(string, ...interface{})
+```
+
+Warnf for PlainLogger logs the provided formatted string as a warning
+line using slog library.
+The format and arguments are handled in the manner of fmt.Printf.
 
 ---
 
