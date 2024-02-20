@@ -61,7 +61,7 @@ area/magefiles:
   - changed-files:
       - any-glob-to-any-file: "magefiles/*"
 
-area/go-mod-sum:
+area/go:
   - changed-files:
       - any-glob-to-any-file: "go.mod"
       - any-glob-to-any-file: "go.sum"
