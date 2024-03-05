@@ -113,6 +113,24 @@ manner of fmt.Printf.
 
 ---
 
+### DetermineLogLevel(string)
+
+```go
+DetermineLogLevel(string) slog.Level
+```
+
+DetermineLogLevel determines the log level from a given string.
+
+**Parameters:**
+
+levelStr: A string representing the log level.
+
+**Returns:**
+
+slog.Level: The corresponding slog.Level for the given log level string.
+
+---
+
 ### InitLogging(*LogConfig)
 
 ```go
