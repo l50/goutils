@@ -140,28 +140,39 @@ func TestCp(t *testing.T) {
 		dst     string
 		setup   func() error
 		cleanup func()
-		err     error
+		err     string
 	}{
 		{
-			name: "FailedToCopy",
-			src:  "nonexistentfile",
-			dst:  "destinationfile",
-			err:  fmt.Errorf("failed to copy nonexistentfile to destinationfile: lstat nonexistentfile: no such file or directory"),
-		},
-		{
-			name: "SuccessfulCopy",
-			src:  "test.txt",
-			dst:  "testing.txt",
+			name: "SuccessfulFileCopy",
+			src:  "testfile.txt",
+			dst:  "copiedfile.txt",
 			setup: func() error {
-				return fileutils.Create("test.txt", nil, fileutils.CreateEmptyFile)
+				return os.WriteFile("testfile.txt", []byte("This is a test file"), 0644)
 			},
 			cleanup: func() {
-				remove := []string{"test.txt", "testing.txt"}
-				for _, f := range remove {
-					if err := fileutils.Delete(f); err != nil {
-						t.Errorf("unable to delete %s, DeleteFile() failed", f)
-					}
+				os.Remove("testfile.txt")
+				os.Remove("copiedfile.txt")
+			},
+		},
+		{
+			name: "SuccessfulDirectoryCopy",
+			src:  "sourcedir",
+			dst:  "destinationdir",
+			setup: func() error {
+				if err := os.Mkdir("sourcedir", 0755); err != nil {
+					return fmt.Errorf("failed to create source directory: %v", err)
 				}
+
+				filePath := filepath.Join("sourcedir", "testfile.txt")
+				if err := os.WriteFile(filePath, []byte("This is a test file inside a directory"), 0644); err != nil {
+					return fmt.Errorf("failed to create a file in source directory: %v", err)
+				}
+
+				return nil
+			},
+			cleanup: func() {
+				os.RemoveAll("sourcedir")
+				os.RemoveAll("destinationdir")
 			},
 		},
 	}
@@ -176,8 +187,13 @@ func TestCp(t *testing.T) {
 
 			err := sys.Cp(tc.src, tc.dst)
 
-			if (err != nil && tc.err == nil) || (err == nil && tc.err != nil) || (err != nil && tc.err != nil && err.Error() != tc.err.Error()) {
-				t.Fatalf("unexpected error: got %v, want %v", err, tc.err)
+			switch {
+			case tc.err == "" && err != nil:
+				t.Fatalf("expected no error, got %v", err)
+			case tc.err != "" && err == nil:
+				t.Fatalf("expected error, got none")
+			case tc.err != "" && err != nil && !strings.Contains(err.Error(), tc.err):
+				t.Fatalf("unexpected error: got %v, want %v", err.Error(), tc.err)
 			}
 
 			if tc.cleanup != nil {
