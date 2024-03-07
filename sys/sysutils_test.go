@@ -146,7 +146,7 @@ func TestCp(t *testing.T) {
 			name: "FailedToCopy",
 			src:  "nonexistentfile",
 			dst:  "destinationfile",
-			err:  fmt.Errorf("failed to copy nonexistentfile to destinationfile: lstat nonexistentfile: no such file or directory"), // Updated error message
+			err:  fmt.Errorf("failed to copy nonexistentfile to destinationfile: lstat nonexistentfile: no such file or directory"),
 		},
 		{
 			name: "SuccessfulCopy",
