@@ -556,9 +556,12 @@ func (c *Cmd) RunCmd() (string, error) {
 		if ctx.Err() == context.DeadlineExceeded {
 			// The command timed out, now force kill the process group
 			if err := KillProcess(-execCmd.Process.Pid, SignalKill); err != nil {
-				return "", fmt.Errorf("failed to kill process group: %v", err)
+				return outputBuf.String(), fmt.Errorf("failed to kill process group: %v", err)
 			}
 			return outputBuf.String(), fmt.Errorf("command timed out")
+		} else if exitErr, ok := err.(*exec.ExitError); ok {
+			// The command exited with a non-zero status
+			return outputBuf.String(), fmt.Errorf("command exited with status %d", exitErr.ExitCode())
 		}
 		return outputBuf.String(), err
 	}
