@@ -2,8 +2,6 @@ module magefile
 
 go 1.22
 
-toolchain go1.22.0
-
 require (
 	github.com/fatih/color v1.16.0
 	github.com/l50/goutils/v2 v2.2.3

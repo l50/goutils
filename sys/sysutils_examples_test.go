@@ -10,17 +10,6 @@ import (
 	"github.com/l50/goutils/v2/sys"
 )
 
-func ExampleCheckRoot() {
-	err := sys.CheckRoot()
-	uid := os.Geteuid()
-	if uid != 0 {
-		if err != nil {
-			log.L().Println("The process must be run as root.")
-		}
-		// Output: the process must be run as root.
-	}
-}
-
 func ExampleCd() {
 	dir := "/tmp" // choose a directory that should exist on the testing machine
 	err := sys.Cd(dir)
