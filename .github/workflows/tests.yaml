@@ -22,11 +22,8 @@ jobs:
         with:
           go-version: '1.22'
 
-      - name: Install goreleaser
+      - name: Install goreleaser (required for tests)
         run: go install github.com/goreleaser/goreleaser@latest
-
-      - name: Install pre-commit
-        run: pip3 install pre-commit
 
       - name: Set git config
         run: |
@@ -38,8 +35,8 @@ jobs:
         with:
           python-version: "3.x"
 
-      - name: Install dependencies
-        run: pip3 install keepercommander
+      - name: Install python dependencies (required for tests)
+        run: python3 -m pip install ansible keepercommander pre-commit
 
       - name: Generate the coverage output
         run: |
