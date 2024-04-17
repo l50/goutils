@@ -5,7 +5,7 @@ go 1.22
 require (
 	github.com/bitfield/script v0.22.0
 	github.com/cavaliergopher/grab/v3 v3.0.1
-	github.com/chromedp/cdproto v0.0.0-20240202021202-6d0b6a386732
+	github.com/chromedp/cdproto v0.0.0-20240328024531-fe04f09ede24
 	github.com/chromedp/chromedp v0.9.5
 	github.com/fatih/color v1.16.0
 	github.com/glendc/go-external-ip v0.1.0
@@ -51,7 +51,7 @@ require (
 	github.com/tidwall/pretty v1.2.1 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
 	golang.org/x/crypto v0.22.0 // indirect
-	golang.org/x/exp v0.0.0-20231214170342-aacd6d4b4611 // indirect
+	golang.org/x/exp v0.0.0-20240416160154-fe59bbe5cc7f // indirect
 	golang.org/x/mod v0.17.0 // indirect
 	golang.org/x/net v0.24.0 // indirect
 	golang.org/x/sync v0.7.0 // indirect
