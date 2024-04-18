@@ -12,6 +12,10 @@
   color: "7BD7E0"
   description: >-
     Changes made to Ansible resources
+- name: area/collection
+  color: "7A9CF7"
+  description: >-
+    Changes made to collection resources
 - name: area/cloudflare
   color: "7BD7E0"
   description: >-

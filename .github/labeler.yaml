@@ -12,6 +12,10 @@ area/ansible:
   - changed-files:
       - any-glob-to-any-file: "ansible/*.go"
 
+area/collection:
+  - changed-files:
+      - any-glob-to-any-file: "collection/*.go"
+
 area/cloudflare:
   - changed-files:
       - any-glob-to-any-file: "cloudflare/*.go"
