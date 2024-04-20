@@ -46,20 +46,19 @@ error: An error if the file cannot be read or parsed.
 Create(string, []byte, CreateType) error
 ```
 
-Create makes a directory, an empty file, or a file with content at
+Create makes a directory, an empty file, a file with content, or a temporary file at
 the specified path, depending on the createType argument.
 
 **Parameters:**
 
-path: Path to the directory or file.
+path: Path to the directory or file. For temporary files, this serves as a pattern.
 contents: Content to write to the file as a byte slice.
-createType: A CreateType value representing whether to create a
-directory, an empty file, or a file with content.
+createType: A CreateType value representing what kind of file creation action to execute.
 
 **Returns:**
 
 error: An error if the directory or file can't be created, if it
-already exists, or if there's a problem writing to the file.
+already exists (except for temporary files), or if there's a problem writing to the file.
 
 ---
 
@@ -312,6 +311,27 @@ path: String representing the path to the file.
 
 []string: Slice of strings where each element represents a line in the file.
 error: An error if the file cannot be read.
+
+---
+
+### WriteTempFile(string, *bytes.Buffer)
+
+```go
+WriteTempFile(string, *bytes.Buffer) string, error
+```
+
+WriteTempFile creates a temporary file in the system default temp directory,
+writes the contents from the provided buffer, and returns the file path.
+
+**Parameters:**
+
+workloadName: A string representing the base name of the temporary file.
+jobFile: A *bytes.Buffer containing the data to write to the temporary file.
+
+**Returns:**
+
+string: The name of the temporary file created.
+error: An error if any issue occurs during file creation or writing.
 
 ---
 

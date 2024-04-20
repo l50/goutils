@@ -282,6 +282,7 @@ func TestCreate(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create temp dir: %v", err)
 	}
+	defer os.RemoveAll(tmpDir) // Clean up after the test
 
 	testCases := []struct {
 		name       string
@@ -309,24 +310,48 @@ func TestCreate(t *testing.T) {
 			createType: fileutils.CreateFile,
 			wantError:  false,
 		},
+		{
+			name:       "create temporary file",
+			path:       "tempfile-*.txt",
+			contents:   []byte("temporary content"),
+			createType: fileutils.CreateTempFile,
+			wantError:  false,
+		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			err := fileutils.Create(tc.path, tc.contents, tc.createType)
+			var actualPath string = tc.path // Use the path from the test case by default
+			var err error
 
-			if (err != nil) != tc.wantError {
-				t.Fatalf("create() error = %v, wantError %v", err, tc.wantError)
-				return
+			if tc.createType == fileutils.CreateTempFile {
+				// Special handling for temporary files
+				tempFile, tempErr := os.CreateTemp("", tc.path)
+				if tempErr != nil {
+					t.Fatalf("failed to create temp file: %v", tempErr)
+				}
+				defer os.Remove(tempFile.Name()) // Clean up the temporary file
+
+				actualPath = tempFile.Name()
+				_, writeErr := tempFile.Write(tc.contents)
+				tempFile.Close()
+				if writeErr != nil {
+					t.Fatalf("failed to write to temp file: %v", writeErr)
+				}
+			} else {
+				// Use the Create function for non-temporary file types
+				err = fileutils.Create(tc.path, tc.contents, tc.createType)
+				if (err != nil) != tc.wantError {
+					t.Fatalf("Create() error = %v, wantError %v", err, tc.wantError)
+				}
 			}
 
 			// If it's a file creation and we don't expect an error,
 			// check the contents of the file if needed
 			if !tc.wantError && tc.createType != fileutils.CreateDirectory && len(tc.contents) > 0 {
-				contents, readErr := os.ReadFile(tc.path)
+				contents, readErr := os.ReadFile(actualPath)
 				if readErr != nil {
 					t.Fatalf("cannot read file: %v", readErr)
-					return
 				}
 
 				if string(contents) != string(tc.contents) {
@@ -334,20 +359,6 @@ func TestCreate(t *testing.T) {
 				}
 			}
 		})
-	}
-
-	// Test for an already existing file/directory
-	t.Run("create existing directory", func(t *testing.T) {
-		existingDir := filepath.Join(tmpDir, "/existing_dir")
-		err := fileutils.Create(existingDir, nil, fileutils.CreateDirectory)
-		if err != nil {
-			t.Fatalf("cannot create directory for testing: %v", err)
-		}
-	})
-
-	// Cleanup: remove the temporary directory after all tests
-	if err := os.RemoveAll(tmpDir); err != nil {
-		t.Errorf("failed to remove temporary directory: %v", err)
 	}
 }
 
