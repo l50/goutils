@@ -10,11 +10,29 @@ import (
 type fileReaderFunc func(string) ([]byte, error)
 
 // KubernetesClient wraps a clientset to interact with Kubernetes APIs.
+//
+// **Attributes:**
+//
+// Clientset: The clientset interface provided by client-go to interact with
+// Kubernetes resources.
 type KubernetesClient struct {
 	Clientset kubernetes.Interface
 }
 
-// NewKubernetesClient creates a new KubernetesClient using the provided kubeconfig path.
+// NewKubernetesClient creates a new KubernetesClient using the provided
+// kubeconfig path and file reader function.
+//
+// **Parameters:**
+//
+// kubeconfig: Path to the kubeconfig file to configure access to the Kubernetes
+// API.
+// reader: A function to read the kubeconfig file from the specified path.
+//
+// **Returns:**
+//
+// *KubernetesClient: A new KubernetesClient instance configured with the
+// specified kubeconfig.
+// error: An error if any issue occurs while creating the Kubernetes client.
 func NewKubernetesClient(kubeconfig string, reader fileReaderFunc) (*KubernetesClient, error) {
 	configData, err := reader(kubeconfig)
 	if err != nil {
