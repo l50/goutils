@@ -168,18 +168,19 @@ const (
 //
 // error: An error if the directory or file can't be created, if it
 // already exists (except for temporary files), or if there's a problem writing to the file.
-func Create(path string, contents []byte, createType CreateType) error {
+func Create(path string, contents []byte, createType CreateType) (string, error) {
 	switch createType {
 	case CreateDirectory:
-		return createDirectory(path)
+		return path, createDirectory(path)
 	case CreateEmptyFile:
-		return createEmptyFile(path)
+		return path, createEmptyFile(path)
 	case CreateFile:
-		return createFile(path, contents)
+		return path, createFile(path, contents)
 	case CreateTempFile:
-		return createTempFile(path, contents)
+		tempPath, err := createTempFile(path, "testTempFile", contents)
+		return tempPath, err
 	default:
-		return fmt.Errorf("invalid createType %v", createType)
+		return path, fmt.Errorf("invalid createType %v", createType)
 	}
 }
 
@@ -467,16 +468,16 @@ func WriteTempFile(workloadName string, jobFile *bytes.Buffer) (string, error) {
 	return tempFilePath.Name(), nil
 }
 
-func createTempFile(pattern string, contents []byte) error {
-	tempFile, err := os.CreateTemp("", pattern)
+func createTempFile(dir, fileName string, contents []byte) (string, error) {
+	tempFile, err := os.CreateTemp(dir, fileName+"-*")
 	if err != nil {
-		return err
+		return "", err
 	}
 	defer tempFile.Close()
 
 	if _, err := tempFile.Write(contents); err != nil {
-		return err
+		return "", err
 	}
 
-	return nil
+	return tempFile.Name(), nil
 }

@@ -114,7 +114,7 @@ func ExampleRealFile_Append() {
 	}
 }
 
-func ExampleCreate() {
+func ExampleCreateFile() {
 	tmpdir, err := os.MkdirTemp("", "example")
 	if err != nil {
 		log.Printf("failed to create temp directory: %v", err)
@@ -125,10 +125,33 @@ func ExampleCreate() {
 	// Name of the file to be created
 	fileName := tmpdir + "/testfile.txt"
 
-	if err := fileutils.Create(fileName, []byte("Hello, World!"), fileutils.CreateFile); err != nil {
+	createdFile, err := fileutils.Create(fileName, []byte("Hello, World!"), fileutils.CreateFile)
+	if err != nil {
 		log.Printf("failed to create file: %v", err)
 		return
 	}
+
+	log.Printf("file created: %s", createdFile)
+}
+
+func ExampleCreateTempFile() {
+	tmpdir, err := os.MkdirTemp("", "example")
+	if err != nil {
+		log.Printf("failed to create temp directory: %v", err)
+		return
+	}
+	defer os.RemoveAll(tmpdir)
+
+	// Name of the file to be created
+	fileName := tmpdir + "/testfile.txt"
+
+	createdFile, err := fileutils.Create(fileName, []byte("Hello, World!"), fileutils.CreateTempFile)
+	if err != nil {
+		log.Printf("failed to create file: %v", err)
+		return
+	}
+
+	log.Printf("file created: %s", createdFile)
 }
 
 func ExampleHasStr() {

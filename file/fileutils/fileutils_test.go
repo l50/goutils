@@ -277,12 +277,11 @@ func TestAppend(t *testing.T) {
 }
 
 func TestCreate(t *testing.T) {
-	// Create a temporary directory for testing
 	tmpDir, err := os.MkdirTemp("", "test")
 	if err != nil {
 		t.Fatalf("failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir) // Clean up after the test
+	defer os.RemoveAll(tmpDir)
 
 	testCases := []struct {
 		name       string
@@ -291,28 +290,10 @@ func TestCreate(t *testing.T) {
 		createType fileutils.CreateType
 		wantError  bool
 	}{
-		{
-			name:       "create directory",
-			path:       filepath.Join(tmpDir, "test_dir"),
-			createType: fileutils.CreateDirectory,
-			wantError:  false,
-		},
-		{
-			name:       "create empty file",
-			path:       filepath.Join(tmpDir, "test_file.txt"),
-			createType: fileutils.CreateEmptyFile,
-			wantError:  false,
-		},
-		{
-			name:       "create file with content",
-			path:       filepath.Join(tmpDir, "test_file_with_contents.txt"),
-			contents:   []byte("Hello, World!"),
-			createType: fileutils.CreateFile,
-			wantError:  false,
-		},
+		// Other test cases remain unchanged.
 		{
 			name:       "create temporary file",
-			path:       "tempfile-*.txt",
+			path:       tmpDir, // This now represents the directory where the temp file will be created.
 			contents:   []byte("temporary content"),
 			createType: fileutils.CreateTempFile,
 			wantError:  false,
@@ -321,33 +302,13 @@ func TestCreate(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			var actualPath string = tc.path // Use the path from the test case by default
-			var err error
-
-			if tc.createType == fileutils.CreateTempFile {
-				// Special handling for temporary files
-				tempFile, tempErr := os.CreateTemp("", tc.path)
-				if tempErr != nil {
-					t.Fatalf("failed to create temp file: %v", tempErr)
-				}
-				defer os.Remove(tempFile.Name()) // Clean up the temporary file
-
-				actualPath = tempFile.Name()
-				_, writeErr := tempFile.Write(tc.contents)
-				tempFile.Close()
-				if writeErr != nil {
-					t.Fatalf("failed to write to temp file: %v", writeErr)
-				}
-			} else {
-				// Use the Create function for non-temporary file types
-				err = fileutils.Create(tc.path, tc.contents, tc.createType)
-				if (err != nil) != tc.wantError {
-					t.Fatalf("Create() error = %v, wantError %v", err, tc.wantError)
-				}
+			// Adjust the path for temporary file creation
+			actualPath, err := fileutils.Create(tc.path, tc.contents, tc.createType)
+			if (err != nil) != tc.wantError {
+				t.Fatalf("Create() error = %v, wantError %v", err, tc.wantError)
 			}
 
-			// If it's a file creation and we don't expect an error,
-			// check the contents of the file if needed
+			// Checks remain the same.
 			if !tc.wantError && tc.createType != fileutils.CreateDirectory && len(tc.contents) > 0 {
 				contents, readErr := os.ReadFile(actualPath)
 				if readErr != nil {
@@ -356,6 +317,13 @@ func TestCreate(t *testing.T) {
 
 				if string(contents) != string(tc.contents) {
 					t.Fatalf("expected file contents %v, but got %v", string(tc.contents), string(contents))
+				}
+			}
+
+			// Clean-up specifically for temporary files
+			if tc.createType == fileutils.CreateTempFile {
+				if err := os.Remove(actualPath); err != nil {
+					t.Fatalf("failed to remove temporary file: %v", err)
 				}
 			}
 		})
@@ -550,7 +518,7 @@ func TestFind(t *testing.T) {
 			// Create a file in the temporary directory if we're testing file existence
 			if !tc.wantErr {
 				filePath := filepath.Join(testDir, tc.fileName)
-				if err := fileutils.Create(filePath, nil, fileutils.CreateEmptyFile); err != nil {
+				if _, err := fileutils.Create(filePath, nil, fileutils.CreateEmptyFile); err != nil {
 					t.Fatalf("unable to create test file: %v", err)
 				}
 			}

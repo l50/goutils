@@ -43,7 +43,7 @@ error: An error if the file cannot be read or parsed.
 ### Create(string, []byte, CreateType)
 
 ```go
-Create(string, []byte, CreateType) error
+Create(string, []byte, CreateType) string, error
 ```
 
 Create makes a directory, an empty file, a file with content, or a temporary file at
