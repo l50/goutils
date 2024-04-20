@@ -11,7 +11,7 @@ type fileReaderFunc func(string) ([]byte, error)
 
 // KubernetesClient wraps a clientset to interact with Kubernetes APIs.
 type KubernetesClient struct {
-	Clientset *kubernetes.Clientset
+	Clientset kubernetes.Interface
 }
 
 // NewKubernetesClient creates a new KubernetesClient using the provided kubeconfig path.
