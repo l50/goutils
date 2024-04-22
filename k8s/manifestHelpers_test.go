@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/l50/goutils/v2/k8s"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/dynamic/fake"
 	k8stesting "k8s.io/client-go/testing"
@@ -37,6 +38,20 @@ func TestApplyOrDeleteManifest(t *testing.T) {
 				mc.Type = k8s.ManifestType(999) // Invalid type
 			},
 			wantErr: true,
+		},
+		{
+			name: "apply job manifest successfully",
+			setup: func(mc *k8s.ManifestConfig, fdc *fake.FakeDynamicClient) {
+				mc.Type = k8s.ManifestJob
+				mc.Operation = k8s.OperationApply
+				mc.ReadFile = func(string) ([]byte, error) {
+					return []byte("kind: Job\napiVersion: batch/v1"), nil
+				}
+				fdc.PrependReactor("create", "*", func(action k8stesting.Action) (bool, runtime.Object, error) {
+					return true, &unstructured.Unstructured{}, nil
+				})
+			},
+			wantErr: false,
 		},
 	}
 
