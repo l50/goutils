@@ -47,15 +47,21 @@ users:
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			reader := func(path string) ([]byte, error) {
-				if path == tc.kubeconfig {
+				if path == tc.kubeconfig && tc.data != nil {
 					return tc.data, nil
 				}
-				return nil, fmt.Errorf("file not found")
+				return nil, fmt.Errorf("error reading kubeconfig")
 			}
 
-			_, err := k8s.NewKubernetesClient(tc.kubeconfig, reader)
+			client, err := k8s.NewKubernetesClient(tc.kubeconfig, reader)
 			if (err != nil) != tc.expectError {
 				t.Errorf("Test '%s' failed - expected error: %v, got: %v", tc.name, tc.expectError, err)
+			}
+			if err == nil {
+				// Perform further validation on the successful creation case
+				if client == nil || client.Clientset == nil || client.DynamicClient == nil {
+					t.Errorf("Test '%s' failed - clientset or dynamic client not properly initialized", tc.name)
+				}
 			}
 		})
 	}

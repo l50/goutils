@@ -3,6 +3,7 @@ package k8s
 import (
 	"fmt"
 
+	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 )
@@ -15,8 +16,11 @@ type fileReaderFunc func(string) ([]byte, error)
 //
 // Clientset: The clientset interface provided by client-go to interact with
 // Kubernetes resources.
+// DynamicClient: The dynamic client interface provided by client-go to interact
+// with Kubernetes resources.
 type KubernetesClient struct {
-	Clientset kubernetes.Interface
+	Clientset     kubernetes.Interface
+	DynamicClient dynamic.Interface
 }
 
 // NewKubernetesClient creates a new KubernetesClient using the provided
@@ -49,5 +53,10 @@ func NewKubernetesClient(kubeconfig string, reader fileReaderFunc) (*KubernetesC
 		return nil, fmt.Errorf("error creating Kubernetes client: %v", err)
 	}
 
-	return &KubernetesClient{Clientset: clientset}, nil
+	dynamicClient, err := dynamic.NewForConfig(config)
+	if err != nil {
+		return nil, fmt.Errorf("error creating dynamic Kubernetes client: %v", err)
+	}
+
+	return &KubernetesClient{Clientset: clientset, DynamicClient: dynamicClient}, nil
 }
