@@ -118,6 +118,33 @@ NewManifestConfig creates a new ManifestConfig with default settings.
 
 ---
 
+### StreamLogs(kubernetes.Interface, string)
+
+```go
+StreamLogs(kubernetes.Interface, string) error
+```
+
+StreamLogs connects to a Kubernetes cluster and streams logs from a specified pod,
+or dynamically locates and streams logs from pods associated with a job or deployment.
+
+**Parameters:**
+
+clientset: The Kubernetes client interface for connecting to the cluster.
+namespace: The namespace in which the resources are located.
+resourceType: The type of resource ('pod', 'job', or 'deployment') from which logs are to be streamed.
+resourceName: The name of the resource.
+
+**Returns:**
+
+error: An error object if an issue occurs during the log streaming process. Nil if the operation is successful.
+
+The function first determines the pod name directly if the resource type is 'pod'. For 'job' or 'deployment',
+it queries associated pods based on label selectors. Once the relevant pod is identified, it sets up a log
+streaming connection using the Kubernetes API. Logs are streamed directly to the standard output.
+Any issues during these steps, such as failure to find pods or streaming errors, result in returning an error.
+
+---
+
 ## Installation
 
 To use the goutils/v2/k8s package, you first need to install it.
