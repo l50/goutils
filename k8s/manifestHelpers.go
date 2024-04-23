@@ -62,6 +62,7 @@ const (
 	ManifestRaw ManifestType = iota
 	ManifestHelm
 	ManifestKustomize
+	ManifestJob
 )
 
 // ManifestOperation specifies the type of operation to perform on the manifest.
@@ -104,6 +105,14 @@ func (mo ManifestOperation) String() string {
 	}
 }
 
+func (mc *ManifestConfig) initializeClient() (dynamic.Interface, error) {
+	config, err := clientcmd.BuildConfigFromFlags("", mc.KubeConfigPath)
+	if err != nil {
+		return nil, fmt.Errorf("error building kubeconfig: %v", err)
+	}
+	return dynamic.NewForConfig(config)
+}
+
 // ApplyOrDeleteManifest applies or deletes a Kubernetes manifest based on the
 // ManifestConfig settings.
 //
@@ -116,17 +125,16 @@ func (mo ManifestOperation) String() string {
 // error: Error if any issue occurs while applying or deleting the manifest.
 func (mc *ManifestConfig) ApplyOrDeleteManifest(ctx context.Context) error {
 	if mc.Client == nil {
-		config, err := clientcmd.BuildConfigFromFlags("", mc.KubeConfigPath)
+		var err error
+		mc.Client, err = mc.initializeClient()
 		if err != nil {
-			return fmt.Errorf("error building kubeconfig: %v", err)
-		}
-		mc.Client, err = dynamic.NewForConfig(config)
-		if err != nil {
-			return fmt.Errorf("error creating dynamic client: %v", err)
+			return err
 		}
 	}
+
+	// Handle different types of manifests
 	switch mc.Type {
-	case ManifestRaw:
+	case ManifestRaw, ManifestJob:
 		return mc.HandleRawManifest(ctx, mc.Client)
 	case ManifestHelm:
 		return mc.handleHelmManifest()
