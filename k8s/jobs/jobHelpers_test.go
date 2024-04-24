@@ -1,9 +1,11 @@
 package k8s_test
 
 import (
+	"context"
 	"testing"
 
-	"github.com/l50/goutils/v2/k8s"
+	k8s "github.com/l50/goutils/v2/k8s/client"
+	jobs "github.com/l50/goutils/v2/k8s/jobs"
 	batchv1 "k8s.io/api/batch/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
@@ -14,21 +16,21 @@ func TestDeleteKubernetesJob(t *testing.T) {
 		name        string
 		jobName     string
 		namespace   string
-		setupClient func() *k8s.KubernetesClient
+		setupClient func() *jobs.JobsClient
 		expectError bool
 	}{
 		{
 			name:      "successful job deletion",
 			jobName:   "test-job",
 			namespace: "default",
-			setupClient: func() *k8s.KubernetesClient {
+			setupClient: func() *jobs.JobsClient {
 				fakeClient := fake.NewSimpleClientset(&batchv1.Job{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "test-job",
 						Namespace: "default",
 					},
 				})
-				return &k8s.KubernetesClient{Clientset: fakeClient}
+				return &jobs.JobsClient{Client: &k8s.KubernetesClient{Clientset: fakeClient}}
 			},
 			expectError: false,
 		},
@@ -36,9 +38,9 @@ func TestDeleteKubernetesJob(t *testing.T) {
 			name:      "failed job deletion",
 			jobName:   "nonexistent-job",
 			namespace: "default",
-			setupClient: func() *k8s.KubernetesClient {
+			setupClient: func() *jobs.JobsClient {
 				fakeClient := fake.NewSimpleClientset() // No pre-existing job
-				return &k8s.KubernetesClient{Clientset: fakeClient}
+				return &jobs.JobsClient{Client: &k8s.KubernetesClient{Clientset: fakeClient}}
 			},
 			expectError: true,
 		},
@@ -46,8 +48,9 @@ func TestDeleteKubernetesJob(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			kc := tc.setupClient()
-			err := kc.DeleteKubernetesJob(tc.jobName, tc.namespace)
+			ctx := context.Background()
+			jobsClient := tc.setupClient()
+			err := jobsClient.DeleteKubernetesJob(ctx, tc.jobName, tc.namespace)
 			if (err != nil) != tc.expectError {
 				t.Errorf("Test %s: expected error: %v, got: %v", tc.name, tc.expectError, err)
 			}

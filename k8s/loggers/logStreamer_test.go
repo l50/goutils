@@ -6,7 +6,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/l50/goutils/v2/k8s"
+	k8s "github.com/l50/goutils/v2/k8s/loggers"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
