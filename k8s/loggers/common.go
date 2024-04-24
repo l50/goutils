@@ -22,6 +22,7 @@ import (
 //
 // error: An error if any occurs during fetching and logging of pods.
 func FetchAndLogPods(ctx context.Context, clientset kubernetes.Interface, namespace, labelSelector string) error {
+	fmt.Printf("Attempting to list pods with label selector: '%s' in namespace '%s'\n", labelSelector, namespace)
 	pods, err := clientset.CoreV1().Pods(namespace).List(ctx, metav1.ListOptions{
 		LabelSelector: labelSelector,
 	})
@@ -33,9 +34,15 @@ func FetchAndLogPods(ctx context.Context, clientset kubernetes.Interface, namesp
 		return nil
 	}
 	for _, pod := range pods.Items {
-		logs, err := clientset.CoreV1().Pods(namespace).GetLogs(pod.Name, &v1.PodLogOptions{}).DoRaw(ctx)
+		fmt.Printf("Fetching logs for pod: %s\n", pod.Name)
+		req := clientset.CoreV1().Pods(namespace).GetLogs(pod.Name, &v1.PodLogOptions{})
+		logs, err := req.DoRaw(ctx)
 		if err != nil {
 			fmt.Printf("error getting logs for pod %s: %v\n", pod.Name, err)
+			continue
+		}
+		if len(logs) == 0 {
+			fmt.Printf("No logs for pod %s\n", pod.Name)
 			continue
 		}
 		fmt.Printf("Logs for pod %s:\n%s\n", pod.Name, string(logs))
