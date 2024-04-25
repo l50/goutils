@@ -65,6 +65,25 @@ error: An error if no pods are found or if an error occurs during the pod retrie
 
 ---
 
+### JobsClient.ListKubernetesJobs(context.Context, string)
+
+```go
+ListKubernetesJobs(context.Context, string) []batchv1.Job, error
+```
+
+ListKubernetesJobs lists Kubernetes jobs from a specified namespace, or all namespaces
+if no namespace is specified. This method allows for either targeted or broad job retrieval.
+
+Parameters:
+ctx - Context for managing control flow of the request.
+namespace - Optional; specifies the namespace from which to list jobs. If empty, jobs will be listed from all namespaces.
+
+Returns:
+A slice of batchv1.Job objects containing the jobs found.
+An error if the API call to fetch the jobs fails.
+
+---
+
 ## Installation
 
 To use the goutils/v2/k8s package, you first need to install it.

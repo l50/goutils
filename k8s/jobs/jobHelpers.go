@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	k8s "github.com/l50/goutils/v2/k8s/client"
+	batchv1 "k8s.io/api/batch/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -75,4 +76,32 @@ func (jc *JobsClient) GetJobPodName(ctx context.Context, jobName, namespace stri
 
 	// Assuming the first pod is the one we're interested in, as jobs usually have one pod if not paralleled
 	return pods.Items[0].Name, nil
+}
+
+// ListKubernetesJobs lists Kubernetes jobs from a specified namespace, or all namespaces
+// if no namespace is specified. This method allows for either targeted or broad job retrieval.
+//
+// Parameters:
+// ctx - Context for managing control flow of the request.
+// namespace - Optional; specifies the namespace from which to list jobs. If empty, jobs will be listed from all namespaces.
+//
+// Returns:
+// A slice of batchv1.Job objects containing the jobs found.
+// An error if the API call to fetch the jobs fails.
+func (jc *JobsClient) ListKubernetesJobs(ctx context.Context, namespace string) ([]batchv1.Job, error) {
+	listOptions := metav1.ListOptions{}
+	var jobs *batchv1.JobList
+	var err error
+
+	if namespace == "" {
+		jobs, err = jc.Client.Clientset.BatchV1().Jobs("").List(ctx, listOptions)
+	} else {
+		jobs, err = jc.Client.Clientset.BatchV1().Jobs(namespace).List(ctx, listOptions)
+	}
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to get jobs: %v", err)
+	}
+
+	return jobs.Items, nil
 }
