@@ -41,6 +41,30 @@ error: An error if the job could not be deleted.
 
 ---
 
+### JobsClient.GetJobPodName(context.Context, string)
+
+```go
+GetJobPodName(context.Context, string) string, error
+```
+
+GetJobPodName retrieves the name of the first pod associated with a specific Kubernetes job
+within a given namespace. It uses a label selector to find pods that are labeled with
+the job's name. This method is typically used in scenarios where jobs create a single pod or
+when only the first pod is of interest.
+
+**Parameters:**
+
+ctx: Context for managing control flow of the request.
+jobName: Name of the Kubernetes job to find pods for.
+namespace: Namespace where the job and its pods are located.
+
+**Returns:**
+
+string: The name of the first pod found that is associated with the job.
+error: An error if no pods are found or if an error occurs during the pod retrieval.
+
+---
+
 ## Installation
 
 To use the goutils/v2/k8s package, you first need to install it.
