@@ -89,6 +89,22 @@ func GetResourceStatus(ctx context.Context, client dynamic.Interface, resourceNa
 	return status == "Running", nil
 }
 
+// DescribeKubernetesResource retrieves the details of a specific Kubernetes
+// resource using the provided dynamic client, resource name, namespace, and
+// GroupVersionResource (GVR).
+//
+// **Parameters:**
+//
+// ctx: The context to use for the request.
+// client: The dynamic client to use for the request.
+// resourceName: The name of the resource to describe.
+// namespace: The namespace of the resource.
+// gvr: The GroupVersionResource of the resource.
+//
+// **Returns:**
+//
+// string: A string representation of the resource, similar to `kubectl describe`.
+// error: An error if any issue occurs while trying to describe the resource.
 func DescribeKubernetesResource(ctx context.Context, client dynamic.Interface, resourceName, namespace string, gvr schema.GroupVersionResource) (string, error) {
 	resource, err := client.Resource(gvr).Namespace(namespace).Get(ctx, resourceName, metav1.GetOptions{})
 	if err != nil {
@@ -107,7 +123,8 @@ func DescribeKubernetesResource(ctx context.Context, client dynamic.Interface, r
 	return description, nil
 }
 
-// formatResourceDescription creates a detailed string representation of a Kubernetes resource similar to `kubectl describe`.
+// formatResourceDescription creates a detailed string representation of a
+// Kubernetes resource similar to `kubectl describe`.
 func formatResourceDescription(resource *unstructured.Unstructured) string {
 	var sb strings.Builder
 	sb.WriteString(fmt.Sprintf("Name: %s\n", resource.GetName()))

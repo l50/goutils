@@ -24,6 +24,22 @@ designed to simplify common k8s tasks.
 DescribeKubernetesResource(context.Context dynamic.Interface string schema.GroupVersionResource) string error
 ```
 
+DescribeKubernetesResource retrieves the details of a specific Kubernetes
+resource using the provided dynamic client, resource name, namespace, and
+GroupVersionResource (GVR).
+
+**Parameters:**
+
+ctx: The context to use for the request.
+client: The dynamic client to use for the request.
+resourceName: The name of the resource to describe.
+namespace: The namespace of the resource.
+gvr: The GroupVersionResource of the resource.
+
+**Returns:**
+
+string: A string representation of the resource, similar to `kubectl describe`.
+error: An error if any issue occurs while trying to describe the resource.
 
 ---
 
