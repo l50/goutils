@@ -18,6 +18,15 @@ designed to simplify common k8s tasks.
 
 ## Functions
 
+### DescribeKubernetesResource(context.Context, dynamic.Interface, string, schema.GroupVersionResource)
+
+```go
+DescribeKubernetesResource(context.Context dynamic.Interface string schema.GroupVersionResource) string error
+```
+
+
+---
+
 ### GetResourceStatus(context.Context, dynamic.Interface, string, schema.GroupVersionResource)
 
 ```go

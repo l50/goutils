@@ -2,14 +2,19 @@ package k8s_test
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
 	k8s "github.com/l50/goutils/v2/k8s/dynamic"
 	"github.com/stretchr/testify/assert"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/dynamic/fake"
 	"k8s.io/client-go/kubernetes/scheme"
+	k8stesting "k8s.io/client-go/testing"
 )
 
 func TestWaitForResourceReady(t *testing.T) {
@@ -70,6 +75,84 @@ func TestWaitForResourceReady(t *testing.T) {
 				assert.Error(t, err, "Expected an error but did not get one in test case: %s", tc.name)
 			} else {
 				assert.NoError(t, err, "Did not expect an error but got one in test case: %s", tc.name)
+			}
+		})
+	}
+}
+
+func TestDescribeKubernetesResource(t *testing.T) {
+	tests := []struct {
+		name           string
+		resourceName   string
+		namespace      string
+		gvr            schema.GroupVersionResource
+		resourceSetup  func() *unstructured.Unstructured
+		expectedOutput string
+		expectError    bool
+	}{
+		{
+			name:         "successful resource description",
+			resourceName: "test-pod",
+			namespace:    "default",
+			gvr:          schema.GroupVersionResource{Group: "", Version: "v1", Resource: "pods"},
+			resourceSetup: func() *unstructured.Unstructured {
+				return &unstructured.Unstructured{
+					Object: map[string]interface{}{
+						"apiVersion": "v1",
+						"kind":       "Pod",
+						"metadata": map[string]interface{}{
+							"name":      "test-pod",
+							"namespace": "default",
+						},
+						"status": map[string]interface{}{
+							"phase": "Running",
+						},
+					},
+				}
+			},
+			expectedOutput: "Name: test-pod\nNamespace: default\nLabels: map[]\nAnnotations: map[]\nDetails:\napiVersion: v1\nkind: Pod\nmetadata: map[name:test-pod namespace:default]\nstatus: map[phase:Running]\n",
+			expectError:    false,
+		},
+		{
+			name:         "resource not found",
+			resourceName: "unknown-pod",
+			namespace:    "default",
+			gvr:          schema.GroupVersionResource{Group: "", Version: "v1", Resource: "pods"},
+			resourceSetup: func() *unstructured.Unstructured {
+				return nil // correctly simulate non-existent resource
+			},
+			expectedOutput: "",
+			expectError:    true,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx := context.Background()
+
+			// Setup fake dynamic client
+			fakeClient := fake.NewSimpleDynamicClient(scheme.Scheme)
+			fakeClient.PrependReactor("get", "pods", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+				getAction, ok := action.(k8stesting.GetAction)
+				if ok {
+					if getAction.GetName() == tc.resourceName && tc.resourceSetup != nil {
+						resource := tc.resourceSetup()
+						if resource == nil {
+							return true, nil, fmt.Errorf("pod '%s' not found", getAction.GetName())
+						}
+						return true, resource, nil
+					}
+				}
+				return false, nil, fmt.Errorf("pod '%s' not found", getAction.GetName())
+			})
+
+			description, err := k8s.DescribeKubernetesResource(ctx, fakeClient, tc.resourceName, tc.namespace, tc.gvr)
+
+			if tc.expectError {
+				assert.Error(t, err, "Expected an error but did not get one in test case: %s", tc.name)
+			} else {
+				assert.NoError(t, err, "Did not expect an error but got one in test case: %s", tc.name)
+				assert.Equal(t, tc.expectedOutput, description, "Unexpected description in test case: %s", tc.name)
 			}
 		})
 	}

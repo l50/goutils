@@ -3,6 +3,7 @@ package k8s
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -86,4 +87,39 @@ func GetResourceStatus(ctx context.Context, client dynamic.Interface, resourceNa
 	}
 
 	return status == "Running", nil
+}
+
+func DescribeKubernetesResource(ctx context.Context, client dynamic.Interface, resourceName, namespace string, gvr schema.GroupVersionResource) (string, error) {
+	resource, err := client.Resource(gvr).Namespace(namespace).Get(ctx, resourceName, metav1.GetOptions{})
+	if err != nil {
+		return "", fmt.Errorf("failed to get %s '%s' in namespace '%s': %v", gvr.Resource, resourceName, namespace, err)
+	}
+	if resource == nil {
+		return "", fmt.Errorf("no %s '%s' found in namespace '%s'", gvr.Resource, resourceName, namespace)
+	}
+
+	// Make sure the resource is not nil before accessing UnstructuredContent
+	if resource.Object == nil {
+		return "", fmt.Errorf("the resource data is nil")
+	}
+
+	description := formatResourceDescription(resource)
+	return description, nil
+}
+
+// formatResourceDescription creates a detailed string representation of a Kubernetes resource similar to `kubectl describe`.
+func formatResourceDescription(resource *unstructured.Unstructured) string {
+	var sb strings.Builder
+	sb.WriteString(fmt.Sprintf("Name: %s\n", resource.GetName()))
+	sb.WriteString(fmt.Sprintf("Namespace: %s\n", resource.GetNamespace()))
+	sb.WriteString(fmt.Sprintf("Labels: %v\n", resource.GetLabels()))
+	sb.WriteString(fmt.Sprintf("Annotations: %v\n", resource.GetAnnotations()))
+	sb.WriteString("Details:\n")
+
+	// Include additional details like status, spec, etc.
+	for key, val := range resource.UnstructuredContent() {
+		sb.WriteString(fmt.Sprintf("%s: %v\n", key, val))
+	}
+
+	return sb.String()
 }
