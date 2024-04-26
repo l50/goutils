@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/l50/goutils/v2/k8s"
+	k8s "github.com/l50/goutils/v2/k8s/manifests"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/dynamic/fake"

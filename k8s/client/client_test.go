@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/l50/goutils/v2/k8s"
+	k8s "github.com/l50/goutils/v2/k8s/client"
 )
 
 func TestNewKubernetesClient(t *testing.T) {
