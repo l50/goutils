@@ -3,6 +3,7 @@ package k8s
 import (
 	"context"
 	"fmt"
+	"sort"
 	"strings"
 	"time"
 
@@ -133,9 +134,17 @@ func formatResourceDescription(resource *unstructured.Unstructured) string {
 	sb.WriteString(fmt.Sprintf("Annotations: %v\n", resource.GetAnnotations()))
 	sb.WriteString("Details:\n")
 
-	// Include additional details like status, spec, etc.
-	for key, val := range resource.UnstructuredContent() {
-		sb.WriteString(fmt.Sprintf("%s: %v\n", key, val))
+	// Sort the keys to ensure consistent order in tests and descriptions
+	keys := make([]string, 0, len(resource.UnstructuredContent()))
+	for key := range resource.UnstructuredContent() {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+
+	// Include sorted details like status, spec, etc.
+	for _, key := range keys {
+		value := resource.UnstructuredContent()[key]
+		sb.WriteString(fmt.Sprintf("%s: %v\n", key, value))
 	}
 
 	return sb.String()

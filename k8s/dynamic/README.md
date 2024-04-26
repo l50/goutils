@@ -43,6 +43,29 @@ error: An error if any issue occurs while trying to describe the resource.
 
 ---
 
+### ExecKubernetesResources(context.Context, *client.KubernetesClient, string, []string)
+
+```go
+ExecKubernetesResources(context.Context *client.KubernetesClient string []string) string error
+```
+
+ExecKubernetesResources executes a command in a specified resource within a given namespace using the existing KubernetesClient.
+
+**Parameters:**
+
+ctx: The context to use for the request.
+kc: The KubernetesClient that includes both the standard and dynamic clients.
+namespace: The namespace of the resource.
+podName: The name of the pod to execute the command in.
+command: A slice of strings representing the command to execute inside the resource.
+
+**Returns:**
+
+string: The output from the executed command or an error message.
+error: An error if any issue occurs during the command execution.
+
+---
+
 ### GetResourceStatus(context.Context, dynamic.Interface, string, schema.GroupVersionResource)
 
 ```go
