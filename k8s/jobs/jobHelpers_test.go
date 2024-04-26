@@ -158,3 +158,70 @@ func TestListKubernetesJobs(t *testing.T) {
 		})
 	}
 }
+
+func TestJobExists(t *testing.T) {
+	tests := []struct {
+		name         string
+		jobName      string
+		namespace    string
+		setupClient  func() *jobs.JobsClient
+		expectExists bool
+		expectError  bool
+	}{
+		{
+			name:      "job exists",
+			jobName:   "existing-job",
+			namespace: "default",
+			setupClient: func() *jobs.JobsClient {
+				fakeClient := fake.NewSimpleClientset(&batchv1.Job{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "existing-job",
+						Namespace: "default",
+					},
+				})
+				return &jobs.JobsClient{Client: &k8s.KubernetesClient{Clientset: fakeClient}}
+			},
+			expectExists: true,
+			expectError:  false,
+		},
+		{
+			name:      "job does not exist",
+			jobName:   "nonexistent-job",
+			namespace: "default",
+			setupClient: func() *jobs.JobsClient {
+				fakeClient := fake.NewSimpleClientset()
+				return &jobs.JobsClient{Client: &k8s.KubernetesClient{Clientset: fakeClient}}
+			},
+			expectExists: false,
+			expectError:  false,
+		},
+		{
+			name:      "error on retrieving job",
+			jobName:   "faulty-job",
+			namespace: "default",
+			setupClient: func() *jobs.JobsClient {
+				fakeClient := fake.NewSimpleClientset()
+				fakeClient.PrependReactor("get", "jobs", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+					return true, nil, fmt.Errorf("internal error")
+				})
+				return &jobs.JobsClient{Client: &k8s.KubernetesClient{Clientset: fakeClient}}
+			},
+			expectExists: false,
+			expectError:  true,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx := context.Background()
+			jobsClient := tc.setupClient()
+			exists, err := jobsClient.JobExists(ctx, tc.jobName, tc.namespace)
+			if (err != nil) != tc.expectError {
+				t.Errorf("Test %s: expected error: %v, got: %v", tc.name, tc.expectError, err)
+			}
+			if exists != tc.expectExists {
+				t.Errorf("Test %s: expected job existence: %v, got: %v", tc.name, tc.expectExists, exists)
+			}
+		})
+	}
+}

@@ -65,6 +65,27 @@ error: An error if no pods are found or if an error occurs during the pod retrie
 
 ---
 
+### JobsClient.JobExists(context.Context, string)
+
+```go
+JobExists(context.Context, string) bool, error
+```
+
+JobExists checks if a Kubernetes job with the specified name exists within a given namespace.
+
+**Parameters:**
+
+ctx: Context for managing control flow of the request.
+jobName: Name of the Kubernetes job to check for existence.
+namespace: Namespace where the job is located.
+
+**Returns:**
+
+bool: true if the job exists, false otherwise.
+error: An error if the job existence check fails.
+
+---
+
 ### JobsClient.ListKubernetesJobs(context.Context, string)
 
 ```go

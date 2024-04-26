@@ -6,6 +6,7 @@ import (
 
 	k8s "github.com/l50/goutils/v2/k8s/client"
 	batchv1 "k8s.io/api/batch/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -104,4 +105,27 @@ func (jc *JobsClient) ListKubernetesJobs(ctx context.Context, namespace string) 
 	}
 
 	return jobs.Items, nil
+}
+
+// JobExists checks if a Kubernetes job with the specified name exists within a given namespace.
+//
+// **Parameters:**
+//
+// ctx: Context for managing control flow of the request.
+// jobName: Name of the Kubernetes job to check for existence.
+// namespace: Namespace where the job is located.
+//
+// **Returns:**
+//
+// bool: true if the job exists, false otherwise.
+// error: An error if the job existence check fails.
+func (jc *JobsClient) JobExists(ctx context.Context, jobName, namespace string) (bool, error) {
+	_, err := jc.Client.Clientset.BatchV1().Jobs(namespace).Get(ctx, jobName, metav1.GetOptions{})
+	if err != nil {
+		if errors.IsNotFound(err) {
+			return false, nil // Job does not exist
+		}
+		return false, fmt.Errorf("failed to get job '%s' in namespace '%s': %v", jobName, namespace, err)
+	}
+	return true, nil // Job exists
 }
