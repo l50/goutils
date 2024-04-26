@@ -14,6 +14,7 @@ import (
 	"strings"
 	"text/template"
 
+	gitutils "github.com/l50/goutils/v2/git"
 	"github.com/spf13/afero"
 )
 
@@ -139,7 +140,24 @@ func CreatePackageDocs(fs afero.Fs, repo Repo, templatePath string, excludedPack
 // file exists, reading the template file, parsing the template, creating the
 // README.md file, or writing to the README.md file.
 func generateReadmeFromTemplate(fs afero.Fs, pkgDoc *PackageDoc, path string, templatePath string) error {
-	// Check if the template file exists
+	// Determine the absolute path of the target README.md file
+	absolutePath, err := filepath.Abs(path)
+	if err != nil {
+		return fmt.Errorf("error determining the absolute path: %w", err)
+	}
+
+	repoRoot, err := gitutils.RepoRoot()
+	if err != nil {
+		return fmt.Errorf("error finding repo root: %w", err)
+	}
+	rootReadmePath := filepath.Join(repoRoot, "README.md")
+
+	// Skip if the target README.md is the root README.md
+	if absolutePath == rootReadmePath {
+		return nil // Skip processing to avoid overwriting root README.md
+	}
+
+	// Proceed with README.md generation for non-root directories
 	exists, err := afero.Exists(fs, templatePath)
 	if err != nil {
 		return fmt.Errorf("error checking if template file exists: %w", err)
@@ -148,46 +166,37 @@ func generateReadmeFromTemplate(fs afero.Fs, pkgDoc *PackageDoc, path string, te
 		return fmt.Errorf("template file does not exist")
 	}
 
-	// Open the template file
 	templateFile, err := fs.Open(templatePath)
 	if err != nil {
 		return fmt.Errorf("error opening template file: %w", err)
 	}
 	defer templateFile.Close()
 
-	// Read the contents of the file into a string
 	templateBytes, err := afero.ReadAll(templateFile)
 	if err != nil {
 		return fmt.Errorf("error reading template file: %w", err)
 	}
 
-	// Parse the template file
 	tmpl, err := template.New("").Parse(string(templateBytes))
 	if err != nil {
 		return err
 	}
 
-	// Open the output file
-	out, err := fs.Create(path)
+	out, err := fs.Create(absolutePath)
 	if err != nil {
 		return err
 	}
 	defer out.Close()
 
-	// Execute the template with the package documentation
 	var buf bytes.Buffer
 	err = tmpl.Execute(&buf, pkgDoc)
 	if err != nil {
 		return err
 	}
 
-	// Replace &#34; with "
 	readmeContent := strings.ReplaceAll(buf.String(), "&#34;", "\"")
-
-	// Replace hard tabs with spaces
 	readmeContent = strings.ReplaceAll(readmeContent, "\t", "    ")
 
-	// Write the modified content to the README file
 	if _, err := out.WriteString(readmeContent); err != nil {
 		return err
 	}
