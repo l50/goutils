@@ -7,10 +7,10 @@ import (
 	"strings"
 	"time"
 
+	client "github.com/l50/goutils/v2/k8s/client"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/client-go/dynamic"
 )
 
 // WaitForResourceReady waits for any Kubernetes resource to reach a ready state.
@@ -67,7 +67,7 @@ func WaitForResourceReady(ctx context.Context, resourceName, namespace, resource
 // **Parameters:**
 //
 // ctx: A context.Context to control the operation.
-// client: The dynamic.Interface client used for Kubernetes API calls.
+// kc: The KubernetesClient that includes both the standard and dynamic clients.
 // resourceName: The name of the resource being checked.
 // namespace: The namespace of the resource.
 // gvr: The schema.GroupVersionResource that specifies the resource type.
@@ -76,8 +76,8 @@ func WaitForResourceReady(ctx context.Context, resourceName, namespace, resource
 //
 // bool: true if the resource status is 'Running', false otherwise.
 // error: An error if the resource cannot be retrieved or the status is not found.
-func GetResourceStatus(ctx context.Context, client dynamic.Interface, resourceName, namespace string, gvr schema.GroupVersionResource) (bool, error) {
-	resource, err := client.Resource(gvr).Namespace(namespace).Get(ctx, resourceName, metav1.GetOptions{})
+func GetResourceStatus(ctx context.Context, kc *client.KubernetesClient, resourceName, namespace string, gvr schema.GroupVersionResource) (bool, error) {
+	resource, err := kc.DynamicClient.Resource(gvr).Namespace(namespace).Get(ctx, resourceName, metav1.GetOptions{})
 	if err != nil {
 		return false, fmt.Errorf("failed to get %s (%s) in %s namespace: %v", resourceName, gvr.Resource, namespace, err)
 	}
@@ -97,7 +97,7 @@ func GetResourceStatus(ctx context.Context, client dynamic.Interface, resourceNa
 // **Parameters:**
 //
 // ctx: The context to use for the request.
-// client: The dynamic client to use for the request.
+// kc: The KubernetesClient that includes both the standard and dynamic clients.
 // resourceName: The name of the resource to describe.
 // namespace: The namespace of the resource.
 // gvr: The GroupVersionResource of the resource.
@@ -106,22 +106,18 @@ func GetResourceStatus(ctx context.Context, client dynamic.Interface, resourceNa
 //
 // string: A string representation of the resource, similar to `kubectl describe`.
 // error: An error if any issue occurs while trying to describe the resource.
-func DescribeKubernetesResource(ctx context.Context, client dynamic.Interface, resourceName, namespace string, gvr schema.GroupVersionResource) (string, error) {
-	resource, err := client.Resource(gvr).Namespace(namespace).Get(ctx, resourceName, metav1.GetOptions{})
+func DescribeKubernetesResource(ctx context.Context, kc *client.KubernetesClient, resourceName, namespace string, gvr schema.GroupVersionResource) (string, error) {
+	resource, err := kc.DynamicClient.Resource(gvr).Namespace(namespace).Get(ctx, resourceName, metav1.GetOptions{})
 	if err != nil {
 		return "", fmt.Errorf("failed to get %s '%s' in namespace '%s': %v", gvr.Resource, resourceName, namespace, err)
 	}
+
+	// Make sure the resource is not nil before accessing UnstructuredContent
 	if resource == nil {
 		return "", fmt.Errorf("no %s '%s' found in namespace '%s'", gvr.Resource, resourceName, namespace)
 	}
 
-	// Make sure the resource is not nil before accessing UnstructuredContent
-	if resource.Object == nil {
-		return "", fmt.Errorf("the resource data is nil")
-	}
-
-	description := formatResourceDescription(resource)
-	return description, nil
+	return formatResourceDescription(resource), nil
 }
 
 // formatResourceDescription creates a detailed string representation of a

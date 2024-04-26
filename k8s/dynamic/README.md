@@ -18,10 +18,10 @@ designed to simplify common k8s tasks.
 
 ## Functions
 
-### DescribeKubernetesResource(context.Context, dynamic.Interface, string, schema.GroupVersionResource)
+### DescribeKubernetesResource(context.Context, *client.KubernetesClient, string, schema.GroupVersionResource)
 
 ```go
-DescribeKubernetesResource(context.Context dynamic.Interface string schema.GroupVersionResource) string error
+DescribeKubernetesResource(context.Context *client.KubernetesClient string schema.GroupVersionResource) string error
 ```
 
 DescribeKubernetesResource retrieves the details of a specific Kubernetes
@@ -31,7 +31,7 @@ GroupVersionResource (GVR).
 **Parameters:**
 
 ctx: The context to use for the request.
-client: The dynamic client to use for the request.
+kc: The KubernetesClient that includes both the standard and dynamic clients.
 resourceName: The name of the resource to describe.
 namespace: The namespace of the resource.
 gvr: The GroupVersionResource of the resource.
@@ -66,10 +66,10 @@ error: An error if any issue occurs during the command execution.
 
 ---
 
-### GetResourceStatus(context.Context, dynamic.Interface, string, schema.GroupVersionResource)
+### GetResourceStatus(context.Context, *client.KubernetesClient, string, schema.GroupVersionResource)
 
 ```go
-GetResourceStatus(context.Context dynamic.Interface string schema.GroupVersionResource) bool error
+GetResourceStatus(context.Context *client.KubernetesClient string schema.GroupVersionResource) bool error
 ```
 
 GetResourceStatus checks the status of any Kubernetes resource.
@@ -77,7 +77,7 @@ GetResourceStatus checks the status of any Kubernetes resource.
 **Parameters:**
 
 ctx: A context.Context to control the operation.
-client: The dynamic.Interface client used for Kubernetes API calls.
+kc: The KubernetesClient that includes both the standard and dynamic clients.
 resourceName: The name of the resource being checked.
 namespace: The namespace of the resource.
 gvr: The schema.GroupVersionResource that specifies the resource type.

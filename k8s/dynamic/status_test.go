@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	client "github.com/l50/goutils/v2/k8s/client"
 	k8s "github.com/l50/goutils/v2/k8s/dynamic"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -130,23 +131,27 @@ func TestDescribeKubernetesResource(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			ctx := context.Background()
 
-			// Setup fake dynamic client
-			fakeClient := fake.NewSimpleDynamicClient(scheme.Scheme)
-			fakeClient.PrependReactor("get", "pods", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+			// Setup fake dynamic client and wrap in KubernetesClient
+			fakeDynamicClient := fake.NewSimpleDynamicClient(scheme.Scheme)
+			kubernetesClient := &client.KubernetesClient{
+				DynamicClient: fakeDynamicClient,
+				// Populate other fields if needed, such as Clientset or Config
+			}
+
+			// Handling the "get" reactor for specific tests
+			fakeDynamicClient.PrependReactor("get", "pods", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
 				getAction, ok := action.(k8stesting.GetAction)
-				if ok {
-					if getAction.GetName() == tc.resourceName && tc.resourceSetup != nil {
-						resource := tc.resourceSetup()
-						if resource == nil {
-							return true, nil, fmt.Errorf("pod '%s' not found", getAction.GetName())
-						}
-						return true, resource, nil
+				if ok && getAction.GetName() == tc.resourceName && tc.resourceSetup != nil {
+					resource := tc.resourceSetup()
+					if resource == nil {
+						return true, nil, fmt.Errorf("pod '%s' not found", getAction.GetName())
 					}
+					return true, resource, nil
 				}
 				return false, nil, fmt.Errorf("pod '%s' not found", getAction.GetName())
 			})
 
-			description, err := k8s.DescribeKubernetesResource(ctx, fakeClient, tc.resourceName, tc.namespace, tc.gvr)
+			description, err := k8s.DescribeKubernetesResource(ctx, kubernetesClient, tc.resourceName, tc.namespace, tc.gvr)
 
 			if tc.expectError {
 				assert.Error(t, err, "Expected an error but did not get one in test case: %s", tc.name)
