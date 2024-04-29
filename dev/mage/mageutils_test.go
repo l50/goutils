@@ -343,6 +343,11 @@ func TestTidy(t *testing.T) {
 }
 
 func TestUpdateMageDeps(t *testing.T) {
+	repoRoot, err := git.RepoRoot()
+	if err != nil {
+		t.Errorf("RepoRoot() failed with error %v", err)
+		return
+	}
 	testCases := []struct {
 		desc    string
 		mageDir string
@@ -355,7 +360,7 @@ func TestUpdateMageDeps(t *testing.T) {
 		},
 		{
 			desc:    "updates mage dependencies",
-			mageDir: "magefiles",
+			mageDir: repoRoot,
 			wantErr: false,
 		},
 	}
@@ -365,11 +370,6 @@ func TestUpdateMageDeps(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(t *testing.T) {
-			repoRoot, err := git.RepoRoot()
-			if err != nil {
-				t.Errorf("RepoRoot() failed with error %v", err)
-				return
-			}
 
 			if err := sys.Cd(repoRoot); err != nil {
 				t.Errorf("failed to change directory to %s: %v", testingPath, err)
