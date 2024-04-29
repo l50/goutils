@@ -18,7 +18,7 @@ var repo = docs.Repo{
 }
 
 func TestCreatePackageDocs(t *testing.T) {
-	templatePath := filepath.Join("magefiles", "tmpl", "README.md.tmpl")
+	templatePath := filepath.Join("templates", "README.md.tmpl")
 
 	testCases := []struct {
 		name          string
@@ -37,10 +37,7 @@ func TestCreatePackageDocs(t *testing.T) {
 				initCommonDirs(fs, templatePath)
 
 				filesToCopy := []string{
-					"magefiles/go.mod", "magefiles/go.mod",
-					"magefiles/go.sum", "magefiles/go.sum",
-					"magefiles/magefile.go", "magefiles/magefile.go",
-					"magefiles/tmpl/README.md.tmpl", "magefiles/tmpl/README.md.tmpl",
+					"templates/README.md.tmpl", "templates/README.md.tmpl",
 				}
 				if err := copyFilesToFs(fs, filesToCopy...); err != nil {
 					t.Fatal(err)
@@ -65,13 +62,6 @@ func TestCreatePackageDocs(t *testing.T) {
 			setupFs: func() afero.Fs {
 				fs, templatePath := initBaseFs(t)
 				initCommonDirs(fs, templatePath)
-
-				filesToCopy := []string{
-					"magefiles/tmpl/README.md.tmpl", "magefiles/tmpl/README.md.tmpl",
-				}
-				if err := copyFilesToFs(fs, filesToCopy...); err != nil {
-					t.Fatal(err)
-				}
 
 				return fs
 			},
@@ -120,29 +110,6 @@ func TestCreatePackageDocs(t *testing.T) {
 			templatePath: templatePath,
 			expectErr:    false,
 		},
-		{
-			name: "magefiles directory with main package",
-			repo: repo,
-			setupFs: func() afero.Fs {
-				fs, templatePath := initBaseFs(t)
-				initCommonDirs(fs, templatePath)
-
-				// Mock README.md.tmpl content
-				_ = afero.WriteFile(fs, filepath.Join("magefiles", "tmpl", "README.md.tmpl"), []byte("mock README.md.tmpl content"), 0644)
-
-				filesToCopy := []string{
-					"magefiles/magefile.go", "magefiles/magefile.go",
-				}
-				if err := copyFilesToFs(fs, filesToCopy...); err != nil {
-					t.Fatal(err)
-				}
-
-				return fs
-			},
-			templatePath:  templatePath,
-			expectErr:     false,
-			expectPkgName: "magefiles",
-		},
 	}
 
 	for _, tc := range testCases {
@@ -150,17 +117,19 @@ func TestCreatePackageDocs(t *testing.T) {
 			fs := tc.setupFs()
 
 			// Check directory explicitly:
-			dirExists, _ := afero.DirExists(fs, "magefiles")
+			dirExists, _ := afero.DirExists(fs, "templates")
 			if !dirExists {
 				t.Error("magefiles directory does not exist in the in-memory file system")
 			}
+
 			if tc.expectPkgName != "" {
-				readmePath := filepath.Join("magefiles", "README.md")
+				readmePath := filepath.Join("templates", "README.md")
 				content, err := afero.ReadFile(fs, readmePath)
 				if err == nil && !strings.Contains(string(content), tc.expectPkgName) {
 					t.Errorf("expected package name %s not found in generated README", tc.expectPkgName)
 				}
 			}
+
 			err := docs.CreatePackageDocs(fs, tc.repo, tc.templatePath, tc.excludedPkgs...)
 			if (err != nil) != tc.expectErr {
 				t.Errorf("CreatePackageDocs() error = %v, expectErr %v", err, tc.expectErr)
@@ -180,7 +149,7 @@ func initBaseFs(t *testing.T) (afero.Fs, string) {
 }
 
 func initCommonDirs(fs afero.Fs, path string) {
-	_ = fs.MkdirAll(filepath.Join("magefiles", "tmpl"), 0755)
+	_ = fs.MkdirAll("templates", 0755)
 	_ = afero.WriteFile(fs, path, []byte("{{.PackageName}}"), 0644)
 }
 

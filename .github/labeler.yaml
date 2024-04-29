@@ -61,10 +61,6 @@ area/web:
       - any-glob-to-any-file: "web/*.go"
       - any-glob-to-any-file: "web/cdpchrome/*.go"
 
-area/magefiles:
-  - changed-files:
-      - any-glob-to-any-file: "magefiles/*"
-
 area/go:
   - changed-files:
       - any-glob-to-any-file: "go.mod"
