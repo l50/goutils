@@ -56,7 +56,7 @@ func setup() error {
 	magefileSrc := filepath.Join(repoRoot, "magefiles")
 
 	// ensure the source directory exists
-	if _, err := os.Stat(magefileSrc); err != nil && !os.IsNotExist(err) {
+	if _, err := os.Stat(repoRoot); err != nil && !os.IsNotExist(err) {
 		return fmt.Errorf("magefiles directory does not exist at %s", magefileSrc)
 	} else if err != nil {
 		return fmt.Errorf("unexpected error when checking for magefiles directory: %w", err)
@@ -410,96 +410,6 @@ func TestInstallGoDeps(t *testing.T) {
 		})
 	}
 }
-
-// func TestFindExportedFunctionsInPackage(t *testing.T) {
-// 	bashCmd := `
-// find . -name "*.go" -not -path "./magefiles/*" |
-// xargs grep -E -o 'func [A-Z][a-zA-Z0-9_]+\(' |
-// grep --color=auto --exclude-dir={.bzr,CVS,.git,.hg,.svn,.idea,.tox} -v '_test.go' |
-// grep --color=auto --exclude-dir={.bzr,CVS,.git,.hg,.svn,.idea,.tox} -v -E 'func [A-Z][a-zA-Z0-9_]+Test\(' |
-// sed -e 's/func //' -e 's/(//' |
-// awk -F: '{printf "Function: %s\nFile: %s\n", $2, $1}'`
-
-// 	cmd := exec.Command("bash", "-c", bashCmd)
-// 	cmd.Dir = "."
-// 	cmd.Env = os.Environ()
-
-// 	// Run the command and get its output
-// 	outputBytes, err := cmd.Output()
-// 	if err != nil {
-// 		t.Fatalf("failed to execute command: %v", err)
-// 	}
-// 	output := string(outputBytes)
-
-// 	// Parse the output and create a map of expected function names
-// 	bashFuncs := make(map[string]bool)
-// 	scanner := bufio.NewScanner(strings.NewReader(output))
-// 	for scanner.Scan() {
-// 		line := scanner.Text()
-// 		if strings.HasPrefix(line, "Function: ") {
-// 			funcName := strings.TrimSpace(strings.TrimPrefix(line, "Function: "))
-// 			bashFuncs[funcName] = true
-// 		}
-// 	}
-// 	if err := scanner.Err(); err != nil {
-// 		t.Fatalf("error while scanning command output: %v", err)
-// 	}
-
-// 	// Define a table of test cases with input values and expected results
-// 	testCases := []struct {
-// 		name           string
-// 		packagePath    string
-// 		expectedFuncs  map[string]bool
-// 		expectedErrors bool
-// 	}{
-// 		// {
-// 		// 	name:           "Valid package",
-// 		// 	packagePath:    testingPath,
-// 		// 	expectedFuncs:  bashFuncs,
-// 		// 	expectedErrors: false,
-// 		// },
-// 		{
-// 			name:           "Invalid package",
-// 			packagePath:    "/tmp",
-// 			expectedFuncs:  nil,
-// 			expectedErrors: true,
-// 		},
-// 	}
-// 	// Loop through the test cases and execute each one
-// 	for _, tc := range testCases {
-// 		t.Run(tc.name, func(t *testing.T) {
-// 			// Get the exported functions from the package
-// 			goFuncs, err := mageutils.FindExportedFunctionsInPackage(tc.packagePath)
-// 			if tc.expectedErrors && err == nil {
-// 				t.Errorf("expected an error but got none")
-// 			}
-// 			if !tc.expectedErrors && err != nil {
-// 				t.Logf("CURRENT DIRECTORY: %v", sys.Gwd())
-// 				t.Errorf("unexpected error: %v", err)
-// 			}
-
-// 			// Compare the expected and actual functions
-// 			missingFuncs := []string{}
-// 			for bf := range tc.expectedFuncs {
-// 				found := false
-// 				for _, gf := range goFuncs {
-// 					if bf == gf.FuncName {
-// 						found = true
-// 						break
-// 					}
-// 				}
-// 				if !found {
-// 					missingFuncs = append(missingFuncs, bf)
-// 				}
-// 			}
-
-// 			if len(missingFuncs) > 0 {
-// 				t.Errorf("go and bash implementations don't agree: %v", missingFuncs)
-// 				fmt.Println("Missing functions: ", missingFuncs)
-// 			}
-// 		})
-// 	}
-// }
 
 func TestFindExportedFuncsWithoutTests(t *testing.T) {
 	testCases := []struct {

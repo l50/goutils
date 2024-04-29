@@ -29,7 +29,7 @@ func TestCheckRoot(t *testing.T) {
 
 func TestCd(t *testing.T) {
 	// Setup a temporary directory for testing
-	tmpDir, err := os.MkdirTemp("", "magefiles")
+	tmpDir, err := os.MkdirTemp("", "testing")
 	if err != nil {
 		t.Fatal(err)
 	}
