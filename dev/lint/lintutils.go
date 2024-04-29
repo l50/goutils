@@ -11,6 +11,7 @@ import (
 
 	mageutils "github.com/l50/goutils/v2/dev/mage"
 	fileutils "github.com/l50/goutils/v2/file/fileutils"
+	gitutils "github.com/l50/goutils/v2/git"
 	"github.com/l50/goutils/v2/sys"
 	"github.com/magefile/mage/sh"
 )
@@ -18,12 +19,11 @@ import (
 var pc = sh.RunCmd("pre-commit")
 
 func checkPCProject() error {
-	cwd := sys.Gwd()
-	pcFile := ".pre-commit-config.yaml"
-
-	if strings.Contains(cwd, "magefiles") {
-		pcFile = filepath.Join("..", pcFile)
+	repoRoot, err := gitutils.RepoRoot()
+	if err != nil {
+		return err
 	}
+	pcFile := filepath.Join(repoRoot, ".pre-commit-config.yaml")
 
 	if !fileutils.Exists(pcFile) {
 		return errors.New("pre-commit is not configured for the current project")

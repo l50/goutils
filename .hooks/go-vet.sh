@@ -5,7 +5,7 @@ pkgs=$(go list ./...)
 
 for pkg in $pkgs; do
     dir="$(basename "$pkg")/"
-    if [[ "${dir}" != .*/ ]] && [[ "${dir}" != "magefiles/" ]]; then
+    if [[ "${dir}" != .*/ ]]; then
         go vet "${pkg}"
     fi
 done

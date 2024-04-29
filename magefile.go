@@ -4,10 +4,13 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
+	"io"
 	"log/slog"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/fatih/color"
 	"github.com/l50/goutils/v2/dev/lint"
@@ -39,20 +42,7 @@ func init() {
 // error: An error if any issue occurs while trying to
 // install the dependencies.
 func InstallDeps() error {
-	fmt.Println(color.YellowString("Running go mod tidy on magefiles and repo root."))
-	cwd := sys.Gwd()
-	if err := sys.Cd("magefiles"); err != nil {
-		return fmt.Errorf("failed to cd into magefiles directory: %v", err)
-	}
-
-	if err := mageutils.Tidy(); err != nil {
-		return fmt.Errorf("failed to install dependencies: %v", err)
-	}
-
-	if err := sys.Cd(cwd); err != nil {
-		return fmt.Errorf("failed to cd back into repo root: %v", err)
-	}
-
+	fmt.Println(color.YellowString("Running go mod tidy on repo root."))
 	if err := mageutils.Tidy(); err != nil {
 		return fmt.Errorf("failed to install dependencies: %v", err)
 	}
@@ -96,7 +86,7 @@ func GeneratePackageDocs() error {
 		Name:  "goutils/v2",
 	}
 
-	templatePath := filepath.Join("magefiles", "tmpl", "README.md.tmpl")
+	templatePath := filepath.Join("templates", "README.md.tmpl")
 	if err := docs.CreatePackageDocs(fs, repo, templatePath); err != nil {
 		return fmt.Errorf("failed to create package docs: %v", err)
 	}
@@ -232,4 +222,70 @@ func TestLoggerOutput() {
 	log.Debugf("This is a test debug message")
 	log.Errorf("This is a test %s error message", "formatted")
 	log.Println("{\"time\":\"2024-01-03T23:12:35.937476-07:00\",\"level\":\"ERROR\",\"msg\":\"\\u001b[1;32m==> docker.ansible-attack-box: Starting docker container...\\u001b[0m\"}")
+}
+
+// RunTests executes all unit tests.
+//
+// Example usage:
+//
+// ```go
+// mage runtests
+// ```
+//
+// **Returns:**
+//
+// error: An error if any issue occurs while running the tests.
+func RunTests() error {
+	fmt.Println("Running unit tests.")
+	if _, err := sys.RunCommand(filepath.Join(".hooks", "run-go-tests.sh"), "all"); err != nil {
+		return fmt.Errorf("failed to run unit tests: %v", err)
+	}
+
+	return nil
+}
+
+// processLines parses an io.Reader, identifying and marking code blocks
+// found in a README.
+func processLines(r io.Reader, language string) ([]string, error) {
+	scanner := bufio.NewScanner(r)
+	var lines, codeBlockLines []string
+	var inCodeBlock bool
+
+	for scanner.Scan() {
+		line := scanner.Text()
+
+		inCodeBlock, codeBlockLines = handleLineInCodeBlock(strings.TrimSpace(line), line, inCodeBlock, language, codeBlockLines)
+
+		if !inCodeBlock {
+			lines = append(lines, codeBlockLines...)
+			codeBlockLines = codeBlockLines[:0]
+			if !strings.HasPrefix(line, "```") {
+				lines = append(lines, line)
+			}
+		}
+	}
+
+	if inCodeBlock {
+		codeBlockLines = append(codeBlockLines, "\t\t\t// ```")
+		lines = append(lines, codeBlockLines...)
+	}
+
+	return lines, scanner.Err()
+}
+
+// handleLineInCodeBlock categorizes and handles each line based on its
+// content and relation to code blocks found in a README.
+func handleLineInCodeBlock(trimmedLine, line string, inCodeBlock bool, language string, codeBlockLines []string) (bool, []string) {
+	switch {
+	case strings.HasPrefix(trimmedLine, "```"+language):
+		if !inCodeBlock {
+			codeBlockLines = append(codeBlockLines, line)
+		}
+		return !inCodeBlock, codeBlockLines
+	case inCodeBlock:
+		codeBlockLines = append(codeBlockLines, line)
+	case strings.Contains(trimmedLine, "```"):
+		inCodeBlock = false
+	}
+	return inCodeBlock, codeBlockLines
 }
