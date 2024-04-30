@@ -18,6 +18,29 @@ designed to simplify common k8s tasks.
 
 ## Functions
 
+### DefaultExecutorCreator.NewSPDYExecutor(*rest.Config, string, *url.URL)
+
+```go
+NewSPDYExecutor(*rest.Config, string, *url.URL) remotecommand.Executor, error
+```
+
+NewSPDYExecutor creates a new SPDY executor given a configuration, method,
+and URL. It returns a remotecommand.Executor and an error.
+
+**Parameters:**
+
+config: A pointer to a rest.Config struct that includes the configuration
+for the executor.
+method: A string representing the HTTP method to use for the request.
+url: A pointer to a url.URL struct that includes the URL for the request.
+
+**Returns:**
+
+remotecommand.Executor: The created SPDY executor.
+error: An error if any issue occurs while creating the executor.
+
+---
+
 ### DescribeKubernetesResource(context.Context, *client.KubernetesClient, string, schema.GroupVersionResource)
 
 ```go
@@ -43,26 +66,29 @@ error: An error if any issue occurs while trying to describe the resource.
 
 ---
 
-### ExecKubernetesResources(context.Context, *client.KubernetesClient, string, []string)
+### ExecKubernetesResources(context.Context, *client.KubernetesClient, string, []string, rest.Interface, ExecutorCreator)
 
 ```go
-ExecKubernetesResources(context.Context *client.KubernetesClient string []string) string error
+ExecKubernetesResources(context.Context *client.KubernetesClient string []string rest.Interface ExecutorCreator) string error
 ```
 
-ExecKubernetesResources executes a command in a specified resource within a given namespace using the existing KubernetesClient.
+ExecKubernetesResources executes a command in a specified resource within a
+given namespace using the existing KubernetesClient.
 
 **Parameters:**
 
 ctx: The context to use for the request.
 kc: The KubernetesClient that includes both the standard and dynamic clients.
-namespace: The namespace of the resource.
+namespace: The namespace of the resource where the pod is located.
 podName: The name of the pod to execute the command in.
-command: A slice of strings representing the command to execute inside the resource.
+command: A slice of strings representing the command to execute inside the pod.
+restClient: The rest.Interface used to create the request.
+executorCreator: An ExecutorCreator interface to create the SPDYExecutor for command execution.
 
 **Returns:**
 
-string: The output from the executed command or an error message.
-error: An error if any issue occurs during the command execution.
+string: The output from the executed command or an error message if execution fails.
+error: An error if any issue occurs during the setup or execution of the command.
 
 ---
 
