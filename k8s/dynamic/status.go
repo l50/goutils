@@ -29,8 +29,6 @@ import (
 // error: An error if the waiting is cancelled by context, times out, or
 // fails to determine the state.
 func WaitForResourceState(ctx context.Context, resourceName, namespace, resourceType, desiredState string, checkStatusFunc func(name, namespace string) (bool, error)) error {
-	fmt.Printf("Waiting for %s (%s) in %s namespace to reach %s state...\n", resourceName, resourceType, namespace, desiredState)
-
 	// Set a timeout for reaching the desired state
 	timeout := time.After(5 * time.Minute)
 
@@ -55,8 +53,6 @@ func WaitForResourceState(ctx context.Context, resourceName, namespace, resource
 				continue // Continue checking at next tick
 			}
 			if inDesiredState {
-				// Log that the resource has reached the desired state
-				fmt.Printf("%s (%s) in %s namespace has reached %s state.\n", resourceName, resourceType, namespace, desiredState)
 				return nil
 			}
 		}
