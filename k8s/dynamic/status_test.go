@@ -7,8 +7,10 @@ import (
 	"time"
 
 	client "github.com/l50/goutils/v2/k8s/client"
-	k8s "github.com/l50/goutils/v2/k8s/dynamic"
+	dynK8s "github.com/l50/goutils/v2/k8s/dynamic"
 	"github.com/stretchr/testify/assert"
+	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -18,48 +20,74 @@ import (
 	k8stesting "k8s.io/client-go/testing"
 )
 
-func TestWaitForResourceReady(t *testing.T) {
+func TestWaitForResourceState(t *testing.T) {
 	tests := []struct {
 		name            string
 		resourceName    string
 		namespace       string
 		resourceType    string
+		desiredState    string
 		setupClient     func() dynamic.Interface
-		checkStatusFunc func(resourceName, namespace string) (bool, error)
+		checkStatusFunc func(dynamic.Interface, string, string) (bool, error)
 		expectedError   bool
 		timeout         time.Duration
 	}{
 		{
-			name:         "successful resource ready check",
+			name:         "successful resource state check for readiness",
 			resourceName: "test-resource",
 			namespace:    "default",
 			resourceType: "pod",
+			desiredState: "Running",
 			setupClient: func() dynamic.Interface {
-				fakeClient := fake.NewSimpleDynamicClient(scheme.Scheme)
-				return fakeClient
+				return fake.NewSimpleDynamicClient(scheme.Scheme)
 			},
-			checkStatusFunc: func(name, namespace string) (bool, error) {
-				// Simulate an immediate readiness without delay.
-				return true, nil
+			checkStatusFunc: func(client dynamic.Interface, name, namespace string) (bool, error) {
+				return true, nil // Simulate an immediate readiness without delay.
 			},
 			expectedError: false,
-			timeout:       10 * time.Second,
+			timeout:       2 * time.Second,
 		},
 		{
-			name:         "resource ready check times out",
+			name:         "resource state check times out for readiness",
 			resourceName: "test-resource",
 			namespace:    "default",
 			resourceType: "pod",
+			desiredState: "Running",
 			setupClient: func() dynamic.Interface {
-				fakeClient := fake.NewSimpleDynamicClient(scheme.Scheme)
-				return fakeClient
+				return fake.NewSimpleDynamicClient(scheme.Scheme)
 			},
-			checkStatusFunc: func(name, namespace string) (bool, error) {
-				// Simulate not ready without delay.
+			checkStatusFunc: func(client dynamic.Interface, name, namespace string) (bool, error) {
 				return false, nil
 			},
 			expectedError: true,
-			timeout:       100 * time.Millisecond, // Timeout intended for failure scenario
+			timeout:       20 * time.Millisecond,
+		},
+		{
+			name:         "successful resource state check for removal",
+			resourceName: "test-resource",
+			namespace:    "default",
+			resourceType: "pod",
+			desiredState: "Deleted",
+			setupClient: func() dynamic.Interface {
+				fakeClient := fake.NewSimpleDynamicClient(scheme.Scheme)
+				fakeClient.PrependReactor("get", "pods", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+					getAction := action.(k8stesting.GetAction)
+					if getAction.GetName() == "test-resource" {
+						return true, nil, errors.NewNotFound(schema.GroupResource{Group: "", Resource: "pods"}, "test-resource")
+					}
+					return false, nil, nil
+				})
+				return fakeClient
+			},
+			checkStatusFunc: func(client dynamic.Interface, name, namespace string) (bool, error) {
+				_, err := client.Resource(schema.GroupVersionResource{Group: "", Version: "v1", Resource: "pods"}).Namespace(namespace).Get(context.TODO(), name, metav1.GetOptions{})
+				if errors.IsNotFound(err) {
+					return true, nil
+				}
+				return false, err
+			},
+			expectedError: false,
+			timeout:       20 * time.Second,
 		},
 	}
 
@@ -68,8 +96,10 @@ func TestWaitForResourceReady(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), tc.timeout)
 			defer cancel()
 
-			err := k8s.WaitForResourceReady(ctx, tc.resourceName, tc.namespace, tc.resourceType, func(name, namespace string) (bool, error) {
-				return tc.checkStatusFunc(name, namespace)
+			client := tc.setupClient() // Setup client for each test
+
+			err := dynK8s.WaitForResourceState(ctx, tc.resourceName, tc.namespace, tc.resourceType, tc.desiredState, func(name, namespace string) (bool, error) {
+				return tc.checkStatusFunc(client, name, namespace) // Pass the client directly
 			})
 
 			if tc.expectedError {
@@ -151,7 +181,7 @@ func TestDescribeKubernetesResource(t *testing.T) {
 				return false, nil, fmt.Errorf("pod '%s' not found", getAction.GetName())
 			})
 
-			description, err := k8s.DescribeKubernetesResource(ctx, kubernetesClient, tc.resourceName, tc.namespace, tc.gvr)
+			description, err := dynK8s.DescribeKubernetesResource(ctx, kubernetesClient, tc.resourceName, tc.namespace, tc.gvr)
 
 			if tc.expectError {
 				assert.Error(t, err, "Expected an error but did not get one in test case: %s", tc.name)

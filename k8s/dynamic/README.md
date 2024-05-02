@@ -113,13 +113,13 @@ error: An error if the resource cannot be retrieved or the status is not found.
 
 ---
 
-### WaitForResourceReady(context.Context, string, func(name, namespace string) (bool, error))
+### WaitForResourceState(context.Context, string, func(name, namespace string) (bool, error))
 
 ```go
-WaitForResourceReady(context.Context string func(name namespace string) (bool error)) error
+WaitForResourceState(context.Context string func(name namespace string) (bool error)) error
 ```
 
-WaitForResourceReady waits for any Kubernetes resource to reach a ready state.
+WaitForResourceState waits for a Kubernetes resource to reach a specified state.
 
 **Parameters:**
 
@@ -127,12 +127,13 @@ ctx: A context.Context to allow for cancellation and timeouts.
 resourceName: The name of the resource to monitor.
 namespace: The namespace in which the resource exists.
 resourceType: The type of the resource (e.g., Pod, Service).
-checkStatusFunc: A function that checks if the resource is ready.
+desiredState: A string representing the desired state (e.g., "Running", "Deleted").
+checkStatusFunc: A function that checks if the resource is in the desired state.
 
 **Returns:**
 
 error: An error if the waiting is cancelled by context, times out, or
-fails to determine readiness.
+fails to determine the state.
 
 ---
 
