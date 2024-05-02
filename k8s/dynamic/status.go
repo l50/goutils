@@ -28,8 +28,6 @@ import (
 // error: An error if the waiting is cancelled by context, times out, or
 // fails to determine readiness.
 func WaitForResourceReady(ctx context.Context, resourceName, namespace, resourceType string, checkStatusFunc func(name, namespace string) (bool, error)) error {
-	fmt.Printf("Waiting for %s (%s) in %s namespace to be ready...\n", resourceName, resourceType, namespace)
-
 	// Set a timeout for resource readiness
 	timeout := time.After(5 * time.Minute)
 
