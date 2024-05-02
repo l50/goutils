@@ -65,7 +65,7 @@ error: An error if any issue occurs while creating the dynamic client.
 ### RealKubernetesClient.NewForConfig(*rest.Config)
 
 ```go
-NewForConfig(*rest.Config) *kubernetes.Clientset, error
+NewForConfig(*rest.Config) kubernetes.Interface, error
 ```
 
 NewForConfig creates a new clientset using the provided REST configuration.

@@ -59,7 +59,7 @@ type RealKubernetesClient struct{}
 // *kubernetes.Clientset: A new clientset instance created using the provided
 // REST configuration.
 // error: An error if any issue occurs while creating the clientset.
-func (r *RealKubernetesClient) NewForConfig(config *rest.Config) (*kubernetes.Clientset, error) {
+func (r *RealKubernetesClient) NewForConfig(config *rest.Config) (kubernetes.Interface, error) {
 	return kubernetes.NewForConfig(config)
 }
 
