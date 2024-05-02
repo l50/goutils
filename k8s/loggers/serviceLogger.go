@@ -53,10 +53,14 @@ func (s *ServiceLogger) FetchAndLog(ctx context.Context) error {
 		return fmt.Errorf("error fetching service: %v", err)
 	}
 
-	// Create a LabelSelector from the map[string]string
-	labelSelector := &metav1.LabelSelector{MatchLabels: service.Spec.Selector}
+	var selectorString string
+	if len(service.Spec.Selector) > 0 {
+		// Create a LabelSelector from the map[string]string
+		labelSelector := &metav1.LabelSelector{MatchLabels: service.Spec.Selector}
 
-	// Format the LabelSelector to string form used in Kubernetes API calls
-	selectorString := metav1.FormatLabelSelector(labelSelector)
+		// Format the LabelSelector to string form used in Kubernetes API calls
+		selectorString = metav1.FormatLabelSelector(labelSelector)
+	}
+
 	return FetchAndLogPods(ctx, s.kc.Clientset, s.namespace, selectorString)
 }

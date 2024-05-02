@@ -18,10 +18,10 @@ designed to simplify common k8s tasks.
 
 ## Functions
 
-### NewKubernetesClient(string, fileReaderFunc)
+### NewKubernetesClient(string, FileReaderFunc, KubernetesClientInterface)
 
 ```go
-NewKubernetesClient(string, fileReaderFunc) *KubernetesClient, error
+NewKubernetesClient(string FileReaderFunc KubernetesClientInterface) *KubernetesClient error
 ```
 
 NewKubernetesClient creates a new KubernetesClient using the provided
@@ -38,6 +38,68 @@ reader: A function to read the kubeconfig file from the specified path.
 *KubernetesClient: A new KubernetesClient instance configured with the
 specified kubeconfig.
 error: An error if any issue occurs while creating the Kubernetes client.
+
+---
+
+### RealKubernetesClient.NewDynamicForConfig(*rest.Config)
+
+```go
+NewDynamicForConfig(*rest.Config) dynamic.Interface, error
+```
+
+NewDynamicForConfig creates a new dynamic client using the provided REST
+configuration.
+
+**Parameters:**
+
+config: The REST configuration to use to create the dynamic client.
+
+**Returns:**
+
+dynamic.Interface: A new dynamic client instance created using the provided
+REST configuration.
+error: An error if any issue occurs while creating the dynamic client.
+
+---
+
+### RealKubernetesClient.NewForConfig(*rest.Config)
+
+```go
+NewForConfig(*rest.Config) *kubernetes.Clientset, error
+```
+
+NewForConfig creates a new clientset using the provided REST configuration.
+
+**Parameters:**
+
+config: The REST configuration to use to create the clientset.
+
+**Returns:**
+
+*kubernetes.Clientset: A new clientset instance created using the provided
+REST configuration.
+error: An error if any issue occurs while creating the clientset.
+
+---
+
+### RealKubernetesClient.RESTConfigFromKubeConfig([]byte)
+
+```go
+RESTConfigFromKubeConfig([]byte) *rest.Config, error
+```
+
+RESTConfigFromKubeConfig creates a REST configuration from the provided
+kubeconfig data.
+
+**Parameters:**
+
+configData: The kubeconfig data to use to create the REST configuration.
+
+**Returns:**
+
+*rest.Config: A new REST configuration instance created using the provided
+kubeconfig data.
+error: An error if any issue occurs while creating the REST configuration.
 
 ---
 

@@ -114,6 +114,10 @@ func ExecKubernetesResources(params ExecParams) (string, error) {
 		return "", fmt.Errorf("pod %s is not in running state, current state: %s", params.PodName, pod.Status.Phase)
 	}
 
+	if params.Client.Clientset == nil || params.Client.Clientset.CoreV1() == nil {
+		return "", fmt.Errorf("kubernetes clientset is not initialized")
+	}
+
 	req := params.Client.Clientset.CoreV1().RESTClient().
 		Post().
 		Resource("pods").
@@ -133,6 +137,11 @@ func ExecKubernetesResources(params ExecParams) (string, error) {
 		options,
 		scheme.ParameterCodec,
 	)
+
+	// Check that the URL to which we are making the request is valid
+	if req.URL() == nil {
+		return "", fmt.Errorf("failed to form a valid request URL")
+	}
 
 	executor, err := remotecommand.NewSPDYExecutor(params.Client.Config, "POST", req.URL())
 	if err != nil {

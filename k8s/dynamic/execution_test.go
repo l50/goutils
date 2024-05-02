@@ -1,74 +1,80 @@
 package k8s_test
 
 import (
-	"bytes"
 	"context"
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	dynFake "k8s.io/client-go/dynamic/fake"
 	"k8s.io/client-go/kubernetes/fake"
-	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/remotecommand"
+	ktesting "k8s.io/client-go/testing"
 
 	client "github.com/l50/goutils/v2/k8s/client"
 	dynK8s "github.com/l50/goutils/v2/k8s/dynamic"
 )
 
-// Mocking the SPDY Executor for remotecommand.Stream.
-type mockExecutor struct {
-	mock.Mock
-}
-
-func (m *mockExecutor) StreamWithContext(ctx context.Context, opts remotecommand.StreamOptions) error {
-	return m.Called(ctx, opts).Error(0)
-}
-
 func TestExecKubernetesResources(t *testing.T) {
-	config := &rest.Config{Host: "https://localhost:6443"}
-	mockClientset := fake.NewSimpleClientset()
-	mockDynamicClient := dynFake.NewSimpleDynamicClient(runtime.NewScheme())
-
-	kc := &client.KubernetesClient{
-		Clientset:     mockClientset,
-		DynamicClient: mockDynamicClient,
-		Config:        config,
-	}
-
 	tests := []struct {
-		name      string
-		params    dynK8s.ExecParams
-		expectErr bool
-		expected  string
+		name          string
+		namespace     string
+		podName       string
+		setupClient   func(*fake.Clientset)
+		expectedError string
 	}{
 		{
-			name: "successful command execution",
-			params: dynK8s.ExecParams{
-				Context:   context.TODO(),
-				Client:    kc,
-				Namespace: "default",
-				PodName:   "example-pod",
-				Command:   []string{"echo", "Hello"},
-				Stdout:    new(bytes.Buffer),
+			name:      "PodNotFound",
+			namespace: "default",
+			podName:   "my-pod",
+			setupClient: func(cs *fake.Clientset) {
+				cs.PrependReactor("get", "pods", func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
+					return true, nil, errors.New("pods \"my-pod\" not found")
+				})
 			},
-			expectErr: false,
-			expected:  "Hello",
+			expectedError: "pods \"my-pod\" not found",
+		},
+		{
+			name:      "PodNotRunning",
+			namespace: "default",
+			podName:   "my-pod",
+			setupClient: func(cs *fake.Clientset) {
+				pod := &v1.Pod{
+					ObjectMeta: metav1.ObjectMeta{Name: "my-pod", Namespace: "default"},
+					Status:     v1.PodStatus{Phase: v1.PodPending},
+				}
+				_, err := cs.CoreV1().Pods("default").Create(context.Background(), pod, metav1.CreateOptions{})
+				if err != nil {
+					t.Fatalf("failed to create pod: %v", err)
+				}
+			},
+			expectedError: "pod my-pod is not in running state, current state: Pending",
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			mockExec := new(mockExecutor)
-			mockExec.On("StreamWithContext", mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("remotecommand.StreamOptions")).Return(nil)
-			_, err := dynK8s.ExecKubernetesResources(tc.params)
+			mockClient := fake.NewSimpleClientset()
+			tc.setupClient(mockClient)
 
-			if tc.expectErr {
+			params := dynK8s.ExecParams{
+				Context:   context.Background(),
+				Client:    &client.KubernetesClient{Clientset: mockClient},
+				Namespace: tc.namespace,
+				PodName:   tc.podName,
+				Command:   []string{"ls", "-l"},
+			}
+
+			output, err := dynK8s.ExecKubernetesResources(params)
+
+			if tc.expectedError != "" {
 				assert.Error(t, err)
+				assert.Contains(t, err.Error(), tc.expectedError)
+				assert.NotContains(t, output, "Command executed successfully")
 			} else {
 				assert.NoError(t, err)
-				assert.Contains(t, tc.params.Stdout.(*bytes.Buffer).String(), tc.expected, "Output should contain the expected command output")
+				assert.Contains(t, output, "Command executed successfully")
 			}
 		})
 	}
