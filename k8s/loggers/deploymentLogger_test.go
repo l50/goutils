@@ -2,17 +2,20 @@ package k8s_test
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
-	k8sclient "github.com/l50/goutils/v2/k8s/client"
-	k8s "github.com/l50/goutils/v2/k8s/loggers"
+	client "github.com/l50/goutils/v2/k8s/client"
+	loggers "github.com/l50/goutils/v2/k8s/loggers"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	appsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/dynamic"
+	dynFake "k8s.io/client-go/dynamic/fake"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/fake"
-	k8stesting "k8s.io/client-go/testing"
+	"k8s.io/client-go/rest"
 )
 
 func mockFileReader(filename string) ([]byte, error) {
@@ -40,6 +43,26 @@ func mockFileReader(filename string) ([]byte, error) {
 	}`), nil
 }
 
+type MockKubernetesClient struct {
+	mock.Mock
+	client.KubernetesClientInterface
+}
+
+func (m *MockKubernetesClient) NewForConfig(config *rest.Config) (kubernetes.Interface, error) {
+	args := m.Called(config)
+	return args.Get(0).(kubernetes.Interface), args.Error(1)
+}
+
+func (m *MockKubernetesClient) NewDynamicForConfig(config *rest.Config) (dynamic.Interface, error) {
+	args := m.Called(config)
+	return args.Get(0).(dynamic.Interface), args.Error(1)
+}
+
+func (m *MockKubernetesClient) RESTConfigFromKubeConfig(configData []byte) (*rest.Config, error) {
+	args := m.Called(configData)
+	return args.Get(0).(*rest.Config), args.Error(1)
+}
+
 func TestDeploymentLogger(t *testing.T) {
 	tests := []struct {
 		name           string
@@ -55,20 +78,10 @@ func TestDeploymentLogger(t *testing.T) {
 			setupClient: func(cs *fake.Clientset) {
 				deployment := &appsv1.Deployment{
 					ObjectMeta: metav1.ObjectMeta{Name: "test-deployment", Namespace: "default"},
-					Spec: appsv1.DeploymentSpec{
-						Selector: &metav1.LabelSelector{MatchLabels: map[string]string{"app": "test"}},
-					},
 				}
-				cs.AddReactor("get", "deployments", func(action k8stesting.Action) (bool, runtime.Object, error) {
-					getAction := action.(k8stesting.GetAction)
-					if getAction.GetName() == deployment.Name && getAction.GetNamespace() == deployment.Namespace {
-						return true, deployment, nil
-					}
-					return true, nil, fmt.Errorf("deployment not found")
-				})
-				_, err := cs.AppsV1().Deployments(deployment.Namespace).Create(context.TODO(), deployment, metav1.CreateOptions{})
+				_, err := cs.AppsV1().Deployments("default").Create(context.Background(), deployment, metav1.CreateOptions{})
 				if err != nil {
-					t.Fatal("Failed to create mock deployment:", err)
+					t.Fatalf("failed to create fake deployment: %v", err)
 				}
 			},
 			expectedError: "",
@@ -78,13 +91,18 @@ func TestDeploymentLogger(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			clientset := fake.NewSimpleClientset()
+			dynamicClient := dynFake.NewSimpleDynamicClient(runtime.NewScheme())
 			tc.setupClient(clientset)
 
-			kc, err := k8sclient.NewKubernetesClient("apiTokenOrConfigString", mockFileReader)
-			assert.NoError(t, err)
-			kc.Clientset = clientset
+			mockClient := new(MockKubernetesClient)
+			mockClient.On("NewForConfig", mock.Anything).Return(clientset, nil)
+			mockClient.On("NewDynamicForConfig", mock.Anything).Return(dynamicClient, nil)
+			mockClient.On("RESTConfigFromKubeConfig", mock.Anything).Return(&rest.Config{}, nil)
 
-			deploymentLogger := k8s.NewDeploymentLogger(kc, tc.namespace, tc.deploymentName)
+			kc, err := client.NewKubernetesClient("fake-kubeconfig-path", mockFileReader, mockClient)
+			assert.NoError(t, err)
+
+			deploymentLogger := loggers.NewDeploymentLogger(kc, tc.namespace, tc.deploymentName)
 			err = deploymentLogger.FetchAndLog(context.Background())
 			if tc.expectedError == "" {
 				assert.NoError(t, err)
