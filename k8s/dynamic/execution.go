@@ -3,14 +3,15 @@ package k8s
 import (
 	"context"
 	"fmt"
+	"io"
 	"net/url"
-	"os"
 
 	client "github.com/l50/goutils/v2/k8s/client"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/remotecommand"
+	"k8s.io/kubectl/pkg/scheme"
 )
 
 // ExecutorCreator represents an interface that includes a method for creating
@@ -60,6 +61,29 @@ func (dec *DefaultExecutorCreator) NewSPDYExecutor(config *rest.Config, method s
 	return remotecommand.NewSPDYExecutor(config, method, url)
 }
 
+// ExecParams contains all the parameters needed to execute a command in a Kubernetes pod.
+//
+// **Attributes:**
+//
+// Context: The context to use for the request.
+// Client: The KubernetesClient that includes both the standard and dynamic clients.
+// Namespace: The namespace of the resource where the pod is located.
+// PodName: The name of the pod to execute the command in.
+// Command: A slice of strings representing the command to execute inside the pod.
+// Stdin: An io.Reader to use as the standard input for the command.
+// Stdout: An io.Writer to use as the standard output for the command.
+// Stderr: An io.Writer to use as the standard error for the command.
+type ExecParams struct {
+	Context   context.Context
+	Client    *client.KubernetesClient
+	Namespace string
+	PodName   string
+	Command   []string
+	Stdin     io.Reader
+	Stdout    io.Writer
+	Stderr    io.Writer
+}
+
 // ExecKubernetesResources executes a command in a specified resource within a
 // given namespace using the existing KubernetesClient.
 //
@@ -70,30 +94,60 @@ func (dec *DefaultExecutorCreator) NewSPDYExecutor(config *rest.Config, method s
 // namespace: The namespace of the resource where the pod is located.
 // podName: The name of the pod to execute the command in.
 // command: A slice of strings representing the command to execute inside the pod.
-// restClient: The rest.Interface used to create the request.
-// executorCreator: An ExecutorCreator interface to create the SPDYExecutor for command execution.
 //
 // **Returns:**
 //
 // string: The output from the executed command or an error message if execution fails.
 // error: An error if any issue occurs during the setup or execution of the command.
-func ExecKubernetesResources(ctx context.Context, kc *client.KubernetesClient, namespace, podName string, command []string, restClient rest.Interface, executorCreator ExecutorCreator) (string, error) {
-	if kc == nil || kc.Clientset == nil {
+func ExecKubernetesResources(params ExecParams) (string, error) {
+	if params.Client == nil || params.Client.Clientset == nil {
 		return "", fmt.Errorf("KubernetesClient or Clientset is not initialized")
 	}
-	req := restClient.Post().Resource("pods").Name(podName).Namespace(namespace).SubResource("exec").VersionedParams(&v1.PodExecOptions{
-		Command: command,
-		Stdin:   true,
-		Stdout:  true,
-		Stderr:  true,
+
+	// Fetch the pod to ensure it exists and is in a Running state
+	pod, err := params.Client.Clientset.CoreV1().Pods(params.Namespace).Get(params.Context, params.PodName, metav1.GetOptions{})
+	if err != nil {
+		return "", fmt.Errorf("error fetching pod %s in namespace %s: %v", params.PodName, params.Namespace, err)
+	}
+
+	if pod.Status.Phase != v1.PodRunning {
+		return "", fmt.Errorf("pod %s is not in running state, current state: %s", params.PodName, pod.Status.Phase)
+	}
+
+	req := params.Client.Clientset.CoreV1().RESTClient().
+		Post().
+		Resource("pods").
+		Name(params.PodName).
+		Namespace(params.Namespace).
+		SubResource("exec")
+
+	options := &v1.PodExecOptions{
+		Command: params.Command,
+		Stdin:   params.Stdin != nil,
+		Stdout:  params.Stdout != nil,
+		Stderr:  params.Stderr != nil,
 		TTY:     true,
-	}, metav1.ParameterCodec)
-	executor, err := executorCreator.NewSPDYExecutor(kc.Config, "POST", req.URL())
+	}
+
+	req.VersionedParams(
+		options,
+		scheme.ParameterCodec,
+	)
+
+	executor, err := remotecommand.NewSPDYExecutor(params.Client.Config, "POST", req.URL())
 	if err != nil {
 		return "", fmt.Errorf("failed to initialize command executor: %v", err)
 	}
-	if err := executor.StreamWithContext(ctx, remotecommand.StreamOptions{Stdin: os.Stdin, Stdout: os.Stdout, Stderr: os.Stderr, Tty: true}); err != nil {
+
+	streamOptions := remotecommand.StreamOptions{
+		Stdin:  params.Stdin,
+		Stdout: params.Stdout,
+		Stderr: params.Stderr,
+	}
+
+	if err := executor.StreamWithContext(params.Context, streamOptions); err != nil {
 		return "", fmt.Errorf("failed to execute command: %v", err)
 	}
+
 	return "Command executed successfully", nil
 }
