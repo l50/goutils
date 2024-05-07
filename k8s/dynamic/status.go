@@ -13,52 +13,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
-// WaitForResourceState waits for a Kubernetes resource to reach a specified state.
-//
-// **Parameters:**
-//
-// ctx: A context.Context to allow for cancellation and timeouts.
-// resourceName: The name of the resource to monitor.
-// namespace: The namespace in which the resource exists.
-// resourceType: The type of the resource (e.g., Pod, Service).
-// desiredState: A string representing the desired state (e.g., "Running", "Deleted").
-// checkStatusFunc: A function that checks if the resource is in the desired state.
-//
-// **Returns:**
-//
-// error: An error if the waiting is cancelled by context, times out, or
-// fails to determine the state.
-func WaitForResourceState(ctx context.Context, resourceName, namespace, resourceType, desiredState string, checkStatusFunc func(name, namespace string) (bool, error)) error {
-	// Set a timeout for reaching the desired state
-	timeout := time.After(5 * time.Minute)
-
-	// Check status every second
-	tick := time.NewTicker(1 * time.Second)
-	defer tick.Stop()
-
-	for {
-		select {
-		case <-ctx.Done():
-			// If the context is cancelled, log the appropriate message
-			return fmt.Errorf("context cancelled while waiting for %s (%s) in %s namespace to reach %s state", resourceName, resourceType, namespace, desiredState)
-		case <-timeout:
-			// Log timeout error with correct parameters
-			return fmt.Errorf("timeout while waiting for %s (%s) in %s namespace to reach %s state", resourceName, resourceType, namespace, desiredState)
-		case <-tick.C:
-			// Check if the resource is in the desired state
-			inDesiredState, err := checkStatusFunc(resourceName, namespace)
-			if err != nil {
-				// Log failure in checking status
-				fmt.Printf("failed to get status for %s (%s) in %s namespace: %v\n", resourceName, resourceType, namespace, err)
-				continue // Continue checking at next tick
-			}
-			if inDesiredState {
-				return nil
-			}
-		}
-	}
-}
-
 // GetResourceStatus checks the status of any Kubernetes resource.
 //
 // **Parameters:**
@@ -83,8 +37,6 @@ func GetResourceStatus(ctx context.Context, kc *client.KubernetesClient, resourc
 	if err != nil || !found {
 		return false, fmt.Errorf("status not found for %s (%s) in %s namespace: %v", resourceName, gvr.Resource, namespace, err)
 	}
-
-	fmt.Printf("Status for %s (%s) in %s namespace is %s\n", resourceName, gvr.Resource, namespace, status)
 
 	// Check for undesirable statuses and treat them as not being in the "Running" state
 	undesirableStatuses := map[string]bool{
@@ -152,4 +104,50 @@ func formatResourceDescription(resource *unstructured.Unstructured) string {
 	}
 
 	return sb.String()
+}
+
+// WaitForResourceState waits for a Kubernetes resource to reach a specified state.
+//
+// **Parameters:**
+//
+// ctx: A context.Context to allow for cancellation and timeouts.
+// resourceName: The name of the resource to monitor.
+// namespace: The namespace in which the resource exists.
+// resourceType: The type of the resource (e.g., Pod, Service).
+// desiredState: A string representing the desired state (e.g., "Running", "Deleted").
+// checkStatusFunc: A function that checks if the resource is in the desired state.
+//
+// **Returns:**
+//
+// error: An error if the waiting is cancelled by context, times out, or
+// fails to determine the state.
+func WaitForResourceState(ctx context.Context, resourceName, namespace, resourceType, desiredState string, checkStatusFunc func(name, namespace string) (bool, error)) error {
+	// Set a timeout for reaching the desired state
+	timeout := time.After(5 * time.Minute)
+
+	// Check status every second
+	tick := time.NewTicker(1 * time.Second)
+	defer tick.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			// If the context is cancelled, log the appropriate message
+			return fmt.Errorf("context cancelled while waiting for %s (%s) in %s namespace to reach %s state", resourceName, resourceType, namespace, desiredState)
+		case <-timeout:
+			// Log timeout error with correct parameters
+			return fmt.Errorf("timeout while waiting for %s (%s) in %s namespace to reach %s state", resourceName, resourceType, namespace, desiredState)
+		case <-tick.C:
+			// Check if the resource is in the desired state
+			inDesiredState, err := checkStatusFunc(resourceName, namespace)
+			if err != nil {
+				// Log failure in checking status
+				fmt.Printf("failed to get status for %s (%s) in %s namespace: %v\n", resourceName, resourceType, namespace, err)
+				continue // Continue checking at next tick
+			}
+			if inDesiredState {
+				return nil
+			}
+		}
+	}
 }
