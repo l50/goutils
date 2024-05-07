@@ -9,8 +9,10 @@ import (
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart/loader"
 	"helm.sh/helm/v3/pkg/cli"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/client-go/dynamic"
@@ -141,6 +143,62 @@ func (mc *ManifestConfig) ApplyOrDeleteManifest(ctx context.Context) error {
 	default:
 		return fmt.Errorf("unsupported manifest type")
 	}
+}
+
+// CreateConfigMapFromScript creates a ConfigMap from a script
+// file and applies it to the Kubernetes cluster.
+//
+// **Parameters:**
+//
+// ctx: The context for the operation.
+// scriptPath: The path to the script file.
+// configMapName: The name of the ConfigMap to create.
+//
+// **Returns:**
+//
+// error: Error if any issue occurs while creating the ConfigMap.
+func (mc *ManifestConfig) CreateConfigMapFromScript(ctx context.Context, scriptPath string, configMapName string) error {
+	// Read the script file
+	script, err := mc.ReadFile(scriptPath)
+	if err != nil {
+		return fmt.Errorf("error reading script file: %v", err)
+	}
+
+	// Create a ConfigMap object
+	configMap := &v1.ConfigMap{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "v1",
+			Kind:       "ConfigMap",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      configMapName,
+			Namespace: mc.Namespace,
+		},
+		Data: map[string]string{
+			"script": string(script),
+		},
+	}
+
+	// Convert the ConfigMap to an Unstructured object
+	rawObj, err := runtime.DefaultUnstructuredConverter.ToUnstructured(configMap)
+	if err != nil {
+		return fmt.Errorf("error converting ConfigMap to Unstructured: %v", err)
+	}
+
+	// Apply the ConfigMap
+	unstructuredObj := &unstructured.Unstructured{Object: rawObj}
+	gvk := unstructuredObj.GroupVersionKind()
+	gvr, err := mc.groupVersionResource(gvk)
+	if err != nil {
+		return fmt.Errorf("error getting GroupVersionResource for %v: %v", gvk, err)
+	}
+	resourceClient := mc.Client.Resource(gvr).Namespace(mc.Namespace)
+	_, err = resourceClient.Create(ctx, unstructuredObj, metav1.CreateOptions{})
+	if err != nil {
+		return fmt.Errorf("failed to create ConfigMap: %v", err)
+	}
+
+	return nil
 }
 
 // HandleRawManifest applies or deletes raw Kubernetes manifests based on the

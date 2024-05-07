@@ -37,6 +37,27 @@ error: Error if any issue occurs while applying or deleting the manifest.
 
 ---
 
+### ManifestConfig.CreateConfigMapFromScript(context.Context, string, string)
+
+```go
+CreateConfigMapFromScript(context.Context, string, string) error
+```
+
+CreateConfigMapFromScript creates a ConfigMap from a script
+file and applies it to the Kubernetes cluster.
+
+**Parameters:**
+
+ctx: The context for the operation.
+scriptPath: The path to the script file.
+configMapName: The name of the ConfigMap to create.
+
+**Returns:**
+
+error: Error if any issue occurs while creating the ConfigMap.
+
+---
+
 ### ManifestConfig.HandleRawManifest(context.Context, dynamic.Interface)
 
 ```go
