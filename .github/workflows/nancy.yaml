@@ -21,7 +21,12 @@ jobs:
           go-version: '1.22'
 
       - name: Write go.list
-        run: go list -json -deps ./... > go.list
+        run: |
+          go list -json -deps ./... | jq 'select(. | tostring | test("helm|apiserver"; "i") | not)' > go.list
+        # We are excluding helm dependencies and apiserver from the go.list file for now
+        # because they are noisy and some of them are not fixed in the latest version.
+        # We will revisit this in the future:
+        # run: go list -json -deps ./... > go.list
 
       - name: Run nancy to check for vulnerabilities
         uses: sonatype-nexus-community/nancy-github-action@main
