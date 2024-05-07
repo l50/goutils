@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/url"
+	"os"
 
 	client "github.com/l50/goutils/v2/k8s/client"
 	v1 "k8s.io/api/core/v1"
@@ -149,9 +150,14 @@ func ExecKubernetesResources(params ExecParams) (string, error) {
 	}
 
 	streamOptions := remotecommand.StreamOptions{
-		Stdin:  params.Stdin,
-		Stdout: params.Stdout,
-		Stderr: params.Stderr,
+		Stdin:  os.Stdin,
+		Stdout: os.Stdout,
+		Stderr: os.Stderr,
+		Tty:    true,
+	}
+
+	if err := executor.StreamWithContext(params.Context, streamOptions); err != nil {
+		return "", fmt.Errorf("failed to execute command: %v", err)
 	}
 
 	if err := executor.StreamWithContext(params.Context, streamOptions); err != nil {
