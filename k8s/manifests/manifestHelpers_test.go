@@ -71,6 +71,62 @@ func TestApplyOrDeleteManifest(t *testing.T) {
 	}
 }
 
+func TestCreateConfigMapFromScript(t *testing.T) {
+	tests := []struct {
+		name       string
+		configFunc func() *k8s.ManifestConfig
+		wantErr    bool
+		setup      func(fdc *fake.FakeDynamicClient)
+	}{
+		{
+			name: "successful creation of ConfigMap from script",
+			configFunc: func() *k8s.ManifestConfig {
+				mc := &k8s.ManifestConfig{
+					Namespace: "default",
+					ReadFile: func(path string) ([]byte, error) {
+						return []byte("#!/bin/bash\necho Hello, world!"), nil
+					},
+				}
+				return mc
+			},
+			setup: func(fdc *fake.FakeDynamicClient) {
+				fdc.PrependReactor("create", "configmaps", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+					return true, nil, nil
+				})
+			},
+			wantErr: false,
+		},
+		{
+			name: "fail to read script file",
+			configFunc: func() *k8s.ManifestConfig {
+				mc := &k8s.ManifestConfig{
+					ReadFile: func(path string) ([]byte, error) {
+						return nil, fmt.Errorf("file not found")
+					},
+				}
+				return mc
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			mc := tc.configFunc()
+			fakeClient := fake.NewSimpleDynamicClient(runtime.NewScheme())
+			if tc.setup != nil {
+				tc.setup(fakeClient)
+			}
+			mc.Client = fakeClient // Assigning fake dynamic client
+
+			err := mc.CreateConfigMapFromScript(context.Background(), "path/to/script", "test-configmap")
+			if (err != nil) != tc.wantErr {
+				t.Errorf("CreateConfigMapFromScript() error = %v, wantErr %v", err, tc.wantErr)
+			}
+		})
+	}
+}
+
 func TestHandleRawManifest(t *testing.T) {
 	tests := []struct {
 		name       string
