@@ -192,3 +192,97 @@ func TestDescribeKubernetesResource(t *testing.T) {
 		})
 	}
 }
+
+func TestGetResourceStatus(t *testing.T) {
+	tests := []struct {
+		name          string
+		resourceName  string
+		namespace     string
+		gvr           schema.GroupVersionResource
+		setupPod      func() *unstructured.Unstructured
+		expectedState bool
+		expectError   bool
+	}{
+		{
+			name:         "pod in Running state",
+			resourceName: "running-pod",
+			namespace:    "default",
+			gvr:          schema.GroupVersionResource{Group: "", Version: "v1", Resource: "pods"},
+			setupPod: func() *unstructured.Unstructured {
+				return &unstructured.Unstructured{
+					Object: map[string]interface{}{
+						"status": map[string]interface{}{
+							"phase": "Running",
+						},
+					},
+				}
+			},
+			expectedState: true,
+			expectError:   false,
+		},
+		{
+			name:         "pod in Failed state",
+			resourceName: "failed-pod",
+			namespace:    "default",
+			gvr:          schema.GroupVersionResource{Group: "", Version: "v1", Resource: "pods"},
+			setupPod: func() *unstructured.Unstructured {
+				return &unstructured.Unstructured{
+					Object: map[string]interface{}{
+						"status": map[string]interface{}{
+							"phase": "Failed",
+						},
+					},
+				}
+			},
+			expectedState: false,
+			expectError:   false,
+		},
+		{
+			name:         "pod in OOMKilled state",
+			resourceName: "oomkilled-pod",
+			namespace:    "default",
+			gvr:          schema.GroupVersionResource{Group: "", Version: "v1", Resource: "pods"},
+			setupPod: func() *unstructured.Unstructured {
+				return &unstructured.Unstructured{
+					Object: map[string]interface{}{
+						"status": map[string]interface{}{
+							"phase": "OOMKilled",
+						},
+					},
+				}
+			},
+			expectedState: false,
+			expectError:   false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx := context.Background()
+
+			// Setup fake dynamic client and wrap in KubernetesClient
+			fakeDynamicClient := fake.NewSimpleDynamicClient(scheme.Scheme)
+			kubernetesClient := &client.KubernetesClient{
+				DynamicClient: fakeDynamicClient,
+			}
+
+			// Prepend the 'get' reactor for the dynamic client
+			fakeDynamicClient.PrependReactor("get", "pods", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+				if action.(k8stesting.GetAction).GetName() == tc.resourceName {
+					return true, tc.setupPod(), nil
+				}
+				return false, nil, fmt.Errorf("pod '%s' not found", action.(k8stesting.GetAction).GetName())
+			})
+
+			// Perform the status check
+			status, err := dynK8s.GetResourceStatus(ctx, kubernetesClient, tc.resourceName, tc.namespace, tc.gvr)
+
+			assert.Equal(t, tc.expectedState, status, "Expected state did not match for test case: %s", tc.name)
+			if tc.expectError {
+				assert.Error(t, err, "Expected an error but did not get one in test case: %s", tc.name)
+			} else {
+				assert.NoError(t, err, "Did not expect an error but got one in test case: %s", tc.name)
+			}
+		})
+	}
+}

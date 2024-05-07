@@ -84,7 +84,18 @@ func GetResourceStatus(ctx context.Context, kc *client.KubernetesClient, resourc
 		return false, fmt.Errorf("status not found for %s (%s) in %s namespace: %v", resourceName, gvr.Resource, namespace, err)
 	}
 
-	return status == "Running", nil
+	fmt.Printf("Status for %s (%s) in %s namespace is %s\n", resourceName, gvr.Resource, namespace, status)
+
+	// Check for undesirable statuses and treat them as not being in the "Running" state
+	undesirableStatuses := map[string]bool{
+		"Failed":    true,
+		"OOMKilled": true,
+		"Unknown":   true,
+	}
+
+	// Return true only if the status is "Running" and not in any undesirable state
+	_, isUndesirable := undesirableStatuses[status]
+	return status == "Running" && !isUndesirable, nil
 }
 
 // DescribeKubernetesResource retrieves the details of a specific Kubernetes
@@ -118,7 +129,7 @@ func DescribeKubernetesResource(ctx context.Context, kc *client.KubernetesClient
 }
 
 // formatResourceDescription creates a detailed string representation of a
-// Kubernetes resource similar to `kubectl describe`.
+// kubernetes resource similar to `kubectl describe`.
 func formatResourceDescription(resource *unstructured.Unstructured) string {
 	var sb strings.Builder
 	sb.WriteString(fmt.Sprintf("Name: %s\n", resource.GetName()))
