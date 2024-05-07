@@ -75,7 +75,6 @@ repos:
         require_serial: true
         log_file: /tmp/go-vet.log
 
-
       - id: go-licenses
         name: Run go-licenses
         language: script

@@ -108,7 +108,7 @@ func TestGetResourceStatus(t *testing.T) {
 		resourceName  string
 		namespace     string
 		gvr           schema.GroupVersionResource
-		setupPod      func() *unstructured.Unstructured
+		setupResource func() *unstructured.Unstructured
 		expectedState bool
 		expectError   bool
 	}{
@@ -117,7 +117,7 @@ func TestGetResourceStatus(t *testing.T) {
 			resourceName: "running-pod",
 			namespace:    "default",
 			gvr:          schema.GroupVersionResource{Group: "", Version: "v1", Resource: "pods"},
-			setupPod: func() *unstructured.Unstructured {
+			setupResource: func() *unstructured.Unstructured {
 				return &unstructured.Unstructured{
 					Object: map[string]interface{}{
 						"status": map[string]interface{}{
@@ -134,7 +134,7 @@ func TestGetResourceStatus(t *testing.T) {
 			resourceName: "failed-pod",
 			namespace:    "default",
 			gvr:          schema.GroupVersionResource{Group: "", Version: "v1", Resource: "pods"},
-			setupPod: func() *unstructured.Unstructured {
+			setupResource: func() *unstructured.Unstructured {
 				return &unstructured.Unstructured{
 					Object: map[string]interface{}{
 						"status": map[string]interface{}{
@@ -151,7 +151,7 @@ func TestGetResourceStatus(t *testing.T) {
 			resourceName: "oomkilled-pod",
 			namespace:    "default",
 			gvr:          schema.GroupVersionResource{Group: "", Version: "v1", Resource: "pods"},
-			setupPod: func() *unstructured.Unstructured {
+			setupResource: func() *unstructured.Unstructured {
 				return &unstructured.Unstructured{
 					Object: map[string]interface{}{
 						"status": map[string]interface{}{
@@ -163,6 +163,50 @@ func TestGetResourceStatus(t *testing.T) {
 			expectedState: false,
 			expectError:   false,
 		},
+		{
+			name:         "job complete successfully",
+			resourceName: "completed-job",
+			namespace:    "default",
+			gvr:          schema.GroupVersionResource{Group: "batch", Version: "v1", Resource: "jobs"},
+			setupResource: func() *unstructured.Unstructured {
+				return &unstructured.Unstructured{
+					Object: map[string]interface{}{
+						"status": map[string]interface{}{
+							"conditions": []interface{}{
+								map[string]interface{}{
+									"type":   "Complete",
+									"status": "True",
+								},
+							},
+						},
+					},
+				}
+			},
+			expectedState: true,
+			expectError:   false,
+		},
+		{
+			name:         "job failed",
+			resourceName: "failed-job",
+			namespace:    "default",
+			gvr:          schema.GroupVersionResource{Group: "batch", Version: "v1", Resource: "jobs"},
+			setupResource: func() *unstructured.Unstructured {
+				return &unstructured.Unstructured{
+					Object: map[string]interface{}{
+						"status": map[string]interface{}{
+							"conditions": []interface{}{
+								map[string]interface{}{
+									"type":   "Failed",
+									"status": "True",
+								},
+							},
+						},
+					},
+				}
+			},
+			expectedState: false,
+			expectError:   true,
+		},
 	}
 
 	for _, tc := range tests {
@@ -170,17 +214,17 @@ func TestGetResourceStatus(t *testing.T) {
 			ctx := context.Background()
 
 			// Setup fake dynamic client and wrap in KubernetesClient
-			fakeDynamicClient := fake.NewSimpleDynamicClient(scheme.Scheme)
+			fakeDynamicClient := fake.NewSimpleDynamicClient(runtime.NewScheme())
 			kubernetesClient := &client.KubernetesClient{
 				DynamicClient: fakeDynamicClient,
 			}
 
 			// Prepend the 'get' reactor for the dynamic client
-			fakeDynamicClient.PrependReactor("get", "pods", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+			fakeDynamicClient.PrependReactor("get", tc.gvr.Resource, func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
 				if action.(k8stesting.GetAction).GetName() == tc.resourceName {
-					return true, tc.setupPod(), nil
+					return true, tc.setupResource(), nil
 				}
-				return false, nil, fmt.Errorf("pod '%s' not found", action.(k8stesting.GetAction).GetName())
+				return false, nil, fmt.Errorf("resource '%s' not found", action.(k8stesting.GetAction).GetName())
 			})
 
 			// Perform the status check

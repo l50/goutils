@@ -33,21 +33,64 @@ func GetResourceStatus(ctx context.Context, kc *client.KubernetesClient, resourc
 		return false, fmt.Errorf("failed to get %s (%s) in %s namespace: %v", resourceName, gvr.Resource, namespace, err)
 	}
 
-	status, found, err := unstructured.NestedString(resource.UnstructuredContent(), "status", "phase")
+	status, found, err := unstructured.NestedFieldCopy(resource.UnstructuredContent(), "status")
 	if err != nil || !found {
 		return false, fmt.Errorf("status not found for %s (%s) in %s namespace: %v", resourceName, gvr.Resource, namespace, err)
 	}
 
-	// Check for undesirable statuses and treat them as not being in the "Running" state
-	undesirableStatuses := map[string]bool{
-		"Failed":    true,
-		"OOMKilled": true,
-		"Unknown":   true,
+	switch gvr.Resource {
+	case "jobs":
+		return checkJobStatus(status)
+	default:
+		return checkGeneralStatus(status)
+	}
+}
+
+func checkJobStatus(status interface{}) (bool, error) {
+	active, found, _ := unstructured.NestedInt64(status.(map[string]interface{}), "active")
+	if found && active > 0 {
+		return true, nil // Job is active
 	}
 
-	// Return true only if the status is "Running" and not in any undesirable state
-	_, isUndesirable := undesirableStatuses[status]
-	return status == "Running" && !isUndesirable, nil
+	// Check conditions for completeness or failure
+	conditions, found, _ := unstructured.NestedSlice(status.(map[string]interface{}), "conditions")
+	if found {
+		for _, cond := range conditions {
+			condition, ok := cond.(map[string]interface{})
+			if !ok {
+				continue
+			}
+			if condition["type"] == "Complete" && condition["status"] == "True" {
+				return true, nil // Job completed successfully
+			}
+			if condition["type"] == "Failed" && condition["status"] == "True" {
+				return false, fmt.Errorf("job has failed")
+			}
+		}
+	}
+	// Check for ready status
+
+	ready, found, _ := unstructured.NestedInt64(status.(map[string]interface{}), "ready")
+	if found && ready > 0 {
+		return true, nil // Job has ready pods
+	}
+
+	return false, fmt.Errorf("job status is incomplete or unknown")
+}
+
+func checkGeneralStatus(status interface{}) (bool, error) {
+	phase, found, _ := unstructured.NestedString(status.(map[string]interface{}), "phase")
+	if found {
+		return phase == "Running" || phase == "Succeeded", nil
+	}
+
+	// Consider checking other general statuses if applicable
+	ready, found, _ := unstructured.NestedInt64(status.(map[string]interface{}), "ready")
+	if found && ready > 0 {
+		return true, nil // General resources might use ready to indicate availability
+	}
+
+	return false, fmt.Errorf("phase not found in resource status")
 }
 
 // DescribeKubernetesResource retrieves the details of a specific Kubernetes
