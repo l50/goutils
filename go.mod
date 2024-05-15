@@ -7,7 +7,7 @@ toolchain go1.22.3
 require (
 	github.com/bitfield/script v0.22.1
 	github.com/cavaliergopher/grab/v3 v3.0.1
-	github.com/chromedp/cdproto v0.0.0-20240501202034-ef67d660e9fd
+	github.com/chromedp/cdproto v0.0.0-20240512230644-b3296df1660c
 	github.com/chromedp/chromedp v0.9.5
 	github.com/fatih/color v1.16.0
 	github.com/glendc/go-external-ip v0.1.0
