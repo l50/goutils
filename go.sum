@@ -415,6 +415,8 @@ github.com/samber/slog-multi v1.0.2 h1:6BVH9uHGAsiGkbbtQgAOQJMpKgV8unMrHhhJaw+X1
 github.com/samber/slog-multi v1.0.2/go.mod h1:uLAvHpGqbYgX4FSL0p1ZwoLuveIAJvBECtE07XmYvFo=
 github.com/samber/slog-multi v1.0.3 h1:8wlX8ioZE38h91DwoJBVnC7JfhgwERwlekY+NHsVsv0=
 github.com/samber/slog-multi v1.0.3/go.mod h1:TvwgIK4XPBb8Dn18as5uiTHf7in8gN/AtUXsT57UYuo=
+github.com/samber/slog-multi v1.1.0 h1:m5wfpXE8Qu2gCiR/JnhFGsLcWDOmTxnso32EMffVAY0=
+github.com/samber/slog-multi v1.1.0/go.mod h1:uLAvHpGqbYgX4FSL0p1ZwoLuveIAJvBECtE07XmYvFo=
 github.com/sergi/go-diff v1.3.2-0.20230802210424-5b0b94c5c0d3 h1:n661drycOFuPLCN3Uc8sB6B/s6Z4t2xvBgU1htSHuq8=
 github.com/sergi/go-diff v1.3.2-0.20230802210424-5b0b94c5c0d3/go.mod h1:A0bzQcvG0E7Rwjx0REVgAGH58e96+X0MeOfepqsbeW4=
 github.com/shopspring/decimal v1.2.0/go.mod h1:DKyhrW/HYNuLGql+MJL6WCR6knT2jwCFRcu2hWCYk4o=
