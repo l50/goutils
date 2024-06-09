@@ -27,6 +27,21 @@ run_tests() {
     echo "tail -f ${LOGFILE}" | tee -a "$LOGFILE"
     echo "Running tests..." | tee -a "$LOGFILE"
 
+    # Check if go.mod and go.sum exist
+    if [[ -f "go.mod" && -f "go.sum" ]]; then
+        # Check if `go mod tidy` is necessary
+        MOD_TMP=$(mktemp)
+        SUM_TMP=$(mktemp)
+        cp go.mod "$MOD_TMP"
+        cp go.sum "$SUM_TMP"
+        go mod tidy
+        if ! cmp -s go.mod "$MOD_TMP" || ! cmp -s go.sum "$SUM_TMP"; then
+            echo "Running 'go mod tidy' to clean up module dependencies..." | tee -a "$LOGFILE"
+            go mod tidy 2>&1 | tee -a "$LOGFILE"
+        fi
+        rm "$MOD_TMP" "$SUM_TMP"
+    fi
+
     if [[ "${TESTS_TO_RUN}" == 'coverage' ]]; then
         go test -v -race -failfast -tags=integration -coverprofile="${coverage_file}" ./... 2>&1 | tee -a "$LOGFILE"
     elif [[ "${TESTS_TO_RUN}" == 'all' ]]; then
