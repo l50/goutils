@@ -1,7 +1,7 @@
-# goutils/v2/slices
+# goutils/v2/collection
 
-The `slices` package is a collection of utility functions
-designed to simplify common slices tasks.
+The `collection` package is a collection of utility functions
+designed to simplify common collection tasks.
 
 ---
 
@@ -39,11 +39,11 @@ bool: true if the value is present in the slice, false otherwise.
 
 ## Installation
 
-To use the goutils/v2/slices package, you first need to install it.
+To use the goutils/v2/collection package, you first need to install it.
 Follow the steps below to install via go get.
 
 ```bash
-go get github.com/l50/goutils/v2/slices
+go get github.com/l50/goutils/v2/collection
 ```
 
 ---
@@ -54,7 +54,7 @@ After installation, you can import the package in your Go project
 using the following import statement:
 
 ```go
-import "github.com/l50/goutils/v2/slices"
+import "github.com/l50/goutils/v2/collection"
 ```
 
 ---
@@ -62,7 +62,7 @@ import "github.com/l50/goutils/v2/slices"
 ## Tests
 
 To ensure the package is working correctly, run the following
-command to execute the tests for `goutils/v2/slices`:
+command to execute the tests for `goutils/v2/collection`:
 
 ```bash
 go test -v
