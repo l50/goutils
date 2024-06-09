@@ -944,13 +944,13 @@ func TestRunCmd(t *testing.T) {
 
 	testCases := []struct {
 		name           string
-		cmd            sys.Cmd
+		cmd            *sys.Cmd
 		expectedOutput string
 		expectError    bool
 	}{
 		{
 			name: "Successful Command Execution with Default Output Handler",
-			cmd: sys.Cmd{
+			cmd: &sys.Cmd{
 				CmdString:     "echo",
 				Args:          []string{"hello"},
 				Timeout:       0,
@@ -961,7 +961,7 @@ func TestRunCmd(t *testing.T) {
 		},
 		{
 			name: "Successful Command Execution with Log Output Handler",
-			cmd: sys.Cmd{
+			cmd: &sys.Cmd{
 				CmdString:     "echo",
 				Args:          []string{"hello"},
 				Timeout:       0,
@@ -972,7 +972,7 @@ func TestRunCmd(t *testing.T) {
 		},
 		{
 			name: "Invalid Command",
-			cmd: sys.Cmd{
+			cmd: &sys.Cmd{
 				CmdString:     "invalidcommand",
 				Args:          []string{},
 				Timeout:       0,
@@ -983,7 +983,7 @@ func TestRunCmd(t *testing.T) {
 		},
 		{
 			name: "Command with Timeout",
-			cmd: sys.Cmd{
+			cmd: &sys.Cmd{
 				CmdString:     "sleep",
 				Args:          []string{"1"},
 				Timeout:       500 * time.Millisecond,
@@ -998,7 +998,7 @@ func TestRunCmd(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			loggedOutput = ""
 			output, err := tc.cmd.RunCmd()
-			if (err != nil) != (tc.expectError) {
+			if (err != nil) != tc.expectError {
 				t.Errorf("Test '%s' failed: expected error: %v, got: %v",
 					tc.name, tc.expectError, err)
 			}

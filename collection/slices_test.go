@@ -1,8 +1,9 @@
-package slices_test
+package collection_test
 
 import (
-	"slices"
 	"testing"
+
+	"github.com/l50/goutils/v2/collection"
 )
 
 func TestContains(t *testing.T) {
@@ -46,7 +47,7 @@ func TestContains(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			got := slices.Contains(tc.slice, tc.value)
+			got := collection.Contains(tc.slice, tc.value)
 			if got != tc.want {
 				t.Errorf("Contains(%v, %v) = %v; want %v", tc.slice,
 					tc.value, got, tc.want)
