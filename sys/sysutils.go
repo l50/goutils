@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"sync"
 	"syscall"
 	"time"
 
@@ -45,6 +46,7 @@ type Cmd struct {
 	Dir           string
 	Timeout       time.Duration
 	OutputHandler func(string)
+	mu            sync.Mutex
 }
 
 // Signal represents a signal that can be sent to a process.
@@ -579,7 +581,9 @@ func (c *Cmd) handleOutput(reader io.Reader, outputBuf *bytes.Buffer) {
 	scanner := bufio.NewScanner(reader)
 	for scanner.Scan() {
 		line := scanner.Text()
+		c.mu.Lock()
 		c.OutputHandler(line)
 		outputBuf.WriteString(line + "\n")
+		c.mu.Unlock()
 	}
 }

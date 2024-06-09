@@ -1,4 +1,4 @@
-package slices
+package collection
 
 // Contains checks if a value is present in a slice.
 //
