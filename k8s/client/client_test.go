@@ -2,9 +2,12 @@ package k8s_test
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"testing"
 
 	client "github.com/l50/goutils/v2/k8s/client"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
@@ -119,6 +122,79 @@ users:
 				if client == nil || client.Clientset == nil || client.DynamicClient == nil {
 					t.Errorf("Test '%s' failed - clientset or dynamic client not properly initialized", tc.name)
 				}
+			}
+		})
+	}
+}
+
+func setupEnv(key, value string) {
+	if value != "" {
+		os.Setenv(key, value)
+	} else {
+		os.Unsetenv(key)
+	}
+}
+
+func TestSetupKubeConfig(t *testing.T) {
+	homeDir := os.Getenv("HOME")
+
+	tempFile, err := os.CreateTemp("", "kubeconfig")
+	assert.NoError(t, err)
+	defer os.Remove(tempFile.Name())
+
+	tests := []struct {
+		name        string
+		envValue    string
+		defaultPath string
+		expected    string
+		err         bool
+	}{
+		{
+			name:        "env KUBECONFIG set",
+			envValue:    tempFile.Name(),
+			defaultPath: "",
+			expected:    tempFile.Name(),
+			err:         false,
+		},
+		{
+			name:        "env KUBECONFIG not set, defaultPath set",
+			envValue:    "",
+			defaultPath: tempFile.Name(),
+			expected:    tempFile.Name(),
+			err:         false,
+		},
+		{
+			name:        "env KUBECONFIG and defaultPath not set",
+			envValue:    "",
+			defaultPath: "",
+			expected:    filepath.Join(homeDir, ".kube", "config"),
+			err:         false,
+		},
+		{
+			name:        "env KUBECONFIG invalid path",
+			envValue:    "/invalid/path/to/kubeconfig",
+			defaultPath: "",
+			expected:    "",
+			err:         true,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			setupEnv("KUBECONFIG", tc.envValue)
+
+			if tc.envValue == "" && tc.defaultPath != "" {
+				os.Setenv("HOME", "/invalid/home")
+			} else {
+				os.Setenv("HOME", homeDir)
+			}
+
+			err := client.SetupKubeConfig(tc.defaultPath)
+			if tc.err {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tc.expected, os.Getenv("KUBECONFIG"))
 			}
 		})
 	}

@@ -103,6 +103,25 @@ error: An error if any issue occurs while creating the REST configuration.
 
 ---
 
+### SetupKubeConfig(string)
+
+```go
+SetupKubeConfig(string) error
+```
+
+SetupKubeConfig sets the KUBECONFIG environment variable to the default path
+if it is not already set.
+
+**Parameters:**
+
+defaultPath: The default path to the kubeconfig file.
+
+**Returns:**
+
+error: An error if the kubeconfig file is not found or cannot be accessed
+
+---
+
 ## Installation
 
 To use the goutils/v2/k8s package, you first need to install it.

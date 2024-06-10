@@ -2,7 +2,10 @@ package k8s
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 
+	"github.com/l50/goutils/v2/sys"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -131,4 +134,36 @@ func NewKubernetesClient(kubeconfig string, reader FileReaderFunc, client Kubern
 	}
 
 	return &KubernetesClient{Clientset: clientset, DynamicClient: dynamicClient, Config: config}, nil
+}
+
+// SetupKubeConfig sets the KUBECONFIG environment variable to the default path
+// if it is not already set.
+//
+// **Parameters:**
+//
+// defaultPath: The default path to the kubeconfig file.
+//
+// **Returns:**
+//
+// error: An error if the kubeconfig file is not found or cannot be accessed
+func SetupKubeConfig(defaultPath string) error {
+	kubeConfigPath := os.Getenv("KUBECONFIG")
+	if kubeConfigPath == "" {
+		kubeConfigPath = defaultPath
+		if kubeConfigPath == "" {
+			kubeConfigPath = sys.ExpandHomeDir(filepath.Join(os.Getenv("HOME"), ".kube", "config"))
+		} else {
+			kubeConfigPath = sys.ExpandHomeDir(kubeConfigPath)
+		}
+	}
+
+	if _, err := os.Stat(kubeConfigPath); os.IsNotExist(err) {
+		return fmt.Errorf("no kubeconfig found at %s", kubeConfigPath)
+	} else if err != nil {
+		return fmt.Errorf("error accessing kubeconfig at %s: %v", kubeConfigPath, err)
+	}
+
+	// Set the KUBECONFIG environment variable to the resolved path
+	os.Setenv("KUBECONFIG", kubeConfigPath)
+	return nil
 }
