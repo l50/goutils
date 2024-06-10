@@ -18,6 +18,22 @@ designed to simplify common k8s tasks.
 
 ## Functions
 
+### CheckKubeConfig()
+
+```go
+CheckKubeConfig() error
+```
+
+CheckKubeConfig checks if the KUBECONFIG environment variable is set and
+points to a valid kubeconfig file.
+
+Returns:
+
+error: An error if the KUBECONFIG environment variable is not set or does
+not point to a valid kubeconfig file.
+
+---
+
 ### NewKubernetesClient(string, FileReaderFunc, KubernetesClientInterface)
 
 ```go

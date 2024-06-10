@@ -1,6 +1,7 @@
 package k8s
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -165,5 +166,32 @@ func SetupKubeConfig(defaultPath string) error {
 
 	// Set the KUBECONFIG environment variable to the resolved path
 	os.Setenv("KUBECONFIG", kubeConfigPath)
+	return nil
+}
+
+// CheckKubeConfig checks if the KUBECONFIG environment variable is set and
+// points to a valid kubeconfig file.
+//
+// Returns:
+//
+// error: An error if the KUBECONFIG environment variable is not set or does
+// not point to a valid kubeconfig file.
+func CheckKubeConfig() error {
+	kubeConfigPath := os.Getenv("KUBECONFIG")
+	if kubeConfigPath == "" {
+		return errors.New("KUBECONFIG environment variable is not set")
+	}
+
+	fileInfo, err := os.Stat(kubeConfigPath)
+	if os.IsNotExist(err) {
+		return errors.New("kubeconfig file does not exist")
+	}
+	if err != nil {
+		return errors.New("error accessing kubeconfig file: " + err.Error())
+	}
+	if fileInfo.IsDir() {
+		return errors.New("kubeconfig path is a directory, not a file")
+	}
+
 	return nil
 }
