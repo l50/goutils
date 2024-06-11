@@ -5,13 +5,18 @@ import (
 	"fmt"
 	"testing"
 
+	client "github.com/l50/goutils/v2/k8s/client"
 	k8s "github.com/l50/goutils/v2/k8s/client"
 	jobs "github.com/l50/goutils/v2/k8s/jobs"
+	"github.com/stretchr/testify/require"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/kubernetes/fake"
+	"k8s.io/client-go/rest"
 	k8stesting "k8s.io/client-go/testing"
 )
 
@@ -221,6 +226,73 @@ func TestJobExists(t *testing.T) {
 			}
 			if exists != tc.expectExists {
 				t.Errorf("Test %s: expected job existence: %v, got: %v", tc.name, tc.expectExists, exists)
+			}
+		})
+	}
+}
+
+func TestDeleteKubernetesJob(t *testing.T) {
+	tests := []struct {
+		name        string
+		jobName     string
+		namespace   string
+		setupMocks  func(clientset *fake.Clientset)
+		expectError bool
+	}{
+		{
+			name:      "successful job deletion",
+			jobName:   "test-job",
+			namespace: "default",
+			setupMocks: func(clientset *fake.Clientset) {
+				clientset.PrependReactor("delete", "jobs", func(action k8stesting.Action) (bool, runtime.Object, error) {
+					return true, nil, nil
+				})
+			},
+			expectError: false,
+		},
+		{
+			name:      "job not found",
+			jobName:   "non-existent-job",
+			namespace: "default",
+			setupMocks: func(clientset *fake.Clientset) {
+				clientset.PrependReactor("delete", "jobs", func(action k8stesting.Action) (bool, runtime.Object, error) {
+					return true, nil, errors.NewNotFound(schema.GroupResource{Group: "batch", Resource: "jobs"}, "non-existent-job")
+				})
+			},
+			expectError: true,
+		},
+		{
+			name:      "failed to delete job",
+			jobName:   "test-job",
+			namespace: "default",
+			setupMocks: func(clientset *fake.Clientset) {
+				clientset.PrependReactor("delete", "jobs", func(action k8stesting.Action) (bool, runtime.Object, error) {
+					return true, nil, fmt.Errorf("failed to delete job")
+				})
+			},
+			expectError: true,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			clientset := fake.NewSimpleClientset()
+			tc.setupMocks(clientset)
+
+			kubeClient := &client.KubernetesClient{
+				Config:    &rest.Config{},
+				Clientset: clientset,
+			}
+
+			jobsClient := &jobs.JobsClient{
+				Client: kubeClient,
+			}
+
+			err := jobsClient.DeleteKubernetesJob(context.Background(), tc.jobName, tc.namespace)
+			require.Equal(t, tc.expectError, err != nil, "expected error: %v, got: %v", tc.expectError, err)
+
+			if err != nil {
+				t.Logf("error: %v", err)
 			}
 		})
 	}
