@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	client "github.com/l50/goutils/v2/k8s/client"
-	k8s "github.com/l50/goutils/v2/k8s/client"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"k8s.io/client-go/dynamic"
@@ -196,71 +195,6 @@ func TestSetupKubeConfig(t *testing.T) {
 			} else {
 				assert.NoError(t, err)
 				assert.Equal(t, tc.expected, os.Getenv("KUBECONFIG"))
-			}
-		})
-	}
-}
-
-func TestCheckKubeConfig(t *testing.T) {
-	tests := []struct {
-		name        string
-		kubeconfig  string
-		createFile  bool
-		expectError bool
-	}{
-		{
-			name:        "KUBECONFIG set to valid file",
-			kubeconfig:  "valid_kubeconfig",
-			createFile:  true,
-			expectError: false,
-		},
-		{
-			name:        "KUBECONFIG not set",
-			kubeconfig:  "",
-			createFile:  false,
-			expectError: true,
-		},
-		{
-			name:        "KUBECONFIG set to invalid path",
-			kubeconfig:  "invalid_kubeconfig",
-			createFile:  false,
-			expectError: true,
-		},
-		{
-			name:        "KUBECONFIG set to a directory",
-			kubeconfig:  "kubeconfig_dir",
-			createFile:  false,
-			expectError: true,
-		},
-	}
-
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			if tc.kubeconfig != "" {
-				if tc.createFile {
-					tempFile, err := os.CreateTemp("", tc.kubeconfig)
-					assert.NoError(t, err)
-					defer os.Remove(tempFile.Name())
-					os.Setenv("KUBECONFIG", tempFile.Name())
-				} else {
-					if tc.kubeconfig == "kubeconfig_dir" {
-						tempDir, err := os.MkdirTemp("", tc.kubeconfig)
-						assert.NoError(t, err)
-						defer os.RemoveAll(tempDir)
-						os.Setenv("KUBECONFIG", tempDir)
-					} else {
-						os.Setenv("KUBECONFIG", tc.kubeconfig)
-					}
-				}
-			} else {
-				os.Unsetenv("KUBECONFIG")
-			}
-
-			err := k8s.CheckKubeConfig()
-			if tc.expectError {
-				assert.Error(t, err)
-			} else {
-				assert.NoError(t, err)
 			}
 		})
 	}

@@ -10,6 +10,7 @@ import (
 	"helm.sh/helm/v3/pkg/chart/loader"
 	"helm.sh/helm/v3/pkg/cli"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -73,11 +74,13 @@ const (
 //
 // OperationApply: Apply the manifest.
 // OperationDelete: Delete the manifest.
+// OperationUpdate: Update the manifest.
 type ManifestOperation int
 
 const (
 	OperationApply ManifestOperation = iota
 	OperationDelete
+	OperationUpdate
 )
 
 // NewManifestConfig creates a new ManifestConfig with default settings.
@@ -102,6 +105,8 @@ func (mo ManifestOperation) String() string {
 		return "apply"
 	case OperationDelete:
 		return "delete"
+	case OperationUpdate:
+		return "update"
 	default:
 		return "unknown"
 	}
@@ -242,6 +247,27 @@ func (mc *ManifestConfig) HandleRawManifest(ctx context.Context, dynClient dynam
 		switch mc.Operation {
 		case OperationApply:
 			_, operationErr = resourceClient.Create(ctx, rawObj, metav1.CreateOptions{})
+			if errors.IsAlreadyExists(operationErr) {
+				// Fetch the existing job
+				existingObj, getErr := resourceClient.Get(ctx, rawObj.GetName(), metav1.GetOptions{})
+				if getErr != nil {
+					return fmt.Errorf("failed to get existing job: %v", getErr)
+				}
+
+				// Check if the object is being deleted
+				if existingObj.GetDeletionTimestamp() != nil {
+					return fmt.Errorf("object is being deleted: %v", rawObj.GetName())
+				}
+
+				// Delete the existing job
+				delErr := resourceClient.Delete(ctx, existingObj.GetName(), metav1.DeleteOptions{})
+				if delErr != nil {
+					return fmt.Errorf("failed to delete existing job: %v", delErr)
+				}
+
+				// Create the job again after deleting the existing one
+				_, operationErr = resourceClient.Create(ctx, rawObj, metav1.CreateOptions{})
+			}
 		case OperationDelete:
 			operationErr = resourceClient.Delete(ctx, rawObj.GetName(), metav1.DeleteOptions{})
 		}
