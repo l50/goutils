@@ -18,6 +18,26 @@ designed to simplify common k8s tasks.
 
 ## Functions
 
+### JobsClient.ApplyKubernetesJob(string, func(string) ([]byte, error))
+
+```go
+ApplyKubernetesJob(string, func(string) ([]byte, error)) error
+```
+
+ApplyKubernetesJob applies a Kubernetes job manifest to a Kubernetes cluster
+using the provided kubeconfig file. The job is applied to the specified namespace.
+
+**Parameters:**
+
+jobFilePath: Path to the job manifest file to apply.
+namespace: Namespace where the job should be applied.
+
+**Returns:**
+
+error: An error if the job could not be applied.
+
+---
+
 ### JobsClient.DeleteKubernetesJob(context.Context, string)
 
 ```go

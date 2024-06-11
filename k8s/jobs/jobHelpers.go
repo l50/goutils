@@ -4,7 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	k8s "github.com/l50/goutils/v2/k8s/client"
+	client "github.com/l50/goutils/v2/k8s/client"
+	manifests "github.com/l50/goutils/v2/k8s/manifests"
 	batchv1 "k8s.io/api/batch/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -17,7 +18,46 @@ import (
 //
 // Client: A pointer to KubernetesClient for accessing Kubernetes API.
 type JobsClient struct {
-	Client *k8s.KubernetesClient
+	Client               *client.KubernetesClient
+	ConfigBuilder        client.KubernetesClientInterface
+	DynamicClientCreator client.KubernetesClientInterface
+}
+
+// ApplyKubernetesJob applies a Kubernetes job manifest to a Kubernetes cluster
+// using the provided kubeconfig file. The job is applied to the specified namespace.
+//
+// **Parameters:**
+//
+// jobFilePath: Path to the job manifest file to apply.
+// namespace: Namespace where the job should be applied.
+//
+// **Returns:**
+//
+// error: An error if the job could not be applied.
+func (jc *JobsClient) ApplyKubernetesJob(jobFilePath, namespace string, readFile func(string) ([]byte, error)) error {
+	config, err := jc.ConfigBuilder.RESTConfigFromKubeConfig([]byte(jc.Client.Config.Host))
+	if err != nil {
+		return fmt.Errorf("failed to build kubeconfig: %v", err)
+	}
+	dynClient, err := jc.DynamicClientCreator.NewDynamicForConfig(config)
+	if err != nil {
+		return fmt.Errorf("failed to create dynamic client: %v", err)
+	}
+
+	manifestConfig := manifests.NewManifestConfig()
+	manifestConfig.KubeConfigPath = jc.Client.Config.Host
+	manifestConfig.ManifestPath = jobFilePath
+	manifestConfig.Namespace = namespace
+	manifestConfig.Type = manifests.ManifestRaw
+	manifestConfig.Operation = manifests.OperationApply
+	manifestConfig.Client = dynClient
+	manifestConfig.ReadFile = readFile
+
+	if err := manifestConfig.ApplyOrDeleteManifest(context.Background()); err != nil {
+		return fmt.Errorf("failed to apply job: %v", err)
+	}
+
+	return nil
 }
 
 // DeleteKubernetesJob deletes a specified Kubernetes job within
@@ -39,8 +79,7 @@ func (jc *JobsClient) DeleteKubernetesJob(ctx context.Context, jobName, namespac
 	deleteOptions := metav1.DeleteOptions{
 		PropagationPolicy: &deletePolicy,
 	}
-	err := jc.Client.Clientset.BatchV1().Jobs(namespace).Delete(
-		ctx, jobName, deleteOptions)
+	err := jc.Client.Clientset.BatchV1().Jobs(namespace).Delete(ctx, jobName, deleteOptions)
 	if err != nil {
 		return fmt.Errorf("failed to delete job '%s' in namespace '%s': %v", jobName, namespace, err)
 	}
@@ -75,7 +114,6 @@ func (jc *JobsClient) GetJobPodName(ctx context.Context, jobName, namespace stri
 		return "", fmt.Errorf("no pod found for job '%s'", jobName)
 	}
 
-	// Assuming the first pod is the one we're interested in, as jobs usually have one pod if not paralleled
 	return pods.Items[0].Name, nil
 }
 
