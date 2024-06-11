@@ -18,9 +18,7 @@ import (
 //
 // Client: A pointer to KubernetesClient for accessing Kubernetes API.
 type JobsClient struct {
-	Client               *client.KubernetesClient
-	ConfigBuilder        client.KubernetesClientInterface
-	DynamicClientCreator client.KubernetesClientInterface
+	Client *client.KubernetesClient
 }
 
 // ApplyKubernetesJob applies a Kubernetes job manifest to a Kubernetes cluster
@@ -35,13 +33,11 @@ type JobsClient struct {
 //
 // error: An error if the job could not be applied.
 func (jc *JobsClient) ApplyKubernetesJob(jobFilePath, namespace string, readFile func(string) ([]byte, error)) error {
-	config, err := jc.ConfigBuilder.RESTConfigFromKubeConfig([]byte(jc.Client.Config.Host))
-	if err != nil {
-		return fmt.Errorf("failed to build kubeconfig: %v", err)
+	if jc.Client == nil {
+		return fmt.Errorf("jobs client is not initialized")
 	}
-	dynClient, err := jc.DynamicClientCreator.NewDynamicForConfig(config)
-	if err != nil {
-		return fmt.Errorf("failed to create dynamic client: %v", err)
+	if jc.Client.DynamicClient == nil {
+		return fmt.Errorf("dynamic client is not initialized")
 	}
 
 	manifestConfig := manifests.NewManifestConfig()
@@ -50,7 +46,7 @@ func (jc *JobsClient) ApplyKubernetesJob(jobFilePath, namespace string, readFile
 	manifestConfig.Namespace = namespace
 	manifestConfig.Type = manifests.ManifestRaw
 	manifestConfig.Operation = manifests.OperationApply
-	manifestConfig.Client = dynClient
+	manifestConfig.Client = jc.Client.DynamicClient
 	manifestConfig.ReadFile = readFile
 
 	if err := manifestConfig.ApplyOrDeleteManifest(context.Background()); err != nil {
@@ -75,6 +71,9 @@ func (jc *JobsClient) ApplyKubernetesJob(jobFilePath, namespace string, readFile
 //
 // error: An error if the job could not be deleted.
 func (jc *JobsClient) DeleteKubernetesJob(ctx context.Context, jobName, namespace string) error {
+	if jc.Client == nil {
+		return fmt.Errorf("jobs client is not initialized")
+	}
 	deletePolicy := metav1.DeletePropagationForeground
 	deleteOptions := metav1.DeleteOptions{
 		PropagationPolicy: &deletePolicy,
@@ -102,6 +101,9 @@ func (jc *JobsClient) DeleteKubernetesJob(ctx context.Context, jobName, namespac
 // string: The name of the first pod found that is associated with the job.
 // error: An error if no pods are found or if an error occurs during the pod retrieval.
 func (jc *JobsClient) GetJobPodName(ctx context.Context, jobName, namespace string) (string, error) {
+	if jc.Client == nil {
+		return "", fmt.Errorf("jobs client is not initialized")
+	}
 	labelSelector := "job-name=" + jobName
 	pods, err := jc.Client.Clientset.CoreV1().Pods(namespace).List(ctx, metav1.ListOptions{
 		LabelSelector: labelSelector,
@@ -128,6 +130,9 @@ func (jc *JobsClient) GetJobPodName(ctx context.Context, jobName, namespace stri
 // A slice of batchv1.Job objects containing the jobs found.
 // An error if the API call to fetch the jobs fails.
 func (jc *JobsClient) ListKubernetesJobs(ctx context.Context, namespace string) ([]batchv1.Job, error) {
+	if jc.Client == nil {
+		return nil, fmt.Errorf("jobs client is not initialized")
+	}
 	listOptions := metav1.ListOptions{}
 	var jobs *batchv1.JobList
 	var err error
@@ -158,6 +163,9 @@ func (jc *JobsClient) ListKubernetesJobs(ctx context.Context, namespace string) 
 // bool: true if the job exists, false otherwise.
 // error: An error if the job existence check fails.
 func (jc *JobsClient) JobExists(ctx context.Context, jobName, namespace string) (bool, error) {
+	if jc.Client == nil {
+		return false, fmt.Errorf("jobs client is not initialized")
+	}
 	_, err := jc.Client.Clientset.BatchV1().Jobs(namespace).Get(ctx, jobName, metav1.GetOptions{})
 	if err != nil {
 		if errors.IsNotFound(err) {
