@@ -10,16 +10,12 @@ import (
 	jobs "github.com/l50/goutils/v2/k8s/jobs"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	"k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic"
 	fakedynamic "k8s.io/client-go/dynamic/fake"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/rest"
-	k8stesting "k8s.io/client-go/testing"
 	"k8s.io/client-go/util/homedir"
 )
 
@@ -93,38 +89,14 @@ func TestApplyKubernetesJob(t *testing.T) {
 
 	tests := []struct {
 		name        string
-		setupMocks  func(mockManifestConfig *MockManifestConfig, mockConfigBuilder *MockKubeConfigBuilder, mockClientCreator *MockDynamicClientCreator)
+		setupMocks  func(mockManifestConfig *MockManifestConfig)
 		jobFilePath string
 		namespace   string
 		expectError bool
 	}{
 		{
 			name: "successful job application",
-			setupMocks: func(mockManifestConfig *MockManifestConfig, mockConfigBuilder *MockKubeConfigBuilder, mockClientCreator *MockDynamicClientCreator) {
-				config := &rest.Config{}
-				dynClient := fakedynamic.NewSimpleDynamicClient(runtime.NewScheme())
-
-				existingJob := &unstructured.Unstructured{}
-				existingJob.SetKind("Job")
-				existingJob.SetAPIVersion("batch/v1")
-				existingJob.SetName("unique-job-1")
-				existingJob.SetNamespace("default")
-				dynClient.PrependReactor("create", "jobs", func(action k8stesting.Action) (bool, runtime.Object, error) {
-					return true, nil, errors.NewAlreadyExists(schema.GroupResource{Group: "batch", Resource: "jobs"}, "unique-job-1")
-				})
-				dynClient.PrependReactor("get", "jobs", func(action k8stesting.Action) (bool, runtime.Object, error) {
-					return true, existingJob, nil
-				})
-				dynClient.PrependReactor("delete", "jobs", func(action k8stesting.Action) (bool, runtime.Object, error) {
-					return true, nil, nil
-				})
-				dynClient.PrependReactor("create", "jobs", func(action k8stesting.Action) (bool, runtime.Object, error) {
-					return true, existingJob, nil
-				})
-
-				mockConfigBuilder.On("BuildConfigFromFlags", "", kubeconfig).Return(config, nil).Once()
-				mockConfigBuilder.On("RESTConfigFromKubeConfig", mock.Anything).Return(config, nil).Once()
-				mockClientCreator.On("NewDynamicForConfig", config).Return(dynClient, nil).Once()
+			setupMocks: func(mockManifestConfig *MockManifestConfig) {
 				mockManifestConfig.On("ApplyOrDeleteManifest", mock.Anything).Return(nil).Once()
 				mockManifestConfig.ReadFile = func(string) ([]byte, error) {
 					return []byte(`apiVersion: batch/v1
@@ -148,27 +120,11 @@ spec:
 			expectError: false,
 		},
 		{
-			name: "failure in building kubeconfig",
-			setupMocks: func(mockManifestConfig *MockManifestConfig, mockConfigBuilder *MockKubeConfigBuilder, mockClientCreator *MockDynamicClientCreator) {
-				mockConfigBuilder.On("BuildConfigFromFlags", "", kubeconfig).Return(nil, fmt.Errorf("failed to build kubeconfig")).Once()
-				mockConfigBuilder.On("RESTConfigFromKubeConfig", mock.Anything).Return(nil, fmt.Errorf("failed to build kubeconfig")).Once()
+			name: "failure in applying manifest",
+			setupMocks: func(mockManifestConfig *MockManifestConfig) {
+				mockManifestConfig.On("ApplyOrDeleteManifest", mock.Anything).Return(fmt.Errorf("failed to apply manifest")).Once()
 				mockManifestConfig.ReadFile = func(string) ([]byte, error) {
-					return nil, nil
-				}
-			},
-			jobFilePath: "testdata/job.yaml",
-			namespace:   "default",
-			expectError: true,
-		},
-		{
-			name: "failure in creating dynamic client",
-			setupMocks: func(mockManifestConfig *MockManifestConfig, mockConfigBuilder *MockKubeConfigBuilder, mockClientCreator *MockDynamicClientCreator) {
-				config := &rest.Config{}
-				mockConfigBuilder.On("BuildConfigFromFlags", "", kubeconfig).Return(config, nil).Once()
-				mockConfigBuilder.On("RESTConfigFromKubeConfig", mock.Anything).Return(config, nil).Once()
-				mockClientCreator.On("NewDynamicForConfig", config).Return(nil, fmt.Errorf("failed to create dynamic client")).Once()
-				mockManifestConfig.ReadFile = func(string) ([]byte, error) {
-					return nil, nil
+					return nil, fmt.Errorf("failed to read file")
 				}
 			},
 			jobFilePath: "testdata/job.yaml",
@@ -180,21 +136,18 @@ spec:
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			mockManifestConfig := new(MockManifestConfig)
-			mockConfigBuilder := new(MockKubeConfigBuilder)
-			mockClientCreator := new(MockDynamicClientCreator)
-			tc.setupMocks(mockManifestConfig, mockConfigBuilder, mockClientCreator)
+			tc.setupMocks(mockManifestConfig)
 
 			kubeClient := &client.KubernetesClient{
 				Config: &rest.Config{
 					Host: kubeconfig,
 				},
-				Clientset: fake.NewSimpleClientset(),
+				Clientset:     fake.NewSimpleClientset(),
+				DynamicClient: fakedynamic.NewSimpleDynamicClient(runtime.NewScheme()),
 			}
 
 			jobsClient := &jobs.JobsClient{
-				Client:               kubeClient,
-				ConfigBuilder:        mockConfigBuilder,
-				DynamicClientCreator: mockClientCreator,
+				Client: kubeClient,
 			}
 
 			require.NotNil(t, mockManifestConfig)
@@ -208,10 +161,6 @@ spec:
 			if err != nil {
 				t.Logf("error: %v", err)
 			}
-
-			// Clean up the job after test
-			_ = jobsClient.DeleteKubernetesJob(context.Background(), "unique-job-1", tc.namespace)
-			_ = jobsClient.DeleteKubernetesJob(context.Background(), "invalid-job", tc.namespace)
 		})
 	}
 }
