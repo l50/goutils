@@ -9,8 +9,6 @@ import (
 	batchv1 "k8s.io/api/batch/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/dynamic"
-	"k8s.io/client-go/tools/clientcmd"
 )
 
 // JobsClient represents a client for managing Kubernetes jobs
@@ -20,7 +18,9 @@ import (
 //
 // Client: A pointer to KubernetesClient for accessing Kubernetes API.
 type JobsClient struct {
-	Client *client.KubernetesClient
+	Client               *client.KubernetesClient
+	ConfigBuilder        client.KubernetesClientInterface
+	DynamicClientCreator client.KubernetesClientInterface
 }
 
 // ApplyKubernetesJob applies a Kubernetes job manifest to a Kubernetes cluster
@@ -35,11 +35,11 @@ type JobsClient struct {
 //
 // error: An error if the job could not be applied.
 func (jc *JobsClient) ApplyKubernetesJob(jobFilePath, namespace string, readFile func(string) ([]byte, error)) error {
-	config, err := clientcmd.BuildConfigFromFlags("", jc.Client.Config.Host)
+	config, err := jc.ConfigBuilder.RESTConfigFromKubeConfig([]byte(jc.Client.Config.Host))
 	if err != nil {
 		return fmt.Errorf("failed to build kubeconfig: %v", err)
 	}
-	dynClient, err := dynamic.NewForConfig(config)
+	dynClient, err := jc.DynamicClientCreator.NewDynamicForConfig(config)
 	if err != nil {
 		return fmt.Errorf("failed to create dynamic client: %v", err)
 	}
