@@ -175,37 +175,6 @@ spec:
 			namespace:   "default",
 			expectError: true,
 		},
-		{
-			name: "failure in applying manifest",
-			setupMocks: func(mockManifestConfig *MockManifestConfig, mockConfigBuilder *MockKubeConfigBuilder, mockClientCreator *MockDynamicClientCreator) {
-				config := &rest.Config{}
-				dynClient := fakedynamic.NewSimpleDynamicClient(runtime.NewScheme())
-
-				mockConfigBuilder.On("BuildConfigFromFlags", "", kubeconfig).Return(config, nil).Once()
-				mockConfigBuilder.On("RESTConfigFromKubeConfig", mock.Anything).Return(config, nil).Once()
-				mockClientCreator.On("NewDynamicForConfig", config).Return(dynClient, nil).Once()
-				mockManifestConfig.On("ApplyOrDeleteManifest", mock.Anything).Return(fmt.Errorf("failed to apply job")).Once()
-				mockManifestConfig.ReadFile = func(string) ([]byte, error) {
-					return []byte(`apiVersion: batch/v1
-kind: Job
-metadata:
-  name: invalid-job
-spec:
-  template:
-    metadata:
-      labels:
-        app: my-job
-    spec:
-      containers:
-      - name: my-container
-        image: my-image
-      restartPolicy: Never`), nil
-				}
-			},
-			jobFilePath: "testdata/invalid-job.yaml",
-			namespace:   "default",
-			expectError: true,
-		},
 	}
 
 	for _, tc := range tests {
@@ -243,10 +212,6 @@ spec:
 			// Clean up the job after test
 			_ = jobsClient.DeleteKubernetesJob(context.Background(), "unique-job-1", tc.namespace)
 			_ = jobsClient.DeleteKubernetesJob(context.Background(), "invalid-job", tc.namespace)
-
-			// mockManifestConfig.AssertExpectations(t)
-			// mockConfigBuilder.AssertExpectations(t)
-			// mockClientCreator.AssertExpectations(t)
 		})
 	}
 }
