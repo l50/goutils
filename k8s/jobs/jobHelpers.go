@@ -3,12 +3,17 @@ package k8s
 import (
 	"context"
 	"fmt"
+	"time"
 
 	client "github.com/l50/goutils/v2/k8s/client"
+	dynK8s "github.com/l50/goutils/v2/k8s/dynamic"
+	k8sLogger "github.com/l50/goutils/v2/k8s/loggers"
 	manifests "github.com/l50/goutils/v2/k8s/manifests"
 	batchv1 "k8s.io/api/batch/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/client-go/kubernetes"
 )
 
 // JobsClient represents a client for managing Kubernetes jobs
@@ -17,8 +22,10 @@ import (
 // **Attributes:**
 //
 // Client: A pointer to KubernetesClient for accessing Kubernetes API.
+// StreamLogsFn: A function for streaming logs from a Kubernetes pod.
 type JobsClient struct {
-	Client *client.KubernetesClient
+	Client       *client.KubernetesClient
+	StreamLogsFn func(clientset *kubernetes.Clientset, namespace, resourceType, resourceName string) error
 }
 
 // ApplyKubernetesJob applies a Kubernetes job manifest to a Kubernetes cluster
@@ -174,4 +181,91 @@ func (jc *JobsClient) JobExists(ctx context.Context, jobName, namespace string) 
 		return false, fmt.Errorf("failed to get job '%s' in namespace '%s': %v", jobName, namespace, err)
 	}
 	return true, nil // Job exists
+}
+
+// StreamJobLogs monitors a Kubernetes job by waiting for it to reach
+// the 'Ready' state and then streams logs from the associated pod.
+//
+// **Parameters:**
+//
+// jobsClient: A JobsClient for managing Kubernetes jobs.
+// workloadName: Name of the Kubernetes job to monitor.
+// namespace: Namespace where the job is located.
+//
+// **Returns:**
+//
+// error: An error if the job monitoring fails.
+func (jc *JobsClient) StreamJobLogs(workloadName, namespace string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
+	defer cancel()
+
+	fmt.Printf("Monitoring %s job in %s namespace\n", workloadName, namespace)
+
+	// Wait for the job to reach completion
+	err := dynK8s.WaitForResourceState(ctx, workloadName, namespace, "job", "Complete", func(name, ns string) (bool, error) {
+		jobComplete, err := dynK8s.GetResourceStatus(ctx, jc.Client, name, ns, schema.GroupVersionResource{
+			Group:    "batch",
+			Version:  "v1",
+			Resource: "jobs",
+		})
+		if err != nil {
+			return false, fmt.Errorf("error checking status for %s job in %s namespace: %v", name, ns, err)
+		}
+		return jobComplete, nil
+	})
+
+	if err != nil {
+		if diagErr := logJobDiagnosticInfo(jc.Client, workloadName, namespace); diagErr != nil {
+			fmt.Printf("failed to log diagnostic info for %s job: %v", workloadName, diagErr)
+		}
+		return fmt.Errorf("error waiting for %s job to complete in %s namespace: %v", workloadName, namespace, err)
+	}
+
+	// Attempt to fetch the pod name after confirming the job has completed
+	podName, err := jc.GetJobPodName(ctx, workloadName, namespace)
+	if err != nil {
+		return fmt.Errorf("failed to find pod associated with %s workload: %v", workloadName, err)
+	}
+
+	fmt.Printf("%s pod for %s job in %s namespace is ready and being monitored", podName, workloadName, namespace)
+
+	// Stream logs from the pod, ensuring it exists
+	if err := k8sLogger.StreamLogs(jc.Client.Clientset, namespace, "pod", podName); err != nil {
+		return fmt.Errorf("failed to stream logs for pod '%s': %v", podName, err)
+	}
+
+	return nil
+}
+
+// logJobDiagnosticInfo logs diagnostic information for a Kubernetes job and its associated pods.
+//
+// **Parameters:**
+//
+// k8sClient: A KubernetesClient for accessing the Kubernetes API.
+// jobName: Name of the Kubernetes job to log diagnostic information for.
+// namespace: Namespace where the job is located.
+//
+// **Returns:**
+//
+// error: An error if the diagnostic information could not be logged.
+func logJobDiagnosticInfo(k8sClient *client.KubernetesClient, jobName, namespace string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+	defer cancel()
+
+	jobGVR := schema.GroupVersionResource{Group: "batch", Version: "v1", Resource: "jobs"}
+	jobDescription, err := dynK8s.DescribeKubernetesResource(ctx, k8sClient, jobName, namespace, jobGVR)
+	if err != nil {
+		return fmt.Errorf("error describing job: %v", err)
+	}
+
+	fmt.Printf("Describe job output for '%s':\n%s", jobName, jobDescription)
+
+	podsGVR := schema.GroupVersionResource{Group: "", Version: "v1", Resource: "pods"}
+	podsDescription, err := dynK8s.DescribeKubernetesResource(ctx, k8sClient, jobName, namespace, podsGVR)
+	if err != nil {
+		return fmt.Errorf("error describing pods for job: %v", err)
+	}
+
+	fmt.Printf("Describe pods output for job '%s':\n%s", jobName, podsDescription)
+	return nil
 }

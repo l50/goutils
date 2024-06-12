@@ -8,6 +8,8 @@ import (
 	client "github.com/l50/goutils/v2/k8s/client"
 	k8s "github.com/l50/goutils/v2/k8s/client"
 	jobs "github.com/l50/goutils/v2/k8s/jobs"
+	"github.com/smallstep/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -294,6 +296,66 @@ func TestDeleteKubernetesJob(t *testing.T) {
 			if err != nil {
 				t.Logf("error: %v", err)
 			}
+		})
+	}
+}
+
+type MockJobsClient struct {
+	mock.Mock
+	Client *MockKubernetesClient
+}
+
+func (m *MockJobsClient) StreamJobLogs(workloadName, namespace string) error {
+	args := m.Called(workloadName, namespace)
+	return args.Error(0)
+}
+
+type MockKubernetesClient struct {
+	mock.Mock
+	Clientset interface{}
+}
+
+func TestStreamJobLogs(t *testing.T) {
+	tests := []struct {
+		name         string
+		workloadName string
+		namespace    string
+		mockReturn   error
+		expectError  bool
+	}{
+		{
+			name:         "successful streaming of job logs",
+			workloadName: "test-job",
+			namespace:    "test-namespace",
+			mockReturn:   nil,
+			expectError:  false,
+		},
+		{
+			name:         "failed streaming of job logs",
+			workloadName: "test-job",
+			namespace:    "test-namespace",
+			mockReturn:   fmt.Errorf("stream error"),
+			expectError:  true,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			mockJobsClient := new(MockJobsClient)
+			mockK8sClient := new(MockKubernetesClient)
+			mockJobsClient.Client = mockK8sClient
+
+			mockJobsClient.On("StreamJobLogs", tc.workloadName, tc.namespace).Return(tc.mockReturn)
+
+			err := mockJobsClient.StreamJobLogs(tc.workloadName, tc.namespace)
+			if tc.expectError {
+				assert.Error(t, err, "Expected error while streaming job logs")
+			} else {
+				assert.NoError(t, err, "Expected no error while streaming job logs")
+			}
+
+			mockJobsClient.AssertExpectations(t)
+			mockK8sClient.AssertExpectations(t)
 		})
 	}
 }

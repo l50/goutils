@@ -125,6 +125,27 @@ An error if the API call to fetch the jobs fails.
 
 ---
 
+### JobsClient.StreamJobLogs(string)
+
+```go
+StreamJobLogs(string) error
+```
+
+StreamJobLogs monitors a Kubernetes job by waiting for it to reach
+the 'Ready' state and then streams logs from the associated pod.
+
+**Parameters:**
+
+jobsClient: A JobsClient for managing Kubernetes jobs.
+workloadName: Name of the Kubernetes job to monitor.
+namespace: Namespace where the job is located.
+
+**Returns:**
+
+error: An error if the job monitoring fails.
+
+---
+
 ## Installation
 
 To use the goutils/v2/k8s package, you first need to install it.
