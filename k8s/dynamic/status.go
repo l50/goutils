@@ -68,8 +68,8 @@ func checkJobStatus(status interface{}) (bool, error) {
 			}
 		}
 	}
-	// Check for ready status
 
+	// Check for ready status
 	ready, found, _ := unstructured.NestedInt64(status.(map[string]interface{}), "ready")
 	if found && ready > 0 {
 		return true, nil // Job has ready pods

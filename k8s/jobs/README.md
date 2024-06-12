@@ -18,6 +18,31 @@ designed to simplify common k8s tasks.
 
 ## Functions
 
+### DefaultJobPodNameGetter.GetJobPodName(context.Context, string)
+
+```go
+GetJobPodName(context.Context, string) string, error
+```
+
+GetJobPodName retrieves the name of the first pod associated with a specific
+Kubernetes job within a given namespace. It uses a label selector to find
+pods that are labeled with the job's name. This method is typically used in
+scenarios where jobs create a single pod or when only the first pod
+is of interest.
+
+**Parameters:**
+
+ctx: Context for managing control flow of the request.
+jobName: Name of the Kubernetes job to find pods for.
+namespace: Namespace where the job and its pods are located.
+
+**Returns:**
+
+string: The name of the first pod found that is associated with the job
+error: An error if no pods are found or if an error occurs during the pod retrieval
+
+---
+
 ### JobsClient.ApplyKubernetesJob(string, func(string) ([]byte, error))
 
 ```go
@@ -67,10 +92,11 @@ error: An error if the job could not be deleted.
 GetJobPodName(context.Context, string) string, error
 ```
 
-GetJobPodName retrieves the name of the first pod associated with a specific Kubernetes job
-within a given namespace. It uses a label selector to find pods that are labeled with
-the job's name. This method is typically used in scenarios where jobs create a single pod or
-when only the first pod is of interest.
+GetJobPodName retrieves the name of the first pod associated with a specific
+Kubernetes job within a given namespace. It uses a label selector to find
+pods that are labeled with the job's name. This method is typically used in
+scenarios where jobs create a single pod or when only the first pod
+is of interest.
 
 **Parameters:**
 
@@ -80,8 +106,8 @@ namespace: Namespace where the job and its pods are located.
 
 **Returns:**
 
-string: The name of the first pod found that is associated with the job.
-error: An error if no pods are found or if an error occurs during the pod retrieval.
+string: The name of the first pod found that is associated with the job
+error: An error if no pods are found or if an error occurs during the pod retrieval
 
 ---
 
@@ -115,13 +141,36 @@ ListKubernetesJobs(context.Context, string) []batchv1.Job, error
 ListKubernetesJobs lists Kubernetes jobs from a specified namespace, or all namespaces
 if no namespace is specified. This method allows for either targeted or broad job retrieval.
 
-Parameters:
-ctx - Context for managing control flow of the request.
-namespace - Optional; specifies the namespace from which to list jobs. If empty, jobs will be listed from all namespaces.
+**Parameters:**
 
-Returns:
-A slice of batchv1.Job objects containing the jobs found.
-An error if the API call to fetch the jobs fails.
+ctx: Context for managing control flow of the request.
+namespace: Optional; specifies the namespace from which to list jobs. If empty, jobs will be listed from all namespaces.
+
+**Returns:**
+
+[]batchv1.Job: A slice of batchv1.Job objects containing the jobs found.
+error: An error if the API call to fetch the jobs fails.
+
+---
+
+### JobsClient.StreamJobLogs(string)
+
+```go
+StreamJobLogs(string) error
+```
+
+StreamJobLogs monitors a Kubernetes job by waiting for it to reach
+the 'Ready' state and then streams logs from the associated pod.
+
+**Parameters:**
+
+jobsClient: A JobsClient for managing Kubernetes jobs.
+workloadName: Name of the Kubernetes job to monitor.
+namespace: Namespace where the job is located.
+
+**Returns:**
+
+error: An error if the job monitoring fails.
 
 ---
 
