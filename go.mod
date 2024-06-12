@@ -17,7 +17,6 @@ require (
 	github.com/mattn/go-isatty v0.0.20
 	github.com/otiai10/copy v1.14.0
 	github.com/samber/slog-multi v1.1.0
-	github.com/smallstep/assert v0.0.0-20200723003110-82e2b9b3b262
 	github.com/spf13/afero v1.11.0
 	github.com/stretchr/testify v1.9.0
 	github.com/tidwall/gjson v1.17.1

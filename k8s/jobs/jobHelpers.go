@@ -7,7 +7,6 @@ import (
 
 	client "github.com/l50/goutils/v2/k8s/client"
 	dynK8s "github.com/l50/goutils/v2/k8s/dynamic"
-	k8sLogger "github.com/l50/goutils/v2/k8s/loggers"
 	manifests "github.com/l50/goutils/v2/k8s/manifests"
 	batchv1 "k8s.io/api/batch/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -16,16 +15,84 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
+// DynK8sInterface defines the methods used from dynK8s
+// to manage Kubernetes resources.
+//
+// **Methods:**
+//
+// WaitForResourceState: Waits for a Kubernetes resource to reach a desired state.
+// GetResourceStatus: Retrieves the status of a Kubernetes resource.
+type DynK8sInterface interface {
+	WaitForResourceState(ctx context.Context, resourceName, namespace, resourceType, desiredState string, checkStatusFunc func(name, namespace string) (bool, error)) error
+	GetResourceStatus(ctx context.Context, kc *client.KubernetesClient, resourceName, namespace string, gvr schema.GroupVersionResource) (bool, error)
+}
+
+// K8sLoggerInterface defines the methods used from k8sLogger
+// to stream logs from Kubernetes pods.
+//
+// **Methods:**
+//
+// StreamLogs: Streams logs from a Kubernetes pod.
+type K8sLoggerInterface interface {
+	StreamLogs(clientset kubernetes.Interface, namespace, resourceType, podName string) error
+}
+
+// JobPodNameGetter defines the method to get job pod name
+// by job name and namespace.
+//
+// **Methods:**
+//
+// GetJobPodName: Retrieves the name of the first pod associated with a specific
+type JobPodNameGetter interface {
+	GetJobPodName(ctx context.Context, jobName, namespace string) (string, error)
+}
+
+// DefaultJobPodNameGetter implements the default behavior for getting job pod
+// names by using the JobsClient to fetch the pod name.
+//
+// **Attributes:**
+//
+// JC: A JobsClient for managing Kubernetes jobs.
+type DefaultJobPodNameGetter struct {
+	JC *JobsClient
+}
+
+// GetJobPodName retrieves the name of the first pod associated with a specific
+// Kubernetes job within a given namespace. It uses a label selector to find
+// pods that are labeled with the job's name. This method is typically used in
+// scenarios where jobs create a single pod or when only the first pod
+// is of interest.
+//
+// **Parameters:**
+//
+// ctx: Context for managing control flow of the request.
+// jobName: Name of the Kubernetes job to find pods for.
+// namespace: Namespace where the job and its pods are located.
+//
+// **Returns:**
+//
+// string: The name of the first pod found that is associated with the job
+// error: An error if no pods are found or if an error occurs during the pod retrieval
+func (d *DefaultJobPodNameGetter) GetJobPodName(ctx context.Context, jobName, namespace string) (string, error) {
+	return d.JC.GetJobPodName(ctx, jobName, namespace)
+}
+
 // JobsClient represents a client for managing Kubernetes jobs
 // through the Kubernetes API.
 //
 // **Attributes:**
 //
 // Client: A pointer to KubernetesClient for accessing Kubernetes API.
+// DynK8s: A DynK8sInterface for managing Kubernetes resources.
+// K8sLogger: A K8sLoggerInterface for streaming logs from Kubernetes pods.
 // StreamLogsFn: A function for streaming logs from a Kubernetes pod.
+// PodNameGetter: A JobPodNameGetter for getting job pod names.
 type JobsClient struct {
-	Client       *client.KubernetesClient
-	StreamLogsFn func(clientset *kubernetes.Clientset, namespace, resourceType, resourceName string) error
+	Client        *client.KubernetesClient
+	DynK8s        DynK8sInterface
+	K8sLogger     K8sLoggerInterface
+	StreamLogsFn  func(clientset *kubernetes.Clientset, namespace, resourceType, resourceName string) error
+	PodNameGetter JobPodNameGetter
 }
 
 // ApplyKubernetesJob applies a Kubernetes job manifest to a Kubernetes cluster
@@ -92,10 +159,11 @@ func (jc *JobsClient) DeleteKubernetesJob(ctx context.Context, jobName, namespac
 	return nil
 }
 
-// GetJobPodName retrieves the name of the first pod associated with a specific Kubernetes job
-// within a given namespace. It uses a label selector to find pods that are labeled with
-// the job's name. This method is typically used in scenarios where jobs create a single pod or
-// when only the first pod is of interest.
+// GetJobPodName retrieves the name of the first pod associated with a specific
+// Kubernetes job within a given namespace. It uses a label selector to find
+// pods that are labeled with the job's name. This method is typically used in
+// scenarios where jobs create a single pod or when only the first pod
+// is of interest.
 //
 // **Parameters:**
 //
@@ -105,8 +173,8 @@ func (jc *JobsClient) DeleteKubernetesJob(ctx context.Context, jobName, namespac
 //
 // **Returns:**
 //
-// string: The name of the first pod found that is associated with the job.
-// error: An error if no pods are found or if an error occurs during the pod retrieval.
+// string: The name of the first pod found that is associated with the job
+// error: An error if no pods are found or if an error occurs during the pod retrieval
 func (jc *JobsClient) GetJobPodName(ctx context.Context, jobName, namespace string) (string, error) {
 	if jc.Client == nil {
 		return "", fmt.Errorf("jobs client is not initialized")
@@ -129,13 +197,15 @@ func (jc *JobsClient) GetJobPodName(ctx context.Context, jobName, namespace stri
 // ListKubernetesJobs lists Kubernetes jobs from a specified namespace, or all namespaces
 // if no namespace is specified. This method allows for either targeted or broad job retrieval.
 //
-// Parameters:
-// ctx - Context for managing control flow of the request.
-// namespace - Optional; specifies the namespace from which to list jobs. If empty, jobs will be listed from all namespaces.
+// **Parameters:**
 //
-// Returns:
-// A slice of batchv1.Job objects containing the jobs found.
-// An error if the API call to fetch the jobs fails.
+// ctx: Context for managing control flow of the request.
+// namespace: Optional; specifies the namespace from which to list jobs. If empty, jobs will be listed from all namespaces.
+//
+// **Returns:**
+//
+// []batchv1.Job: A slice of batchv1.Job objects containing the jobs found.
+// error: An error if the API call to fetch the jobs fails.
 func (jc *JobsClient) ListKubernetesJobs(ctx context.Context, namespace string) ([]batchv1.Job, error) {
 	if jc.Client == nil {
 		return nil, fmt.Errorf("jobs client is not initialized")
@@ -202,8 +272,8 @@ func (jc *JobsClient) StreamJobLogs(workloadName, namespace string) error {
 	fmt.Printf("Monitoring %s job in %s namespace\n", workloadName, namespace)
 
 	// Wait for the job to reach completion
-	err := dynK8s.WaitForResourceState(ctx, workloadName, namespace, "job", "Complete", func(name, ns string) (bool, error) {
-		jobComplete, err := dynK8s.GetResourceStatus(ctx, jc.Client, name, ns, schema.GroupVersionResource{
+	err := jc.DynK8s.WaitForResourceState(ctx, workloadName, namespace, "job", "Complete", func(name, ns string) (bool, error) {
+		jobComplete, err := jc.DynK8s.GetResourceStatus(ctx, jc.Client, name, ns, schema.GroupVersionResource{
 			Group:    "batch",
 			Version:  "v1",
 			Resource: "jobs",
@@ -222,15 +292,15 @@ func (jc *JobsClient) StreamJobLogs(workloadName, namespace string) error {
 	}
 
 	// Attempt to fetch the pod name after confirming the job has completed
-	podName, err := jc.GetJobPodName(ctx, workloadName, namespace)
+	podName, err := jc.PodNameGetter.GetJobPodName(ctx, workloadName, namespace)
 	if err != nil {
 		return fmt.Errorf("failed to find pod associated with %s workload: %v", workloadName, err)
 	}
 
-	fmt.Printf("%s pod for %s job in %s namespace is ready and being monitored", podName, workloadName, namespace)
+	fmt.Printf("%s pod for %s job in %s namespace is ready and being monitored\n", podName, workloadName, namespace)
 
 	// Stream logs from the pod, ensuring it exists
-	if err := k8sLogger.StreamLogs(jc.Client.Clientset, namespace, "pod", podName); err != nil {
+	if err := jc.K8sLogger.StreamLogs(jc.Client.Clientset, namespace, "pod", podName); err != nil {
 		return fmt.Errorf("failed to stream logs for pod '%s': %v", podName, err)
 	}
 
