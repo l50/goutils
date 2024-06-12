@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"time"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -29,7 +30,6 @@ func StreamLogs(clientset kubernetes.Interface, namespace, resourceType, resourc
 	case "pod":
 		podName = resourceName
 	case "job", "deployment":
-
 		pods, err := clientset.CoreV1().Pods(namespace).List(context.TODO(), metav1.ListOptions{
 			LabelSelector: fmt.Sprintf("job-name=%s", resourceName),
 		})
@@ -39,7 +39,6 @@ func StreamLogs(clientset kubernetes.Interface, namespace, resourceType, resourc
 		if len(pods.Items) == 0 {
 			return fmt.Errorf("no pods found for %s: %s", resourceType, resourceName)
 		}
-
 		podName = pods.Items[0].Name
 	default:
 		return fmt.Errorf("unsupported resource type: %s", resourceType)
@@ -48,16 +47,29 @@ func StreamLogs(clientset kubernetes.Interface, namespace, resourceType, resourc
 	podLogOpts := &corev1.PodLogOptions{
 		Follow: true,
 	}
-	req := clientset.CoreV1().Pods(namespace).GetLogs(podName, podLogOpts)
-	logStream, err := req.Stream(context.TODO())
-	if err != nil {
-		return fmt.Errorf("error in opening stream: %v", err)
-	}
-	defer logStream.Close()
 
-	_, err = io.Copy(os.Stdout, logStream)
-	if err != nil && err != io.EOF {
-		return fmt.Errorf("error in copying information from log to stdout: %v", err)
+	maxRetries := 10
+	retryInterval := 10 * time.Second
+
+	for i := 0; i < maxRetries; i++ {
+		req := clientset.CoreV1().Pods(namespace).GetLogs(podName, podLogOpts)
+		logStream, err := req.Stream(context.TODO())
+		if err != nil {
+			if i == maxRetries-1 {
+				return fmt.Errorf("error in opening stream: %v", err)
+			}
+			fmt.Printf("Error in opening stream, retrying in %s: %v\n", retryInterval, err)
+			time.Sleep(retryInterval)
+			continue
+		}
+		defer logStream.Close()
+
+		_, err = io.Copy(os.Stdout, logStream)
+		if err != nil && err != io.EOF {
+			return fmt.Errorf("error in copying information from log to stdout: %v", err)
+		}
+		return nil
 	}
-	return nil
+
+	return fmt.Errorf("failed to stream logs after %d retries", maxRetries)
 }
