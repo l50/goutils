@@ -60,7 +60,7 @@ require (
 	github.com/lib/pq v1.10.9 // indirect
 	github.com/liggitt/tabwriter v0.0.0-20181228230101-89fcab3d43de // indirect
 	github.com/mattn/go-runewidth v0.0.15 // indirect
-	github.com/miekg/dns v1.1.59 // indirect
+	github.com/miekg/dns v1.1.61 // indirect
 	github.com/mitchellh/copystructure v1.2.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
 	github.com/moby/locker v1.0.1 // indirect
