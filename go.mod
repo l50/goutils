@@ -28,7 +28,7 @@ require (
 
 require (
 	github.com/AdaLogics/go-fuzz-headers v0.0.0-20230811130428-ced1acdcaa24 // indirect
-	github.com/MakeNowJust/heredoc/v2 v2.0.1 // indirect
+	github.com/MakeNowJust/heredoc v1.0.0 // indirect
 	github.com/MakeNowJust/heredoc/v2 v2.0.1 // indirect
 	github.com/Masterminds/goutils v1.1.1 // indirect
 	github.com/Masterminds/semver/v3 v3.2.1 // indirect
@@ -76,9 +76,9 @@ require (
 	github.com/xeipuuv/gojsonschema v1.2.0 // indirect
 	github.com/xlab/treeprint v1.2.0 // indirect
 	go.starlark.net v0.0.0-20240411212711-9b43f0afd521 // indirect
+	gopkg.in/evanphx/json-patch.v4 v4.12.0 // indirect
 	gopkg.in/evanphx/json-patch.v5 v5.9.0 // indirect
-	gopkg.in/evanphx/json-patch.v5 v5.9.0 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
+	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gotest.tools/v3 v3.5.1 // indirect
 	k8s.io/apiextensions-apiserver v0.30.2 // indirect
@@ -187,7 +187,7 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	helm.sh/helm/v3 v3.15.2
-	k8s.io/klog/v2 v2.130.0 // indirect
+	k8s.io/klog/v2 v2.130.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20240430033511-f0e62f92d13f // indirect
 	k8s.io/utils v0.0.0-20240502163921-fe8a2dddb1d0 // indirect
 	mvdan.cc/sh/v3 v3.8.0 // indirect
