@@ -65,7 +65,7 @@ require (
 	github.com/mitchellh/copystructure v1.2.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
 	github.com/moby/locker v1.0.1 // indirect
-	github.com/moby/spdystream v0.3.0 // indirect
+	github.com/moby/spdystream v0.4.0 // indirect
 	github.com/monochromegane/go-gitignore v0.0.0-20200626010858-205db1a8cc00 // indirect
 	github.com/mxk/go-flowrate v0.0.0-20140419014527-cca7078d478f // indirect
 	github.com/peterbourgon/diskv v2.0.1+incompatible // indirect
