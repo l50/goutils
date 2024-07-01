@@ -46,7 +46,6 @@ type Cmd struct {
 	Dir           string
 	Timeout       time.Duration
 	OutputHandler func(string)
-	mu            sync.Mutex
 }
 
 // Signal represents a signal that can be sent to a process.
@@ -550,8 +549,10 @@ func (c *Cmd) RunCmd() (string, error) {
 	}
 
 	var outputBuf bytes.Buffer
-	go c.handleOutput(stdout, &outputBuf)
-	go c.handleOutput(stderr, &outputBuf)
+	var mu sync.Mutex
+
+	go c.handleOutput(stdout, &outputBuf, &mu)
+	go c.handleOutput(stderr, &outputBuf, &mu)
 
 	// Wait for the command to complete
 	err = execCmd.Wait()
@@ -577,13 +578,13 @@ func (c *Cmd) RunCmd() (string, error) {
 // handleOutput reads from the provided reader (standard output
 // or standard error of the command) and sends each line of
 // output to the OutputHandler function of the Cmd struct, while also writing it to the output buffer.
-func (c *Cmd) handleOutput(reader io.Reader, outputBuf *bytes.Buffer) {
+func (c *Cmd) handleOutput(reader io.Reader, outputBuf *bytes.Buffer, mu *sync.Mutex) {
 	scanner := bufio.NewScanner(reader)
 	for scanner.Scan() {
 		line := scanner.Text()
-		c.mu.Lock()
+		mu.Lock()
 		c.OutputHandler(line)
 		outputBuf.WriteString(line + "\n")
-		c.mu.Unlock()
+		mu.Unlock()
 	}
 }
