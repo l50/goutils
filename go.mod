@@ -1,6 +1,6 @@
 module github.com/l50/goutils/v2
 
-go 1.22.0
+go 1.22.4
 
 toolchain go1.22.5
 
@@ -36,7 +36,7 @@ require (
 	github.com/Microsoft/hcsshim v0.12.4 // indirect
 	github.com/blang/semver/v4 v4.0.0 // indirect
 	github.com/chai2010/gettext-go v1.0.3 // indirect
-	github.com/containerd/containerd v1.7.19 // indirect
+	github.com/containerd/containerd v1.7.20 // indirect
 	github.com/containerd/errdefs v0.1.0 // indirect
 	github.com/containerd/log v0.1.0 // indirect
 	github.com/containerd/platforms v0.2.1 // indirect
@@ -84,7 +84,7 @@ require (
 	k8s.io/apiserver v0.30.2 // indirect
 	k8s.io/cli-runtime v0.30.2 // indirect
 	k8s.io/component-base v0.30.2 // indirect
-	oras.land/oras-go v1.2.5 // indirect
+	oras.land/oras-go v1.2.6 // indirect
 	sigs.k8s.io/kustomize/api v0.17.2 // indirect
 	sigs.k8s.io/kustomize/kyaml v0.17.1 // indirect
 )
@@ -102,9 +102,9 @@ require (
 	github.com/cloudflare/circl v1.3.9 // indirect
 	github.com/cyphar/filepath-securejoin v0.2.5 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
-	github.com/docker/cli v27.0.3+incompatible // indirect
+	github.com/docker/cli v27.1.0+incompatible // indirect
 	github.com/docker/distribution v2.8.3+incompatible // indirect
-	github.com/docker/docker v27.0.3+incompatible // indirect
+	github.com/docker/docker v27.1.0+incompatible // indirect
 	github.com/docker/docker-credential-helpers v0.8.2 // indirect
 	github.com/emicklei/go-restful/v3 v3.12.1 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
