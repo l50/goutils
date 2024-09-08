@@ -5,7 +5,7 @@ go 1.22.0
 toolchain go1.22.5
 
 require (
-	github.com/bitfield/script v0.22.1
+	github.com/bitfield/script v0.23.0
 	github.com/cavaliergopher/grab/v3 v3.0.1
 	github.com/chromedp/cdproto v0.0.0-20240512230644-b3296df1660c
 	github.com/chromedp/chromedp v0.9.5
