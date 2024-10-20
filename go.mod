@@ -1,8 +1,8 @@
 module github.com/l50/goutils/v2
 
-go 1.22.0
+go 1.23
 
-toolchain go1.22.5
+toolchain go1.23.2
 
 require (
 	github.com/bitfield/script v0.22.1
@@ -98,7 +98,7 @@ require (
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
-	github.com/chromedp/sysutil v1.0.0 // indirect
+	github.com/chromedp/sysutil v1.1.0 // indirect
 	github.com/cloudflare/circl v1.3.9 // indirect
 	github.com/cyphar/filepath-securejoin v0.2.5 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
