@@ -5,13 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
+	stdlog "log"
 	"log/slog"
-	"os"
 	"time"
 
 	"github.com/fatih/color"
-	"github.com/mattn/go-isatty"
 )
 
 // PrettyHandlerOptions represents options used for configuring
@@ -32,9 +30,13 @@ type PrettyHandlerOptions struct {
 //
 // Handler: The underlying slog.Handler used for logging.
 // l: Standard logger used for outputting log messages.
+// Level: The log level for the handler.
+// OutputType: The type of output for the handler.
 type PrettyHandler struct {
 	slog.Handler
-	l *log.Logger
+	l          *stdlog.Logger
+	Level      slog.Level
+	OutputType OutputType
 }
 
 // NewPrettyHandler creates a new PrettyHandler with specified output
@@ -45,14 +47,17 @@ type PrettyHandler struct {
 //
 // out: Output writer where log messages will be written.
 // opts: PrettyHandlerOptions for configuring the handler.
+// outputType: Type of output for the handler.
 //
 // **Returns:**
 //
 // *PrettyHandler: A new instance of PrettyHandler.
-func NewPrettyHandler(out io.Writer, opts PrettyHandlerOptions) *PrettyHandler {
+func NewPrettyHandler(out io.Writer, opts PrettyHandlerOptions, outputType OutputType) *PrettyHandler {
 	h := &PrettyHandler{
-		Handler: slog.NewJSONHandler(out, &opts.SlogOpts),
-		l:       log.New(out, "", 0),
+		Handler:    slog.NewJSONHandler(out, &opts.SlogOpts),
+		l:          stdlog.New(out, "", 0), // Use stdlog.New
+		Level:      opts.SlogOpts.Level.Level(),
+		OutputType: outputType,
 	}
 	return h
 }
@@ -70,28 +75,19 @@ func NewPrettyHandler(out io.Writer, opts PrettyHandlerOptions) *PrettyHandler {
 //
 // error: An error if any issue occurs during log handling.
 func (h *PrettyHandler) Handle(ctx context.Context, r slog.Record) error {
+	if r.Level < h.Level {
+		return nil // Skip log records below the minimum level
+	}
+
 	fields, err := h.parseLogRecord(r)
 	if err != nil {
-		return err // Return error if JSON is invalid or any other error occurs in parsing
+		return err
 	}
 
-	if h.outputToFile() {
+	if h.OutputType == JSONOutput {
 		return h.outputJSON(fields)
 	}
-
 	return h.outputFormatted(fields, r.Level)
-}
-
-// outputToFile determines if the output is being written to a file
-// rather than a terminal, in which case it returns true.
-//
-// **Returns:**
-//
-// bool: True if output is to a file, false otherwise.
-func (h *PrettyHandler) outputToFile() bool {
-	_, isFile := h.l.Writer().(*os.File)
-	isTerminal := isatty.IsTerminal(os.Stdout.Fd()) || isatty.IsCygwinTerminal(os.Stdout.Fd())
-	return isFile && !isTerminal
 }
 
 // outputJSON marshals the log fields into JSON format and outputs
@@ -127,9 +123,34 @@ func (h *PrettyHandler) outputJSON(fields map[string]interface{}) error {
 //
 // error: An error if formatting or output fails.
 func (h *PrettyHandler) outputFormatted(fields map[string]interface{}, level slog.Level) error {
-	finalLogMsg := fmt.Sprintf("[%s] [%s] %s", fields["time"], h.colorizeBasedOnLevel(level), fields["msg"])
-	h.l.Println(finalLogMsg)
-	return nil
+	timeStr := fields["time"].(string)
+	msg := fields["msg"].(string)
+
+	var levelColor string
+	if h.OutputType == ColorOutput {
+		switch level {
+		case slog.LevelDebug:
+			levelColor = "\033[36m" // Cyan
+		case slog.LevelInfo:
+			levelColor = "\033[32m" // Green
+		case slog.LevelWarn:
+			levelColor = "\033[33m" // Yellow
+		case slog.LevelError:
+			levelColor = "\033[31m" // Red
+		default:
+			levelColor = "\033[0m" // Default
+		}
+	}
+
+	resetColor := "\033[0m"
+	if h.OutputType != ColorOutput {
+		levelColor = ""
+		resetColor = ""
+	}
+
+	formattedMsg := fmt.Sprintf("%s %s%s%s: %s\n", timeStr, levelColor, level.String(), resetColor, msg)
+	_, err := h.l.Writer().Write([]byte(formattedMsg))
+	return err
 }
 
 // parseLogRecord parses the given slog.Record into a map of log fields.
@@ -160,27 +181,6 @@ func (h *PrettyHandler) parseLogRecord(r slog.Record) (map[string]interface{}, e
 	}
 
 	return fields, nil
-}
-
-// colorizeBasedOnLevel applies color to the given log level string
-// based on its severity.
-//
-// **Parameters:**
-//
-// level: Log level to be colorized.
-//
-// **Returns:**
-//
-// string: The colorized log level string.
-func (h *PrettyHandler) colorizeBasedOnLevel(level slog.Level) string {
-	// Create a new color object based on the log level
-	colorAttr := determineColorAttribute(level)
-	c := color.New(colorAttr)
-
-	// Apply color only to the level part
-	coloredLevel := c.Sprint(level.String())
-
-	return coloredLevel
 }
 
 // determineColorAttribute returns the color attribute corresponding

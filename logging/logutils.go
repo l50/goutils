@@ -1,6 +1,7 @@
 package logging
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -26,6 +27,10 @@ const (
 	// text output. This is useful for console output where color
 	// coding can enhance readability.
 	ColorOutput
+
+	// JSONOutput indicates that the logger will produce JSON formatted
+	// output. This is useful for structured logging and log aggregation.
+	JSONOutput
 )
 
 // CreateLogFile creates a log file in a 'logs' subdirectory of the
@@ -110,7 +115,7 @@ func (cfg *LogConfig) ConfigureLogger() (Logger, error) {
 
 	if cfg.OutputType == ColorOutput {
 		prettyOpts := PrettyHandlerOptions{SlogOpts: *opts}
-		stdoutHandler = NewPrettyHandler(os.Stdout, prettyOpts)
+		stdoutHandler = NewPrettyHandler(os.Stdout, prettyOpts, cfg.OutputType)
 	} else {
 		stdoutHandler = slog.NewJSONHandler(os.Stdout, opts)
 	}
@@ -195,7 +200,7 @@ func InitLogging(cfg *LogConfig) (Logger, error) {
 //
 // error: The error created from the errMsg, after it has been logged.
 func LogAndReturnError(logger Logger, errMsg string) error {
-	err := fmt.Errorf(errMsg)
+	err := errors.New(errMsg)
 	logger.Error(err)
 	return err
 }

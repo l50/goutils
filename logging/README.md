@@ -285,10 +285,10 @@ error: An error if any issue occurs during initialization.
 
 ---
 
-### NewPrettyHandler(io.Writer, PrettyHandlerOptions)
+### NewPrettyHandler(io.Writer, PrettyHandlerOptions, OutputType)
 
 ```go
-NewPrettyHandler(io.Writer, PrettyHandlerOptions) *PrettyHandler
+NewPrettyHandler(io.Writer, PrettyHandlerOptions, OutputType) *PrettyHandler
 ```
 
 NewPrettyHandler creates a new PrettyHandler with specified output
@@ -299,6 +299,7 @@ log messages with optional colorization and structured formatting.
 
 out: Output writer where log messages will be written.
 opts: PrettyHandlerOptions for configuring the handler.
+outputType: Type of output for the handler.
 
 **Returns:**
 

@@ -131,8 +131,7 @@ func InstallVSCodeModules() error {
 	}
 
 	if err := InstallGoDeps(vscodeDeps); err != nil {
-		return fmt.Errorf(
-			color.RedString("failed to install vscode-go dependencies: %v", err))
+		return fmt.Errorf("failed to install vscode-go dependencies: %w", err)
 	}
 
 	return nil
