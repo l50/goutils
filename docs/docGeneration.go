@@ -302,7 +302,29 @@ func processGoFiles(fs afero.Fs, path string, repo Repo, tmplPath string, exclud
 		Mode:  packages.NeedName | packages.NeedSyntax | packages.NeedTypes | packages.NeedTypesInfo,
 		Dir:   path,
 		Fset:  token.NewFileSet(),
-		Tests: false, // Explicitly exclude test files
+		Tests: false,
+	}
+
+	// Use nonTestFilter to exclude test files
+	files, err := afero.ReadDir(fs, path)
+	if err != nil {
+		return fmt.Errorf("error reading directory: %w", err)
+	}
+
+	var goFiles []string
+	for _, file := range files {
+		if nonTestFilter(file) && strings.HasSuffix(file.Name(), ".go") {
+			goFiles = append(goFiles, filepath.Join(path, file.Name()))
+		}
+	}
+
+	cfg.Overlay = make(map[string][]byte)
+	for _, file := range goFiles {
+		content, err := afero.ReadFile(fs, file)
+		if err != nil {
+			return fmt.Errorf("error reading file %s: %w", file, err)
+		}
+		cfg.Overlay[file] = content
 	}
 
 	// Use "." to represent the current package
@@ -376,26 +398,17 @@ func createFunctionDoc(fset *token.FileSet, fn *ast.FuncDecl, info *types.Info) 
 	var params, results, structName string
 	var err error
 
-	// Use info to get the function's type
-	fnType := info.TypeOf(fn.Name)
-	if fnType != nil {
-		if sig, ok := fnType.(*types.Signature); ok {
-			params = formatParams(sig.Params())
-			results = formatResults(sig.Results())
+	// Extract parameters and results
+	if fn.Type.Params != nil {
+		params, err = formatNode(fset, fn.Type.Params)
+		if err != nil {
+			return FunctionDoc{}, fmt.Errorf("error formatting function parameters: %w", err)
 		}
-	} else {
-		// Fallback to AST-based extraction if type info is not available
-		if fn.Type.Params != nil {
-			params, err = formatNode(fset, fn.Type.Params)
-			if err != nil {
-				return FunctionDoc{}, fmt.Errorf("error formatting function parameters: %w", err)
-			}
-		}
-		if fn.Type.Results != nil {
-			results, err = formatNode(fset, fn.Type.Results)
-			if err != nil {
-				return FunctionDoc{}, fmt.Errorf("error formatting function results: %w", err)
-			}
+	}
+	if fn.Type.Results != nil {
+		results, err = formatNode(fset, fn.Type.Results)
+		if err != nil {
+			return FunctionDoc{}, fmt.Errorf("error formatting function results: %w", err)
 		}
 	}
 
@@ -425,24 +438,6 @@ func createFunctionDoc(fset *token.FileSet, fn *ast.FuncDecl, info *types.Info) 
 		Signature:   signature,
 		Description: fn.Doc.Text(),
 	}, nil
-}
-
-func formatParams(tup *types.Tuple) string {
-	var params []string
-	for i := 0; i < tup.Len(); i++ {
-		param := tup.At(i)
-		params = append(params, fmt.Sprintf("%s %s", param.Name(), param.Type().String()))
-	}
-	return strings.Join(params, ", ")
-}
-
-func formatResults(tup *types.Tuple) string {
-	var results []string
-	for i := 0; i < tup.Len(); i++ {
-		result := tup.At(i)
-		results = append(results, result.Type().String())
-	}
-	return strings.Join(results, ", ")
 }
 
 func splitLongSignature(signature string, maxLineLength int) string {
