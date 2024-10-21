@@ -7,11 +7,9 @@ import (
 	"io"
 	stdlog "log"
 	"log/slog"
-	"os"
 	"time"
 
 	"github.com/fatih/color"
-	"github.com/mattn/go-isatty"
 )
 
 // PrettyHandlerOptions represents options used for configuring
@@ -90,18 +88,6 @@ func (h *PrettyHandler) Handle(ctx context.Context, r slog.Record) error {
 		return h.outputJSON(fields)
 	}
 	return h.outputFormatted(fields, r.Level)
-}
-
-// outputToFile determines if the output is being written to a file
-// rather than a terminal, in which case it returns true.
-//
-// **Returns:**
-//
-// bool: True if output is to a file, false otherwise.
-func (h *PrettyHandler) outputToFile() bool {
-	_, isFile := h.l.Writer().(*os.File)
-	isTerminal := isatty.IsTerminal(os.Stdout.Fd()) || isatty.IsCygwinTerminal(os.Stdout.Fd())
-	return isFile && !isTerminal
 }
 
 // outputJSON marshals the log fields into JSON format and outputs
@@ -195,27 +181,6 @@ func (h *PrettyHandler) parseLogRecord(r slog.Record) (map[string]interface{}, e
 	}
 
 	return fields, nil
-}
-
-// colorizeBasedOnLevel applies color to the given log level string
-// based on its severity.
-//
-// **Parameters:**
-//
-// level: Log level to be colorized.
-//
-// **Returns:**
-//
-// string: The colorized log level string.
-func (h *PrettyHandler) colorizeBasedOnLevel(level slog.Level) string {
-	// Create a new color object based on the log level
-	colorAttr := determineColorAttribute(level)
-	c := color.New(colorAttr)
-
-	// Apply color only to the level part
-	coloredLevel := c.Sprint(level.String())
-
-	return coloredLevel
 }
 
 // determineColorAttribute returns the color attribute corresponding

@@ -5,9 +5,9 @@ import (
 	"bytes"
 	"fmt"
 	"go/ast"
-	"go/parser"
 	"go/printer"
 	"go/token"
+	"go/types"
 	"os"
 	"path/filepath"
 	"sort"
@@ -16,6 +16,7 @@ import (
 
 	gitutils "github.com/l50/goutils/v2/git"
 	"github.com/spf13/afero"
+	"golang.org/x/tools/go/packages"
 )
 
 // PackageDoc holds the documentation for a Go package.
@@ -148,7 +149,11 @@ func generateReadmeFromTemplate(fs afero.Fs, pkgDoc *PackageDoc, path string, te
 
 	repoRoot, err := gitutils.RepoRoot()
 	if err != nil {
-		return fmt.Errorf("error finding repo root: %w", err)
+		// Fallback to current working directory if not in a git repo
+		repoRoot, err = os.Getwd()
+		if err != nil {
+			return fmt.Errorf("error getting current working directory: %w", err)
+		}
 	}
 	rootReadmePath := filepath.Join(repoRoot, "README.md")
 
@@ -293,41 +298,29 @@ func directoryContainsGoFiles(fs afero.Fs, path string) (bool, error) {
 }
 
 func processGoFiles(fs afero.Fs, path string, repo Repo, tmplPath string, excludedPackagesMap map[string]struct{}) error {
-	fset := token.NewFileSet()
-
-	// Create a temporary directory
-	tempDir, err := os.MkdirTemp("", "parserTemp")
-	if err != nil {
-		return err
-	}
-	defer os.RemoveAll(tempDir) // Ensure cleanup
-
-	// Copy files from afero to the temporary directory
-	aferoFiles, _ := afero.ReadDir(fs, path)
-	for _, file := range aferoFiles {
-		data, _ := afero.ReadFile(fs, filepath.Join(path, file.Name()))
-		if err := os.WriteFile(filepath.Join(tempDir, file.Name()), data, file.Mode()); err != nil {
-			return err
-		}
+	cfg := &packages.Config{
+		Mode:  packages.NeedName | packages.NeedSyntax | packages.NeedTypes | packages.NeedTypesInfo,
+		Dir:   path,
+		Fset:  token.NewFileSet(),
+		Tests: false, // Explicitly exclude test files
 	}
 
-	// Point the parser to the temporary directory
-	pkgs, err := parser.ParseDir(fset, tempDir, nonTestFilter, parser.ParseComments)
+	// Use "." to represent the current package
+	patterns := []string{"."}
+
+	pkgs, err := packages.Load(cfg, patterns...)
 	if err != nil {
-		return err
+		return fmt.Errorf("error loading packages: %w", err)
 	}
 
 	for _, pkg := range pkgs {
-		if filepath.Base(path) == "magefiles" && pkg.Name == "main" {
-			// treat magefiles as a separate package for documentation
-			pkg.Name = "magefiles"
+		// Ensure the package is not excluded
+		if _, exists := excludedPackagesMap[pkg.Name]; exists {
+			continue
 		}
 
-		// check if the package name is in the excluded packages list
-		if _, exists := excludedPackagesMap[pkg.Name]; exists {
-			continue // if so, skip this package
-		}
-		if err := generateReadmeForPackage(fs, path, fset, pkg, repo, tmplPath); err != nil {
+		// Generate the README for the package
+		if err := generateReadmeForPackage(fs, path, pkg, repo, tmplPath); err != nil {
 			return err
 		}
 	}
@@ -339,15 +332,15 @@ func nonTestFilter(info os.FileInfo) bool {
 	return !strings.HasSuffix(info.Name(), "_test.go")
 }
 
-func generateReadmeForPackage(fs afero.Fs, path string, fset *token.FileSet, pkg *ast.Package, repo Repo, templatePath string) error {
+func generateReadmeForPackage(fs afero.Fs, path string, pkg *packages.Package, repo Repo, templatePath string) error {
 	pkgDoc := &PackageDoc{
 		PackageName: pkg.Name,
 		GoGetPath:   fmt.Sprintf("github.com/%s/%s/%s", repo.Owner, repo.Name, pkg.Name),
 		Functions:   []FunctionDoc{},
 	}
 
-	for _, file := range pkg.Files {
-		err := processFileDeclarations(fset, pkgDoc, file)
+	for _, file := range pkg.Syntax {
+		err := processFileDeclarations(pkg.Fset, pkgDoc, file, pkg.TypesInfo)
 		if err != nil {
 			return err
 		}
@@ -359,43 +352,50 @@ func generateReadmeForPackage(fs afero.Fs, path string, fset *token.FileSet, pkg
 	})
 
 	return generateReadmeFromTemplate(fs, pkgDoc, filepath.Join(path, "README.md"), templatePath)
-
 }
 
-func processFileDeclarations(fset *token.FileSet, pkgDoc *PackageDoc, file *ast.File) error {
+func processFileDeclarations(fset *token.FileSet, pkgDoc *PackageDoc, file *ast.File, info *types.Info) error {
 	for _, decl := range file.Decls {
 		if fn, isFn := decl.(*ast.FuncDecl); isFn {
 			if !fn.Name.IsExported() || strings.HasPrefix(fn.Name.Name, "Test") {
 				continue
 			}
 
-			fnDoc, err := createFunctionDoc(fset, fn)
+			fnDoc, err := createFunctionDoc(fset, fn, info)
 			if err != nil {
 				return err
 			}
 
-			// Using fnDoc.Name instead of fn.Name.Name
-			// fnDoc.Name will be a unique identifier for each method or function
 			pkgDoc.Functions = append(pkgDoc.Functions, fnDoc)
 		}
 	}
 	return nil
 }
 
-func createFunctionDoc(fset *token.FileSet, fn *ast.FuncDecl) (FunctionDoc, error) {
+func createFunctionDoc(fset *token.FileSet, fn *ast.FuncDecl, info *types.Info) (FunctionDoc, error) {
 	var params, results, structName string
 	var err error
-	if fn.Type.Params != nil {
-		params, err = formatNode(fset, fn.Type.Params)
-		if err != nil {
-			return FunctionDoc{}, fmt.Errorf("error formatting function parameters: %w", err)
-		}
 
-	}
-	if fn.Type.Results != nil {
-		results, err = formatNode(fset, fn.Type.Results)
-		if err != nil {
-			return FunctionDoc{}, fmt.Errorf("error formatting function results: %w", err)
+	// Use info to get the function's type
+	fnType := info.TypeOf(fn.Name)
+	if fnType != nil {
+		if sig, ok := fnType.(*types.Signature); ok {
+			params = formatParams(sig.Params())
+			results = formatResults(sig.Results())
+		}
+	} else {
+		// Fallback to AST-based extraction if type info is not available
+		if fn.Type.Params != nil {
+			params, err = formatNode(fset, fn.Type.Params)
+			if err != nil {
+				return FunctionDoc{}, fmt.Errorf("error formatting function parameters: %w", err)
+			}
+		}
+		if fn.Type.Results != nil {
+			results, err = formatNode(fset, fn.Type.Results)
+			if err != nil {
+				return FunctionDoc{}, fmt.Errorf("error formatting function results: %w", err)
+			}
 		}
 	}
 
@@ -409,7 +409,7 @@ func createFunctionDoc(fset *token.FileSet, fn *ast.FuncDecl) (FunctionDoc, erro
 	}
 
 	signature := fmt.Sprintf("%s(%s) %s", fn.Name.Name, params, results)
-	signature = strings.TrimRight(signature, " ") // Trim trailing space
+	signature = strings.TrimRight(signature, " ")
 
 	// Split the signature if it's too long
 	const maxLineLength = 80
@@ -425,6 +425,24 @@ func createFunctionDoc(fset *token.FileSet, fn *ast.FuncDecl) (FunctionDoc, erro
 		Signature:   signature,
 		Description: fn.Doc.Text(),
 	}, nil
+}
+
+func formatParams(tup *types.Tuple) string {
+	var params []string
+	for i := 0; i < tup.Len(); i++ {
+		param := tup.At(i)
+		params = append(params, fmt.Sprintf("%s %s", param.Name(), param.Type().String()))
+	}
+	return strings.Join(params, ", ")
+}
+
+func formatResults(tup *types.Tuple) string {
+	var results []string
+	for i := 0; i < tup.Len(); i++ {
+		result := tup.At(i)
+		results = append(results, result.Type().String())
+	}
+	return strings.Join(results, ", ")
 }
 
 func splitLongSignature(signature string, maxLineLength int) string {
