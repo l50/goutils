@@ -100,7 +100,6 @@ func (cfg *LogConfig) ConfigureLogger() (Logger, error) {
 	var err error
 	var fileHandler slog.Handler
 	var stdoutHandler slog.Handler
-
 	opts := &slog.HandlerOptions{
 		Level: cfg.Level,
 	}
@@ -113,11 +112,14 @@ func (cfg *LogConfig) ConfigureLogger() (Logger, error) {
 		fileHandler = slog.NewJSONHandler(logFile, opts)
 	}
 
-	if cfg.OutputType == ColorOutput {
+	switch cfg.OutputType {
+	case ColorOutput:
 		prettyOpts := PrettyHandlerOptions{SlogOpts: *opts}
 		stdoutHandler = NewPrettyHandler(os.Stdout, prettyOpts, cfg.OutputType)
-	} else {
+	case JSONOutput:
 		stdoutHandler = slog.NewJSONHandler(os.Stdout, opts)
+	default: // PlainOutput
+		stdoutHandler = slog.NewTextHandler(os.Stdout, opts)
 	}
 
 	var handlers []slog.Handler
@@ -127,11 +129,9 @@ func (cfg *LogConfig) ConfigureLogger() (Logger, error) {
 	if stdoutHandler != nil {
 		handlers = append(handlers, stdoutHandler)
 	}
-
 	if len(handlers) == 0 {
 		return nil, fmt.Errorf("no valid handlers available for logger")
 	}
-
 	multiHandler := slog.New(slogmulti.Fanout(handlers...))
 	var logger Logger
 	if cfg.OutputType == ColorOutput {
@@ -147,7 +147,6 @@ func (cfg *LogConfig) ConfigureLogger() (Logger, error) {
 			Logger: multiHandler,
 		}
 	}
-
 	return logger, nil
 }
 
