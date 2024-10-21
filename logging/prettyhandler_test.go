@@ -46,24 +46,25 @@ func TestPrettyHandlerHandle(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			// Create a buffer to capture the output
 			var buf strings.Builder
-			prettyHandler := logging.NewPrettyHandler(&buf, logging.PrettyHandlerOptions{})
+			opts := logging.PrettyHandlerOptions{
+				SlogOpts: slog.HandlerOptions{
+					Level: tc.level,
+				},
+			}
+			prettyHandler := logging.NewPrettyHandler(&buf, opts, logging.ColorOutput)
 
-			// Create a log record
 			record := slog.Record{
 				Level:   tc.level,
 				Time:    time.Now(),
 				Message: tc.msg,
 			}
 
-			// Call the handle method
 			err := prettyHandler.Handle(context.Background(), record)
 			if err != nil {
 				t.Fatalf("Handle() error = %v", err)
 			}
 
-			// Check if the output contains the expected msg
 			if !strings.Contains(buf.String(), tc.expected) {
 				t.Fatalf("Expected to find '%s' in the output, got '%s'", tc.expected, buf.String())
 			}
@@ -97,19 +98,22 @@ func TestPrettyHandlerParseLogRecord(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			prettyHandler := logging.NewPrettyHandler(io.Discard, logging.PrettyHandlerOptions{})
+			opts := logging.PrettyHandlerOptions{
+				SlogOpts: slog.HandlerOptions{
+					Level: tc.record.Level,
+				},
+			}
+			prettyHandler := logging.NewPrettyHandler(io.Discard, opts, logging.JSONOutput)
 
-			// Create a log record
 			record := slog.Record{
 				Level:   tc.record.Level,
 				Time:    time.Now(),
 				Message: tc.record.Message,
 			}
 
-			// Call the handle method
 			err := prettyHandler.Handle(context.Background(), record)
 			if (err != nil) != tc.expectError {
-				t.Errorf("parseLogRecord() for %s expected error: %v, got: %v", tc.name, tc.expectError, err)
+				t.Errorf("Handle() for %s expected error: %v, got: %v", tc.name, tc.expectError, err)
 			}
 		})
 	}
@@ -117,41 +121,56 @@ func TestPrettyHandlerParseLogRecord(t *testing.T) {
 
 func TestPrettyHandlerColorization(t *testing.T) {
 	testCases := []struct {
-		name  string
-		level slog.Level
+		name        string
+		level       slog.Level
+		outputType  logging.OutputType
+		expectColor bool
 	}{
 		{
-			name:  "Info Level Color",
-			level: slog.LevelInfo,
+			name:        "Info Level Color",
+			level:       slog.LevelInfo,
+			outputType:  logging.ColorOutput,
+			expectColor: true,
 		},
 		{
-			name:  "Error Level Color",
-			level: slog.LevelError,
+			name:        "Error Level Color",
+			level:       slog.LevelError,
+			outputType:  logging.ColorOutput,
+			expectColor: true,
+		},
+		{
+			name:        "JSON Output No Color",
+			level:       slog.LevelInfo,
+			outputType:  logging.JSONOutput,
+			expectColor: false,
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			var buf strings.Builder
-			prettyHandler := logging.NewPrettyHandler(&buf, logging.PrettyHandlerOptions{})
+			opts := logging.PrettyHandlerOptions{
+				SlogOpts: slog.HandlerOptions{
+					Level: tc.level,
+				},
+			}
+			prettyHandler := logging.NewPrettyHandler(&buf, opts, tc.outputType)
 
-			// Create a log record
 			record := slog.Record{
 				Level:   tc.level,
 				Time:    time.Now(),
 				Message: "test message",
 			}
 
-			// Call the handle method
 			err := prettyHandler.Handle(context.Background(), record)
 			if err != nil {
 				t.Errorf("Handle() error = %v", err)
 			}
 
-			// Ensure the output does not contain ANSI color codes
 			output := buf.String()
-			if strings.Contains(output, "\u001b[") {
-				t.Errorf("Output should not contain color codes, got '%s'", output)
+			hasColorCodes := strings.Contains(output, "\u001b[")
+			if hasColorCodes != tc.expectColor {
+				t.Errorf("Color codes presence (%v) does not match expectation (%v) for output type %v", hasColorCodes, tc.expectColor, tc.outputType)
 			}
 		})
 	}
