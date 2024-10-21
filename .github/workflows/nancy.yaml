@@ -1,11 +1,20 @@
 ---
 name: Nancy 3p Vulnerability Scan
 on:
-  push:
   pull_request:
+    branches:
+      - main
     types:
       - opened
       - synchronize
+      - reopened
+  push:
+    branches:
+      - main
+  schedule:
+    # Run once a week (see https://crontab.guru)
+    - cron: "0 0 * * 0"
+  workflow_dispatch:
 
 jobs:
   nancy:
