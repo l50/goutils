@@ -53,6 +53,7 @@ repos:
     hooks:
       - id: markdownlint
         args: ['--fix', '--config', '.hooks/linters/markdownlint.json']
+        stages: [pre-commit, manual]
 
   - repo: local
     hooks:
