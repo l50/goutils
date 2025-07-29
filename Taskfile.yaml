@@ -1,0 +1,23 @@
+---
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+version: "3"
+
+set: [pipefail]
+
+includes:
+  github: "https://raw.githubusercontent.com/CowDogMoo/taskfile-templates/main/github/Taskfile.yaml"
+  pre-commit: "https://raw.githubusercontent.com/CowDogMoo/taskfile-templates/main/pre-commit/Taskfile.yaml"
+  renovate: "https://raw.githubusercontent.com/CowDogMoo/taskfile-templates/main/renovate/Taskfile.yaml"
+
+tasks:
+  default:
+    desc: Run all CI tasks
+    cmds:
+      - task: run-pre-commit
+
+  run-pre-commit:
+    desc: Update, clear cache, and run pre-commit hooks
+    cmds:
+      - task: pre-commit:update-hooks
+      - task: pre-commit:clear-cache
+      - task: pre-commit:run-hooks

@@ -15,3 +15,6 @@ coverage-all.out
 # File created for debugging with vscode
 mage_output_file.go
 TODO
+
+# Taskfile artifacts
+.task
