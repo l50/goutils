@@ -1,8 +1,8 @@
 module github.com/l50/goutils/v2
 
-go 1.23
+go 1.24
 
-toolchain go1.23.1
+toolchain go1.24.4
 
 require (
 	github.com/bitfield/script v0.23.0
@@ -77,6 +77,8 @@ require (
 	github.com/x448/float16 v0.8.4 // indirect
 	github.com/xeipuuv/gojsonschema v1.2.0 // indirect
 	github.com/xlab/treeprint v1.2.0 // indirect
+	go.yaml.in/yaml/v2 v2.4.2 // indirect
+	go.yaml.in/yaml/v3 v3.0.3 // indirect
 	golang.org/x/mod v0.21.0 // indirect
 	gopkg.in/evanphx/json-patch.v4 v4.12.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
@@ -89,6 +91,7 @@ require (
 	oras.land/oras-go v1.2.6 // indirect
 	sigs.k8s.io/kustomize/api v0.18.0 // indirect
 	sigs.k8s.io/kustomize/kyaml v0.18.1 // indirect
+	sigs.k8s.io/structured-merge-diff/v4 v4.4.1 // indirect
 )
 
 require (
@@ -192,6 +195,5 @@ require (
 	k8s.io/utils v0.0.0-20240921022957-49e7df575cb6 // indirect
 	mvdan.cc/sh/v3 v3.10.0 // indirect
 	sigs.k8s.io/json v0.0.0-20241014173422-cfa47c3a1cc8 // indirect
-	sigs.k8s.io/structured-merge-diff/v4/v6 v6.3.0 // indirect
 	sigs.k8s.io/yaml v1.6.0 // indirect
 )
