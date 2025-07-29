@@ -13,16 +13,33 @@
 set -e
 
 # Define the URL of bashutils.sh
-bashutils_url="https://raw.githubusercontent.com/l50/dotfiles/main/bashutils"
+bashutils_url="https://raw.githubusercontent.com/l50/dotfiles/refs/heads/main/bashutils.sh"
 
 # Define the local path of bashutils.sh
 bashutils_path="/tmp/bashutils"
 
-# Check if bashutils.sh exists locally
-if [[ ! -f "${bashutils_path}" ]]; then
-    # bashutils.sh doesn't exist locally, so download it
-    curl -s "${bashutils_url}" -o "${bashutils_path}"
+# Remove existing file if it exists to ensure fresh download
+rm -f "${bashutils_path}"
+
+# Download with error checking
+echo "Downloading bashutils.sh..."
+if ! curl -fsSL "${bashutils_url}" -o "${bashutils_path}"; then
+    curl_exit_code=$?
+    echo "Failed to download bashutils.sh from ${bashutils_url}"
+    echo "HTTP response code: ${curl_exit_code}"
+    exit 1
 fi
+
+# Verify the file starts with a shebang
+if ! head -n 1 "${bashutils_path}" | grep -q "^#!"; then
+    echo "Downloaded file does not appear to be a valid script"
+    echo "First line of file:"
+    head -n 1 "${bashutils_path}"
+    exit 1
+fi
+
+# Make it executable
+chmod +x "${bashutils_path}"
 
 # Source bashutils
 # shellcheck source=/dev/null
