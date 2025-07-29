@@ -47,8 +47,12 @@ repos:
         exclude: .bats
       - id: shellcheck
       - id: shfmt
-      # Configuration in .mdlrc and .hooks/linters/mdstyle.rb
+
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.45.0
+    hooks:
       - id: markdownlint
+        args: ['--fix', '--config', '.hooks/linters/markdownlint.json']
 
   - repo: local
     hooks:
@@ -91,3 +95,11 @@ repos:
         entry: .hooks/prettier-hook.sh
         language: script
         types: [json, yaml]
+
+      - id: nancy-vulnerability-scan
+        name: Nancy vulnerability scan
+        entry: .hooks/nancy-scan.sh
+        language: script
+        pass_filenames: false
+        files: '(go\.mod|go\.sum)$'
+        description: "Run nancy to check for vulnerabilities in Go dependencies"
