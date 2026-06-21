@@ -2,10 +2,13 @@
 
 [![License](https://img.shields.io/github/license/l50/goutils?label=License&style=flat&color=blue&logo=github)](https://github.com/l50/goutils/blob/main/LICENSE)
 [![Go Report Card](https://goreportcard.com/badge/github.com/l50/goutils/v2)](https://goreportcard.com/report/github.com/l50/goutils/v2)
-[![Tests](https://github.com/l50/goutils/actions/workflows/tests.yaml/badge.svg)](https://github.com/l50/goutils/actions/workflows/tests.yaml)
-[![🚨 Semgrep Analysis](https://github.com/l50/goutils/actions/workflows/semgrep.yaml/badge.svg)](https://github.com/l50/goutils/actions/workflows/semgrep.yaml)
 [![Coverage Status](https://coveralls.io/repos/github/l50/goutils/badge.svg?branch=main)](https://coveralls.io/github/l50/goutils?branch=main)
-[![Renovate](https://github.com/l50/goutils/actions/workflows/renovate.yaml/badge.svg)](https://github.com/l50/goutils/actions/workflows/renovate.yaml)
+
+> [!WARNING]
+> This project is no longer maintained as of June 2026. The repo is archived and
+> read-only. The existing `v2.2.8` and earlier tags will keep working through the
+> Go module proxy, but there will be no further releases, fixes, or dependency
+> updates. Fork it if you want to keep using or building on it.
 
 This repo is comprised of utilities that I use across various go projects.
 
